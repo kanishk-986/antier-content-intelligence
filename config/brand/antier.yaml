@@ -1,0 +1,103 @@
+# Antier brand brain — machine-readable positioning.
+# Source: MASTER_BLUEPRINT.md sections 3, 37, 43. Do not invent capabilities here;
+# an unsupported capability makes the system force service mentions where no genuine
+# expertise exists, which section 2.2 forbids.
+
+company:
+  name: Antier Solutions
+  positioning: >
+    Purpose-built AI and blockchain infrastructure for institutions and enterprises.
+  framing: Engineering trust on blockchain, applying intelligence with AI.
+  ceo: Vikram R Singh            # CEO & Founder (section 43)
+  buyer: institutional and enterprise
+
+# Infrastructure disciplines named on Antier's public positioning (section 43).
+disciplines:
+  - rwa_tokenization
+  - stablecoin_rails
+  - protocol_engineering
+  - enterprise_ai
+  - institutional_defi
+  - enterprise_wallets
+
+# Content pillars with priority (section 3.1). Priority feeds the Antier-relevance
+# dimension in SCORING.md; it is not itself a score.
+pillars:
+  rwa_tokenization:
+    priority: very_high
+    examples: [asset tokenization, funds, real estate, commodities, securities, token standards, compliance]
+  stablecoin_infrastructure:
+    priority: very_high
+    examples: [stablecoin rails, payments, remittance, settlement, issuance, treasury workflows]
+  blockchain_infrastructure:
+    priority: very_high
+    examples: [protocol engineering, L1/L2, rollups, interoperability, chain abstraction, smart contracts]
+  enterprise_ai:
+    priority: very_high
+    examples: [AI infrastructure, agentic systems, AI + blockchain, autonomous workflows]
+  institutional_defi:
+    priority: high
+    examples: [institutional lending, liquidity, custody, settlement, compliant DeFi]
+  digital_asset_infrastructure:
+    priority: high
+    examples: [wallets, custody, exchanges, payments, MPC, account infrastructure]
+  digital_money_payments:
+    priority: high
+    examples: [digital banking, cross-border payments, tokenized money, payment rails]
+  security_compliance:
+    priority: high
+    examples: [smart-contract security, monitoring, KYC/AML, governance, regulatory architecture]
+
+# Topic taxonomy (section 37). Used for topic mapping, not scoring.
+taxonomy:
+  rwa: [tokenization, funds, real estate, commodities, securities, compliance, secondary markets]
+  stablecoins: [rails, remittance, payments, settlement, issuance, treasury, regulation]
+  institutional_defi: [lending, liquidity, custody, compliance, settlement]
+  blockchain_infrastructure: [L1/L2, rollups, protocol engineering, interoperability, chain abstraction]
+  wallets: [MPC, custody, account abstraction, enterprise wallets, programmable wallets]
+  ai_blockchain: [AI agents, autonomous commerce, agent identity, agent payments, AI operations]
+  digital_money: [digital banking, payments, cross-border settlement, tokenized money]
+  security: [smart contracts, audits, monitoring, custody security, governance]
+  regulation: [MiCA, SEC, licensing, stablecoin rules, RWA compliance]
+  enterprise_adoption: [banks, asset managers, governments, fintechs, enterprise transformation]
+
+# Standards Antier's RWA infrastructure material names explicitly (section 3.1).
+# These are evidence of genuine technical depth and may be cited as such.
+standards: [ERC-20, ERC-3643, ERC-4626, ERC-7943]
+
+# Lifecycle capabilities named in Antier's tokenization material (section 3.1).
+tokenization_lifecycle:
+  - issuance
+  - investor onboarding
+  - compliance
+  - custody
+  - corporate actions
+  - secondary-market connectivity
+  - interoperability
+asset_classes: [equities, funds, real estate, commodities, alternative assets]
+
+# Production engagements Antier's site highlights (section 23). Thin on purpose —
+# the proof-of-expertise engine needs a real case-study corpus, which does not yet
+# exist. See PRD.md section 12 open question 1. Do NOT pad this list.
+proof_points:
+  - regulated tokenized-asset platform
+  - stablecoin remittance platform
+  - infrastructure for a regulated enterprise blockchain network
+
+# Hard exclusions (section 2.2). These are filters, not preferences.
+exclude:
+  - generic crypto news with no Antier connection
+  - price-only commentary
+  - speculative token predictions
+  - unverified social-media claims presented as fact
+  - topics unsupported by credible evidence
+  - forced service mentions without genuine expertise
+
+# Ranking principle (section 2.3), in priority order.
+prefer:
+  - insight over news
+  - analysis over reporting
+  - narrative over event
+  - commercial relevance over popularity
+  - evidence over speculation
+  - original angle over generic commentary

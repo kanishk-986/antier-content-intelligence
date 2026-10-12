@@ -1,0 +1,11 @@
+# Persona: Subject-matter expert (section 4)
+persona: sme
+label: Subject-matter expert
+territory:
+  - deep specialist themes tied to actual expertise
+angle: How a specific technology or problem works
+# Deliberately unnamed. Section 4 ties this persona to real expertise, and no
+# spokesperson roster exists in the blueprint. Assigning a name here would invent a
+# requirement (CLAUDE.md rule 1). Owner input needed.
+name: null
+formats: [technical explainer, specialist deep-dive]

@@ -1,0 +1,18 @@
+# Persona: CEO / Founder — Vikram R Singh (sections 4, 43)
+persona: ceo
+label: CEO / Founder
+name: Vikram R Singh
+territory:
+  - strategy
+  - market structure
+  - institutional adoption
+  - regulation
+  - capital markets
+  - future of digital assets
+angle: Why the market is changing and what leaders should do
+framing:
+  stablecoin_infrastructure: Why market structure is changing
+  rwa_tokenization: Capital-market implications
+  chain_abstraction: Why fragmented liquidity matters
+  ai_agents_payments: Autonomous commerce thesis
+formats: [LinkedIn post, long-form thesis, market structure commentary]

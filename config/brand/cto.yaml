@@ -1,0 +1,18 @@
+# Persona: CTO / technical leader (section 4)
+persona: cto
+label: CTO / technical leader
+territory:
+  - architecture
+  - security
+  - protocols
+  - interoperability
+  - wallets
+  - scaling
+  - AI infrastructure
+angle: What is technically difficult and what infrastructure is missing
+framing:
+  stablecoin_infrastructure: What infrastructure is missing
+  rwa_tokenization: Token standards, compliance and architecture
+  chain_abstraction: Technical architecture and interoperability
+  ai_agents_payments: Agent identity, wallets and settlement architecture
+formats: [architecture deep-dive, engineering trade-off analysis, technical explainer]

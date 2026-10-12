@@ -1,0 +1,41 @@
+# --- Secrets: never commit (blueprint section 33) ---
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+secrets.*
+**/*api_key*
+**/*apikey*
+**/*_secret*
+**/*credentials*
+
+# --- Raw operational data: belongs in object storage or the DB, not Git (7.2) ---
+data/raw/
+data/cache/
+*.db
+*.sqlite
+*.sqlite3
+pgdata/
+crawl_dumps/
+
+# --- Python ---
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# --- Node / dashboard ---
+node_modules/
+.next/
+dist/
+build/
+
+# --- Editor / OS ---
+.DS_Store
+.idea/
+.vscode/

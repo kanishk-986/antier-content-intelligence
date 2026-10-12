@@ -1,0 +1,17 @@
+# Persona: Antier Corporate (section 4)
+persona: company
+label: Antier Corporate
+territory:
+  - solutions
+  - market intelligence
+  - enterprise use cases
+  - case studies
+  - technology
+angle: What enterprises need to build next
+# Per-narrative framing from the section 18 matrix.
+framing:
+  stablecoin_infrastructure: What enterprises need to deploy
+  rwa_tokenization: Enterprise adoption and use cases
+  chain_abstraction: Business value of multi-chain access
+  ai_agents_payments: Enterprise opportunities
+formats: [solution brief, enterprise use case, case study, market intelligence note]

@@ -1,0 +1,58 @@
+# Scoring weights. Version-controlled because they materially change system
+# behaviour (section 7.2). A change here is a reviewable diff, never a live tweak.
+# Source: MASTER_BLUEPRINT.md sections 14, 15, 16.
+
+version: 1
+effective_from: 2026-10-12
+
+# Opportunity score dimensions (section 15). Must sum to 1.0 — a mismatch is a
+# startup error, never a silent renormalization (SCORING.md testing contract).
+opportunity_weights:
+  trend_velocity:       0.20   # Is attention increasing?
+  antier_relevance:     0.20   # Does it map to actual capabilities?
+  audience_relevance:   0.15   # Does it matter to target buyers/readers?
+  commercial_relevance: 0.15   # Can it create meaningful business context?
+  authority_potential:  0.10   # Can Antier add expert insight?
+  novelty:              0.10   # Is there a differentiated angle?
+  source_credibility:   0.10   # Can the topic be evidenced reliably?
+
+# Action thresholds (section 15). Lower bound inclusive.
+thresholds:
+  reject:                   0.0
+  monitor:                  5.0
+  good:                     7.0
+  priority:                 8.0
+  immediate_editorial:      9.0
+
+# Momentum windows (section 14). Lets the engine separate a breaking event from a
+# durable narrative.
+windows_hours: [24, 168, 720]
+
+# Emergence is an unweighted sum in section 14. Kept explicit so a future change is
+# a visible diff rather than a code edit.
+emergence_components: [velocity, acceleration, novelty, source_diversity]
+
+# Zero-baseline handling. Section 14 defines velocity as current/baseline and does
+# not specify the baseline==0 case, which is common for a genuinely new narrative.
+# The rule applied must be recorded on the narrative row (SCORING.md edge case).
+zero_baseline:
+  rule: treat_as_emerging
+  assigned_velocity: 1.0
+  flag: baseline_zero
+
+# Source authority tiers (section 5.2). Authority is never derived from popularity.
+authority_tiers:
+  10: regulators, official government and institutional releases, primary company/protocol announcements
+  9:  major financial institutions, established protocols, primary research
+  8:  established research firms, high-quality specialist media
+  7:  industry publications, specialist blogs
+  5:  community and secondary commentary
+  3:  social posts, early signals
+  1:  anonymous, unverified or low-quality
+
+# Saturation / whitespace (section 16). The competitor axis is deferred by section 32;
+# until a competitor set exists it must report not_measured rather than 0, because a
+# missing input read as "no saturation" inflates every score.
+saturation:
+  competitor_axis: not_measured
+  axes_available: [antier_own_coverage, market_wide_volume]
