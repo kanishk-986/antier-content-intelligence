@@ -17,6 +17,7 @@ from dataclasses import dataclass, field
 
 from src.database.sqlite_store import SqliteStore, utcnow
 from src.ingestion.fetcher import fetch_source
+from src.ingestion.listing import extract_listing, load_rules
 
 REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 REGISTRY = os.path.join(REPO, "config", "sources", "source_registry.csv")
@@ -64,8 +65,15 @@ def sync_registry(store: SqliteStore, sources: list[dict]) -> None:
 
 
 def ingest(store: SqliteStore, sources: list[dict], max_items: int = 20,
-           fetch_bodies: bool = True) -> IngestionReport:
+           fetch_bodies: bool = True, use_listing: bool = True) -> IngestionReport:
+    """Feed first, listing page second.
+
+    Phase 3b: six of the twelve highest-authority sources expose no feed, so a
+    feed-only pipeline silently excludes the primary-announcement layer. When feed
+    discovery reports no_feed, the static listing extractor is tried before giving up.
+    """
     report = IngestionReport()
+    rules = load_rules() if use_listing else {}
 
     for source in sources:
         notes = source.get("notes", "")
@@ -74,7 +82,7 @@ def ingest(store: SqliteStore, sources: list[dict], max_items: int = 20,
             report.per_source.append({
                 "source_id": source["id"], "source_name": source["name"],
                 "status": "blocked_known", "new": 0, "duplicates": 0,
-                "detail": notes.split(";")[0].strip(),
+                "detail": notes.split(";")[0].strip(), "via": "-",
             })
             continue
 
@@ -82,6 +90,14 @@ def ingest(store: SqliteStore, sources: list[dict], max_items: int = 20,
         seen = store.seen_urls(source["id"])
         outcome = fetch_source(source, seen, max_items=max_items,
                                fetch_bodies=fetch_bodies)
+        via = "feed"
+        if use_listing and outcome.status == "no_feed":
+            listing = extract_listing(source, seen, rules)
+            if listing.items or listing.status != "no_listing":
+                via = "listing"
+                outcome.status = listing.status
+                outcome.items = listing.items
+                outcome.detail = listing.detail
 
         new_count, dupe_count = 0, 0
         for item in outcome.items:
@@ -104,6 +120,7 @@ def ingest(store: SqliteStore, sources: list[dict], max_items: int = 20,
             "source_id": source["id"], "source_name": source["name"],
             "status": outcome.status, "new": new_count, "duplicates": dupe_count,
             "detail": outcome.detail, "http_status": outcome.http_status,
+            "via": via,
         })
 
     store.audit(

@@ -72,14 +72,42 @@ Measured on the first live run (2026-10-12), over the 12 highest-authority sourc
 
 **Only a quarter of tier-10 sources are reachable by feed.** The no-feed set is
 exactly the primary-announcement layer the blueprint values most — central
-securities depositories, card networks, stablecoin issuers. §8 anticipates this by
-naming Trafilatura / BeautifulSoup / Playwright "where permitted"; an HTML
-listing-page extractor is therefore required, not optional, and is tracked in
-ROADMAP.md.
+securities depositories, card networks, stablecoin issuers.
 
-Until it exists, ingestion skews toward regulators with mature feeds. That is a
-coverage bias to state in any report built on this data, not a detail to leave
-implicit.
+### After Phase 3b (static listing extraction)
+
+Re-measured over the same 12 sources with the listing fallback enabled:
+
+| Outcome | Before | After | Sources |
+|---|---|---|---|
+| Items stored | **18** | **41** | — |
+| Reached | **3** | **6** | + Circle, LSEG, Mastercard |
+| `js_rendered` | — | 2 | DTCC, Clearstream |
+| Blocked (403) | 3 | 3 | Euroclear, FATF, IMF |
+| No listing found | — | 1 | Digital Asset |
+
+Listing extraction is config-driven (`config/sources/listing_rules.yaml`), so a new
+source's news path is added without touching code (§41.1).
+
+### What static extraction cannot reach
+
+**Client-rendered sites.** DTCC and Clearstream ship a Next.js shell whose server
+HTML carries navigation only — no amount of link heuristics will find articles that
+the browser assembles. These are reported `js_rendered`, never silently empty, and
+need Playwright (§8 "where permitted"). That is a deliberate open decision: Playwright
+adds ~150 MB of browser binaries, so it is not installed on a guess.
+
+### Two quality guards worth knowing
+
+1. **Path-prefix constraint.** A candidate must sit under the listing page's own
+   path. Without it, a three-word product slug like
+   `/products-and-services/capital-liquidity-optimization` qualifies, and marketing
+   copy enters the corpus — exactly what §2.2 forbids. This was a real defect caught
+   on the first live run.
+2. **Shared timestamps are flagged, not deleted.** Some sites stamp every page with
+   one template date; others genuinely publish a batch same-day. Both look identical
+   from here, so the date is kept and annotated `date_confidence: low` rather than
+   nulled — nulling destroys what the §14 momentum engine needs.
 
 ## Known-unreachable sources
 

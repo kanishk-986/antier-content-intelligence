@@ -1,0 +1,63 @@
+# Listing-page rules for sources with no RSS/Atom feed.
+#
+# Blueprint 41.1: a new source must be addable through configuration without
+# changing application code. This file is that configuration -- the extractor's
+# heuristics are the default, and these entries override them where a site needs it.
+#
+# The registry stores a root domain, but press releases live on a news path. Without
+# an entry here the extractor probes `default_paths` below; with one, it goes
+# straight to the right page.
+#
+# Keys are matched as a substring of the source URL's host.
+
+default_paths:
+  - /news
+  - /newsroom
+  - /press
+  - /press-releases
+  - /media
+  - /insights
+  - /blog
+  - /research
+
+# Paths and patterns that are never articles.
+reject_patterns:
+  - /login
+  - /signin
+  - /careers
+  - /contact
+  - /privacy
+  - /cookie
+  - /legal
+  - /terms
+  - /sitemap
+  - /search
+  - /subscribe
+  - /events/
+  - /tag/
+  - /tags/
+  - /category/
+  - /author/
+  - /page/
+  - /feed
+  - .pdf
+  - .zip
+  - .xlsx
+
+overrides:
+  circle.com:
+    listing_paths: [/blog]
+    # Circle's blog slugs carry no date; metadata extraction supplies it.
+  dtcc.com:
+    listing_paths: [/news, /news-and-insights]
+  clearstream.com:
+    listing_paths: [/clearstream-en/newsroom]
+  mastercard.com:
+    listing_paths: [/news, /news/press, /insights]
+  lseg.com:
+    listing_paths: [/en/insights, /en/media-centre/press-releases]
+  digitalasset.com:
+    listing_paths: [/blog, /news]
+  euroclear.com:
+    listing_paths: [/newsandinsights]
+    note: measured HTTP 403 on the root; listing may also block

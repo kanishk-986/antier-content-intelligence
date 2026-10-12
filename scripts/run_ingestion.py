@@ -24,6 +24,8 @@ def main():
     ap.add_argument("--max-items", type=int, default=20, help="per source")
     ap.add_argument("--no-bodies", action="store_true",
                     help="skip article downloads; feed metadata only")
+    ap.add_argument("--no-listing", action="store_true",
+                    help="feeds only; skip the phase 3b listing fallback")
     args = ap.parse_args()
 
     store = SqliteStore(args.db)
@@ -36,13 +38,14 @@ def main():
 
     print(f"ingesting {len(sources)} source(s) -> {args.db}\n")
     report = ingest(store, sources, max_items=args.max_items,
-                    fetch_bodies=not args.no_bodies)
+                    fetch_bodies=not args.no_bodies,
+                    use_listing=not args.no_listing)
 
     width = max(len(r["source_name"]) for r in report.per_source)
     for row in report.per_source:
-        print("  %-*s  %-14s new=%-3d dup=%-3d %s" % (
-            width, row["source_name"][:width], row["status"],
-            row["new"], row["duplicates"], row["detail"][:60]))
+        print("  %-*s  %-8s %-13s new=%-3d dup=%-3d %s" % (
+            width, row["source_name"][:width], row.get("via", "-"), row["status"],
+            row["new"], row["duplicates"], row["detail"][:52]))
 
     print(f"\n  attempted {report.attempted} | stored {report.stored} | "
           f"duplicates {report.duplicates}")

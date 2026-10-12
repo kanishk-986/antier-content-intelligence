@@ -9,7 +9,8 @@ from §40.
 | 1 | Antier brand brain | System understands company and personas | **done** |
 | 2 | Excel ingestion | Curated source universe online | **done** |
 | 3 | Ingestion + DB | Reliable content pipeline | **done** (feed-based) |
-| 3b | HTML listing extractor | Reach the no-feed primary sources | **required next** |
+| 3b | HTML listing extractor | Reach the no-feed primary sources | **done** (static) |
+| 3c | Browser rendering (Playwright) | Reach client-rendered sources | open decision |
 | 4 | Intelligence | Structured market signals | blocked on API key |
 | 5 | Narratives | Market themes instead of article lists | |
 | 6 | Scoring | Antier-specific opportunity ranking | |
@@ -43,6 +44,21 @@ efficiency rule verified (a second run stored 0 new items).
 expose a feed. Six of the most valuable — DTCC, Euroclear, Clearstream, LSEG,
 Mastercard, Circle — have none. Phase 3b (an HTML listing extractor) is therefore a
 prerequisite for the §40 vertical slice to be representative, not a later nicety.
+
+## Phase 3b result
+
+Static listing extraction doubled reach over the same 12 sources: **3 → 6 reached,
+18 → 41 items**, adding Circle, LSEG and Mastercard — including "Mastercard unveils
+Agent Pay" and "A conversation on USDC, AI, and the end of banking hours", both
+directly on the §3.1 pillars.
+
+**Phase 3c is an open decision, not a deferral.** DTCC and Clearstream are
+client-rendered; their server HTML is a navigation shell. Reaching them needs
+Playwright, which §8 sanctions "where permitted" but which costs ~150 MB of browser
+binaries. Not installed on a guess — it is a call for the owner.
+
+Still unreached after 3b: DTCC and Clearstream (`js_rendered`), Euroclear, FATF and
+IMF (HTTP 403), Digital Asset (no listing page found).
 
 ## Deferred by §32
 
