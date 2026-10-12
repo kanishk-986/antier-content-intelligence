@@ -28,6 +28,30 @@ Phase 0: repository and documentation (§39 Phase 0, §44.24–27).
   `workflow` scope; the available credential has `repo` only. The workflow is
   preserved on local branch `pending/ci-workflow`.
 
+### Added — Phase 3 (ingestion + DB)
+- `migrations/001_initial_schema.sql` — the §9 schema verbatim, 9 tables, plus
+  `narrative_items`, `audit_log` (§33) and `fetch_state` (§10.2).
+- `src/database/store.py` — storage Protocol. No pipeline stage imports a driver.
+- `src/database/sqlite_store.py` — SQLite implementation.
+- `src/ingestion/fetcher.py` — feed discovery, conditional fetch, trafilatura
+  extraction, content hashing, strict date parsing.
+- `src/ingestion/pipeline.py` — registry → fetch → dedupe → store with per-source
+  coverage reporting.
+- `scripts/run_ingestion.py` — CLI with `--limit`, `--max-items`, `--no-bodies`.
+- 25 further tests (41 total).
+
+### Fixed
+- `insert_content` caught every `IntegrityError` and reported it as a duplicate, so a
+  dangling `source_id` was silently swallowed. It now distinguishes the content_hash
+  uniqueness conflict — the expected §10.2 duplicate — from genuine integrity errors,
+  which raise. Found by a test asserting foreign-key enforcement.
+
+### Finding
+- **Feed coverage is the real constraint.** Of the 12 highest-authority sources, 3
+  have a usable feed, 6 have none, 3 are blocked. The no-feed set is the
+  primary-announcement layer (DTCC, Euroclear, Clearstream, LSEG, Mastercard,
+  Circle). An HTML listing extractor is a prerequisite, not an enhancement.
+
 ### Decisions recorded
 - **SQLite before PostgreSQL** for the vertical slice, behind `src/database/store.py`.
   Postgres, pgvector and Docker are absent from the build machine; installing them

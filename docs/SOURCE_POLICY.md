@@ -60,6 +60,27 @@ changed content. Respect site terms, API limits and platform policies. Keep raw
 crawled content out of Git. Define retention policies. Use least-privilege
 credentials.
 
+## Feed coverage is the real ingestion constraint
+
+Measured on the first live run (2026-10-12), over the 12 highest-authority sources:
+
+| Outcome | Count | Sources |
+|---|---|---|
+| RSS/Atom feed found and parsed | **3** | BIS, ESMA, FSB |
+| **No discoverable feed** | **6** | Circle, Clearstream, Canton/Digital Asset, DTCC, LSEG, Mastercard |
+| Blocked (HTTP 403) | 3 | Euroclear, FATF, IMF |
+
+**Only a quarter of tier-10 sources are reachable by feed.** The no-feed set is
+exactly the primary-announcement layer the blueprint values most — central
+securities depositories, card networks, stablecoin issuers. §8 anticipates this by
+naming Trafilatura / BeautifulSoup / Playwright "where permitted"; an HTML
+listing-page extractor is therefore required, not optional, and is tracked in
+ROADMAP.md.
+
+Until it exists, ingestion skews toward regulators with mature feeds. That is a
+coverage bias to state in any report built on this data, not a detail to leave
+implicit.
+
 ## Known-unreachable sources
 
 Reachability is **measured, not assumed**, and re-probed periodically. As of

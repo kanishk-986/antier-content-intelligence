@@ -8,8 +8,9 @@ from §40.
 | 0 | Git repo + documentation | Single source of truth | **done** |
 | 1 | Antier brand brain | System understands company and personas | **done** |
 | 2 | Excel ingestion | Curated source universe online | **done** |
-| 3 | Ingestion + DB | Reliable content pipeline | next |
-| 4 | Intelligence | Structured market signals | |
+| 3 | Ingestion + DB | Reliable content pipeline | **done** (feed-based) |
+| 3b | HTML listing extractor | Reach the no-feed primary sources | **required next** |
+| 4 | Intelligence | Structured market signals | blocked on API key |
 | 5 | Narratives | Market themes instead of article lists | |
 | 6 | Scoring | Antier-specific opportunity ranking | |
 | 7 | QA | High-confidence editorial queue | |
@@ -31,6 +32,17 @@ Excel -> 10 test sources -> fetch 50-100 recent items -> deduplicate
 
 Expand source coverage only once that runs end to end. This validates the
 architecture before investing in a large crawler or a polished UI.
+
+## Phase 3 result
+
+Feed-based ingestion runs end to end: registry → discover feed → fetch → normalize →
+dedupe on content hash → store, with per-source coverage reporting and the §10.2
+efficiency rule verified (a second run stored 0 new items).
+
+**The finding that changes the plan:** only 3 of the 12 highest-authority sources
+expose a feed. Six of the most valuable — DTCC, Euroclear, Clearstream, LSEG,
+Mastercard, Circle — have none. Phase 3b (an HTML listing extractor) is therefore a
+prerequisite for the §40 vertical slice to be representative, not a later nicety.
 
 ## Deferred by §32
 
