@@ -11,6 +11,29 @@
 | PostgreSQL / pgvector | ❌ not installed — SQLite used for the vertical slice |
 | `ANTHROPIC_API_KEY` | ❌ not set |
 
+## Quality gate
+
+```bash
+./scripts/install-hooks.sh     # once per clone: installs the pre-push gate
+./scripts/check.sh             # lint + tests + secret scan, same as CI
+```
+
+**GitHub Actions is not running yet.** Pushing `.github/workflows/ci.yml` requires a
+token with `workflow` scope; the credential on this machine has `repo` only, so the
+workflow file is held on the local branch `pending/ci-workflow` and sits untracked in
+the working tree. `scripts/check.sh` runs the identical three checks, and the pre-push
+hook enforces them, so the gate is real in the meantime.
+
+To land CI, either add `workflow` scope to the token at
+<https://github.com/settings/tokens>, or run `gh auth login` (which also needs
+`read:org` — the current token lacks it, so `gh` cannot authenticate with it). Then:
+
+```bash
+git add .github/workflows/ci.yml
+git commit -m "Add CI: lint, tests, secret scan"
+git push
+```
+
 ## Setup
 
 ```bash

@@ -19,5 +19,24 @@ dev = ["pytest>=8.3.0", "ruff>=0.14.0"]
 line-length = 100
 target-version = "py310"
 
+[tool.ruff.lint]
+# Deliberate selection. Catches real defects and import hygiene; excludes style
+# preference. UP031 (%-format), FURB167 (re.I alias) and similar are modernization
+# opinions, not bugs -- enabling them turns every review into formatting churn.
+select = [
+  "E",    # pycodestyle errors
+  "F",    # pyflakes: unused imports/names, undefined names
+  "I",    # import sorting
+  "B",    # bugbear: real traps (mutable defaults, loop-variable binding)
+  "SIM",  # simplifications that reduce branching
+  "RUF",  # ruff-specific, incl. unused noqa
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Tests and scripts prepend sys.path before importing project modules, which E402
+# cannot express.
+"tests/*" = ["E402"]
+"scripts/*" = ["E402"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -25,7 +25,7 @@ import tempfile
 import urllib.request
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from src.ingestion.office_reader import xlsx_to_text  # noqa: E402
+from src.ingestion.office_reader import xlsx_to_text
 
 SHEET_ID = os.environ.get(
     "DISCOVERY_SHEET_ID", "15gkGfWOWQvvYmHN2rCHskeyvgp6neB1p8pIRn9bD3Fg"

@@ -15,6 +15,19 @@ Phase 0: repository and documentation (§39 Phase 0, §44.24–27).
   PROMPTS, RUNBOOK, CHANGELOG, ROADMAP.
 - `.gitignore` and `.env.example` — variable names only, per §7.2 and §33.
 
+### Added (follow-up)
+- `scripts/check.sh` — lint, tests and secret scan, identical to CI.
+- `scripts/install-hooks.sh` — installs a pre-push hook running that gate, so
+  §7.2's "tests before merge" holds even though Actions cannot run yet.
+- Explicit `[tool.ruff.lint]` rule selection: E, F, I, B, SIM, RUF. Modernization
+  opinions (UP, FURB) are excluded deliberately — they produce formatting churn
+  rather than catching defects.
+
+### Known gap
+- **GitHub Actions is not running.** Pushing `.github/workflows/` needs a token with
+  `workflow` scope; the available credential has `repo` only. The workflow is
+  preserved on local branch `pending/ci-workflow`.
+
 ### Decisions recorded
 - **SQLite before PostgreSQL** for the vertical slice, behind `src/database/store.py`.
   Postgres, pgvector and Docker are absent from the build machine; installing them

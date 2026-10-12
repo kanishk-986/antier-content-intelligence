@@ -11,7 +11,7 @@ and SOURCE_POLICY.md requires a working URL per source.
     from src.ingestion.office_reader import xlsx_to_text, docx_to_text
 """
 
-import os
+import contextlib
 import re
 import zipfile
 from xml.etree import ElementTree as ET
@@ -109,10 +109,8 @@ def xlsx_to_text(path, max_rows=5000):
                 if value_node is not None and value_node.text is not None:
                     value = value_node.text
                     if cell.attrib.get("t") == "s":
-                        try:
+                        with contextlib.suppress(ValueError, IndexError):
                             value = shared[int(value)]
-                        except (ValueError, IndexError):
-                            pass
                 elif inline_node is not None:
                     value = "".join(t.text or "" for t in inline_node.iter(S + "t"))
                 text = value.replace("\n", " ").strip()

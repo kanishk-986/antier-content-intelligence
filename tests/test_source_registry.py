@@ -8,8 +8,12 @@ REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, REPO)
 sys.path.insert(0, os.path.join(REPO, "scripts"))
 
-from import_source_registry import (  # noqa: E402
-    COLUMNS, DEFAULT_TIER, build_rows, classify, normalise_url,
+from import_source_registry import (
+    COLUMNS,
+    DEFAULT_TIER,
+    build_rows,
+    classify,
+    normalise_url,
 )
 
 REGISTRY = os.path.join(REPO, "config", "sources", "source_registry.csv")

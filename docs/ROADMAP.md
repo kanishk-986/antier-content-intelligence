@@ -42,7 +42,8 @@ architecture before investing in a large crawler or a polished UI.
 
 | Item | Blocker |
 |---|---|
-| Remote repo `antier-content-intelligence` | `gh auth login` — browser OAuth, owner action |
+| GitHub Actions CI | token needs `workflow` scope; held on branch `pending/ci-workflow`. Local gate `scripts/check.sh` + pre-push hook covers it meanwhile |
+| Branch protection on `main` (§7.2) | deferred until CI exists, so the required status check can be named |
 | Any LLM stage running | `ANTHROPIC_API_KEY` not set |
 | Proof-of-expertise engine (§23) | No machine-readable Antier case-study corpus exists |
 | Competitor saturation (§16 competitor axis) | No competitor set defined |
