@@ -1,0 +1,145 @@
+# Core services and their ICPs, from the Marketing Charter's priority matrix.
+#
+# This is the mapping target: every source, narrative and opportunity is scored
+# against these. `service_rank` is Test 1 in SCORING.md -- ranks 1-3 are the
+# strongest pass, 4-8 pass but weaker, no match fails.
+#
+# ICPs are the charter's own "Target Group" column, verbatim in substance. Do not
+# widen them: a source that serves no ICP here is not a source for this business.
+
+services:
+  1:
+    name: RWA Tokenization Infrastructure
+    priority: very_high
+    detail: Tokenized private credit, gold, receivables, and "perpified" assets
+    icps:
+      - mid-market asset managers
+      - regional banks
+      - private credit funds
+      - family offices
+      - commodity desks
+    moat: >
+      Implementation partner of record for major ecosystems (Securitize, Polymesh,
+      Provenance); complex regulatory and custody integrations traditional IT cannot do.
+    geography: [global, brazil, latam, us, eu]
+    # Stems, not whole words: "tokeniz" matches tokenization/tokenized/tokenising.
+    # Literal forms silently missed "tokenized securities" on the first run.
+    signals: [tokeniz, tokenis, rwa, real-world asset, real world asset,
+              private credit, receivable, securit, erc-3643, erc-4626,
+              transfer agent, secondary market, collateral, custod, sukuk,
+              proof of reserve, nav, csd, asset servicing, fund administration]
+
+  2:
+    name: Agentic Micropayments & Stablecoin Rails
+    priority: very_high
+    detail: Programmable settlement for AI and machine economies
+    icps:
+      - mid-market fintechs
+      - neobanks
+      - NBFCs
+      - AI-native startups
+    moat: >
+      White-label stablecoin stack in 60 days; dual AI + MPC wallet expertise for
+      machine-to-machine payment rails traditional networks cannot handle.
+    geography: [us, eu, latam, africa, sea, india]
+    signals: [stablecoin, usdc, usdt, payment, remittance, settle, cross-border,
+              treasury, micropayment, x402, issuance, mpc, genius act,
+              tokenized deposit, cbdc, digital currency, money movement, payout,
+              fx, acquiring, card]
+
+  3:
+    name: AI Agent Infrastructure & Orchestration
+    priority: very_high
+    detail: Wallets, milestone verification, KYA identifiers
+    icps:
+      - enterprise AI firms
+      - crypto protocols
+      - DAOs
+      - remote-first hybrid teams
+    moat: >
+      Infrastructure letting AI agents autonomously hold crypto, negotiate and verify
+      milestones on-chain without a human manager in the loop.
+    geography: [us, eu]
+    signals: [ai agent, agentic, autonomous, agent wallet, agent identity, kya,
+              know your agent, erc-8004, mcp, orchestration, verifiable ai, zkml,
+              ai x, ai +, ai and blockchain, llm, machine economy]
+
+  4:
+    name: Enterprise AI Orchestration & Data Modernization
+    priority: high
+    detail: Legacy cleanup and human-agent workflows
+    icps:
+      - specialty insurance / InsurTech
+      - healthcare
+      - mid-cap vertical SaaS
+    moat: >
+      Outcome-based orchestration instead of headcount-led IT billing; legacy tech-debt
+      cleanup with human "agent bosses" managing pods of executing AI agents.
+    geography: [us, eu, india]
+    signals: [enterprise ai, insurtech, insurance, healthcare, claims, prior
+              authorization, legacy, modernization, modernisation, core banking,
+              workflow, saas, vendor evaluation, tech stack, enterprise transformation,
+              consumer adoption, behavioral data, market sizing, forecast]
+
+  5:
+    name: Institutional DeFi & White-Label Lending
+    priority: high
+    icps:
+      - mid-tier community banks
+      - credit unions
+      - Islamic finance
+    moat: Compliance-ready (KYC/AML integrated) lending platforms and fixed-rate markets.
+    geography: [global]
+    signals: [defi, lending, liquidit, white-label, credit union, community bank,
+              islamic finance, shariah, fixed-rate, yield, aave, borrow,
+              prime brokerage, repo]
+
+  6:
+    name: DePIN Integration & Monitoring Architecture
+    priority: high
+    icps:
+      - logistics
+      - retail
+      - specialty manufacturing
+      - cloud-dependent firms
+    moat: IoT/robotics tied to smart contracts proving location and uptime on-chain.
+    geography: [global]
+    signals: [depin, iot, supply chain, telemetry, uptime, decentralized compute,
+              decentralised compute, decentralized physical, helium, logistics,
+              spatial, hardware network]
+
+  7:
+    name: Zero-Knowledge Privacy for Regulated Finance
+    priority: high
+    icps:
+      - traditional banks
+      - asset managers
+      - government entities
+    moat: Verifiable privacy -- ZK proofs plus confidential AI and on-chain KYC.
+    geography: [us, eu, india]
+    signals: [zero-knowledge, zero knowledge, zk, confidential, privacy,
+              selective disclosure, shielded, attestation, nightfall]
+
+  8:
+    name: Protocol Security Audits & Compliance Layers
+    priority: high
+    icps:
+      - DeFi protocols
+      - Web3 infrastructure firms
+      - crypto exchanges
+    moat: Smart-contract audits cross-sold with AI-readable compliance copilots.
+    geography: [global]
+    signals: [audit, smart contract, security, exploit, vulnerabilit, complian,
+              travel rule, kyc, aml, monitoring, clarity act, mica, licens,
+              enforcement, sanction, regulat, supervis, legal, governance, risk,
+              ratings, policy, standards]
+
+# Charter-level positioning that constrains every mapping.
+positioning:
+  target_band: 100M-1B revenue
+  avoid: >
+    Tier-1 institutions, which use legacy system integrators. Tier-1 events are in
+    scope as signal only when a mid-market implication is attached (INSTRUCTIONS
+    section 2 in the predecessor repo; QA_POLICY.md here).
+  rebrand_from: generic Web3 development services
+  rebrand_to: regulated digital asset infrastructure services
