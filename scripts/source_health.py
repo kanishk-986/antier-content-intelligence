@@ -19,19 +19,8 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from src.database.sqlite_store import SqliteStore
+from src.ingestion.status import ACTIONABLE, guidance
 from src.narratives.momentum import load_independence
-
-# A status is actionable when the fix is ours. `blocked` and `blocked_known` are the
-# publisher's decision; `js_rendered` needs a headless browser (Phase 3c, deferred);
-# `no_feed`/`no_listing` usually means a listing rule is missing, which is a config
-# edit, and `error` is a bug or a transient.
-ACTIONABLE = {"no_feed", "no_listing", "error"}
-DEFERRED = {"js_rendered"}
-PUBLISHER_CHOICE = {"blocked", "blocked_known", "blocked_transport"}
-# `offsite_redirect` and `not_a_listing` are registry problems: the stored URL does
-# not lead to that publisher's editorial index, so the row needs correcting or
-# pruning. Neither is fixed by a listing rule.
-REGISTRY_FIX = {"offsite_redirect", "not_a_listing"}
 
 
 def main() -> int:
@@ -87,16 +76,12 @@ def main() -> int:
 
     print(f"\n  {len(silent)} of {len(rows)} sources yielded nothing:")
     for status, group in sorted(by_status.items(), key=lambda kv: -len(kv[1])):
-        if status in ACTIONABLE:
-            note = "fixable here — listing rule or feed URL"
-        elif status in DEFERRED:
-            note = "needs a headless browser (Phase 3c, deferred by section 32)"
-        elif status in PUBLISHER_CHOICE:
-            note = "the publisher's choice; do not retry blindly"
-        elif status in REGISTRY_FIX:
-            note = "the registry URL is wrong — correct it or prune the row"
-        else:
-            note = ""
+        try:
+            note = guidance(status)
+        except KeyError as exc:
+            # A status nobody classified would otherwise print an empty
+            # recommendation and read as "nothing to do".
+            note = f"UNCLASSIFIED — {exc.args[0].split('.')[0]}"
         ind = sum(1 for r in group if r["source_type"] not in party)
         print(f"    {status:14} {len(group):>3}  ({ind} independent)  {note}")
 
