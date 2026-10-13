@@ -21,6 +21,8 @@ import feedparser
 import httpx
 import trafilatura
 
+from src.ingestion.urls import same_site
+
 UA = "AntierContentIntelligence/0.1 (+research; contact via repo owner)"
 TIMEOUT = httpx.Timeout(20.0, connect=10.0)
 
@@ -112,6 +114,7 @@ def fetch_source(source: dict[str, Any], seen: set[str], max_items: int = 20,
     """Fetch new items for one source."""
     sid, name, url = source["id"], source["name"], source["url"]
     out = FetchOutcome(source_id=sid, source_name=name, status="ok")
+    offsite = 0
 
     with _client() as client:
         feed_url, status = discover_feed(url, client)
@@ -137,10 +140,24 @@ def fetch_source(source: dict[str, Any], seen: set[str], max_items: int = 20,
             out.detail = f"feed parsed, 0 entries ({feed_url})"
             return out
 
+        # The feed that answered, not the registry URL. A publisher that renames
+        # carries its feed with it -- EigenCloud's blog.eigencloud.xyz feed resolves
+        # to eigenlabs.org -- so its own articles are same-site and the registry row
+        # is merely stale. An outbound link is not.
+        feed_home = str(raw.url) or feed_url
+        offsite = 0
+
         for entry in parsed.entries[:max_items]:
             link = (entry.get("link") or "").strip()
             if not link or link in seen:
                 continue                     # section 10.2: skip before downloading
+            # A feed carries outbound links too. Richmond Fed's RSS includes DOI
+            # and conference-registration URLs; stored as items they are attributed
+            # to a publisher that did not write them, and they inflate the source
+            # diversity that section 15 reads as corroboration.
+            if not same_site(feed_home, link):
+                offsite += 1
+                continue
             title = (entry.get("title") or "").strip()
             published = _parse_date(
                 entry.get("published") or entry.get("updated")
@@ -190,6 +207,8 @@ def fetch_source(source: dict[str, Any], seen: set[str], max_items: int = 20,
         out.detail = f"{len(out.items)} new item(s)"
         if newest:
             out.detail += f", newest {newest}"
+        if offsite:
+            out.detail += f", {offsite} offsite link(s) skipped"
     else:
         out.detail = out.detail or "no new items"
     return out

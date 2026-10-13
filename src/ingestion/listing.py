@@ -30,6 +30,7 @@ import trafilatura
 import yaml
 
 from src.ingestion.fetcher import UA, _parse_date, content_hash
+from src.ingestion.urls import same_site
 
 REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 RULES_PATH = os.path.join(REPO, "config", "sources", "listing_rules.yaml")
@@ -102,24 +103,6 @@ def _classify_transport(exc: Exception) -> tuple[str, str]:
     if any(tell in low for tell in _REFUSAL_TELLS):
         return "blocked_transport", text[:160]
     return "error", text[:160]
-
-
-def _registrable(host: str) -> str:
-    """Enough of a host to tell one organisation from another. Not a public-suffix
-    implementation: it keeps the last three labels for a two-part TLD like .co.uk
-    and the last two otherwise, which is sufficient to catch a redirect that leaves
-    the publisher behind."""
-    labels = host.lower().split(":")[0].strip(".").split(".")
-    if len(labels) <= 2:
-        return ".".join(labels)
-    if len(labels[-1]) == 2 and len(labels[-2]) <= 3:
-        return ".".join(labels[-3:])
-    return ".".join(labels[-2:])
-
-
-def _same_site(registry_url: str, final_url: str) -> bool:
-    return (_registrable(urlparse(registry_url).netloc)
-            == _registrable(urlparse(final_url).netloc))
 
 
 def _has_editorial_section(url: str, stems: list[str]) -> bool:
@@ -261,7 +244,7 @@ def extract_listing(source: dict[str, Any], seen: set[str],
             # cadwalader.com/press-releases lands on hlc.com, a different firm;
             # same-host filtering then measures against the wrong host and the
             # corpus gains items attributed to a source that never published them.
-            if not _same_site(source["url"], final_url):
+            if not same_site(source["url"], final_url):
                 out.status = "offsite_redirect"
                 out.detail = (f"{listing_url} redirects off-domain to "
                               f"{urlparse(final_url).netloc}")

@@ -3,8 +3,11 @@
 import os
 import sys
 
+import pytest
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+from src.ingestion import urls
 from src.ingestion.fetcher import _parse_date, content_hash
 
 
@@ -44,3 +47,34 @@ def test_unparseable_date_returns_none_rather_than_a_guess():
 
 def test_struct_time_from_feedparser_parsed():
     assert _parse_date((2026, 10, 12, 6, 0, 0, 0, 0, 0)) == "2026-10-12T06:00:00+00:00"
+
+
+# --- a feed carries outbound links too ---------------------------------------
+
+def test_registrable_distinguishes_organisations():
+    assert urls.registrable("www.richmondfed.org") == "richmondfed.org"
+    assert urls.registrable("doi.org") == "doi.org"
+    assert urls.registrable("news.acme.co.uk") == "acme.co.uk"
+    assert urls.registrable("acme.com") == "acme.com"
+
+
+@pytest.mark.parametrize("feed,link,same,why", [
+    ("https://richmondfed.org/?cc_view=rss",
+     "https://www.richmondfed.org/publications/research/x", True, "own article"),
+    ("https://richmondfed.org/?cc_view=rss",
+     "https://doi.org/10.1093/jeea/jvag015", False, "a DOI link in the feed"),
+    ("https://richmondfed.org/?cc_view=rss",
+     "https://cvent.me/1WAweb", False, "a conference registration shortlink"),
+    ("https://www.eigenlabs.org/blog/rss/",
+     "https://www.eigenlabs.org/blog/introducing-yukon/", True,
+     "the feed itself moved domain, so its own posts are same-site"),
+])
+def test_feed_entry_links_are_judged_against_the_feed(feed, link, same, why):
+    """Richmond Fed's RSS carries DOI and event URLs. Stored as items they are
+    attributed to a publisher that did not write them, and they inflate the source
+    diversity section 15 reads as corroboration.
+
+    The comparison is against the feed that answered, not the registry URL: a
+    publisher that renames carries its feed with it, and the registry row is then
+    merely stale rather than wrong."""
+    assert urls.same_site(feed, link) is same, why

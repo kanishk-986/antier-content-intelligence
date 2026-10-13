@@ -8,7 +8,7 @@ import pytest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from src.ingestion import listing
+from src.ingestion import listing, urls
 from src.ingestion.listing import (
     _flag_shared_dates,
     candidate_links,
@@ -166,7 +166,7 @@ def test_offsite_redirect_detection(registry, final, same):
     """cadwalader.com/press-releases lands on hlc.com. Same-host filtering then
     measures against the wrong host, and the corpus gains items attributed to a
     source that never published them."""
-    assert listing._same_site(registry, final) is same
+    assert urls.same_site(registry, final) is same
 
 
 # --- the page that answers must be a listing ---------------------------------
