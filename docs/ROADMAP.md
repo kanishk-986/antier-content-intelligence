@@ -122,6 +122,70 @@ speculation (§2.2), 0 failed. Re-run attempted 0 — the efficiency rule holds.
 `--limit` and resume — subscription rate limits apply instead of a credit balance,
 and 137 items remain pending.
 
+## Phase 6 result
+
+All seven §15 dimensions are computed in Python from `config/scoring/weights.yaml`
+v1 — no model sees the arithmetic (CLAUDE.md rule 7). Changing a weight is a config
+edit with a version bump, not a code change.
+
+Two defects surfaced only by reading the ranked live output, not by the tests:
+relevance was scoring body noise (a support thread at 0.68 on stablecoin rails,
+because "payment" sat in a signature), and service priority was substituting for
+judgement (a Richmond Fed economics paper the model rated 0.10 scoring 0.55). Both
+fixed in the formula — title hits count double, body-only evidence halves, and
+priority now scales the judgement multiplicatively. Those items now score 0.23 and
+0.33.
+
+A narrative with unmeasured dimensions is **capped below `good`**: it can be
+monitored, never promoted on the strength of what was never measured.
+
+## Phase 7 result
+
+**The QA rejects the recency artefact, which is why it was built.** 30% of §15's
+weight is recency, and rather than quietly retuning the owner's weights, the
+blueprint's own gate was given the scoring provenance it needs to argue against a
+score. It does. From the live run, unprompted:
+
+> `trend_velocity` is 1.0 only via the `treat_as_emerging` rule, meaning there was
+> no baseline to compare against.
+
+> The cluster is not a narrative. The three items share only the surface tokens
+> "mobile/technology".
+
+> Two of the three items are not events — product and press marketing pages.
+
+First live pass over the top four: **3 REJECT, 1 RESEARCH_MORE, 0 APPROVE** at
+confidence 0.80–0.93. That is the correct reading of this corpus, not a failure of
+the gate — §19 says an analyst who approves everything has failed.
+
+It also found problems upstream that no deterministic score could express:
+single-source vendor newsrooms treated as three independent sources, and navigation
+boilerplate reaching the model in place of article text. Both are now known
+ingestion/clustering work rather than suspicions.
+
+What exists:
+
+- `prompts/ai_qa.v1.md` — §19's ten questions, versioned, with an explicit mandate
+  on question 3: reject when timing is doing the work and substance is not, listing
+  the four recency tells.
+- `src/agents/qa.py` — schema, validator, prompt assembly. The validator **rejects a
+  non-APPROVE decision that states no problem**, because §27's dashboard must show
+  "rejected topics with reasons" and §30's feedback loop consumes them. A silent
+  rejection is data loss.
+- The reviewer is handed the **dimension-by-dimension provenance** and the list of
+  unmeasured dimensions, labelled "audit this, do not trust it". Without it, QA can
+  only re-read the articles; with it, QA can name the mechanism.
+- `migrations/002_qa_review_fields.sql` — `problems`, `failed_questions` and
+  `prompt_version` as first-class columns.
+- `scripts/run_qa.py` — scores and persists before reviewing, so a review can never
+  reference an opportunity row that does not exist.
+
+**Section 20 holds.** This narrows the queue; it does not decide. `human_decision`
+is left null for a person, and nothing in the pipeline publishes.
+
+**To run it:** `python3 scripts/run_qa.py --top 5`. No key needed; `--dry-run` for
+the wiring.
+
 ## Deferred by §32
 
 - LinkedIn publishing automation — **NO**, not in scope

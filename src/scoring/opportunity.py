@@ -108,3 +108,52 @@ def score_narrative(narrative_id: str, narrative_name: str,
         unmeasured=unmeasured,
         service_rank=dims["antier_relevance"].detail.get("best_rank"),
     )
+
+
+def score_all(store, config: ScoringConfig,
+              services: dict[int, dict[str, Any]] | None = None,
+              proof_points: list[str] | None = None,
+              ) -> list[tuple[Opportunity, list[dict[str, Any]]]]:
+    """Score every stored narrative. Returns (opportunity, items) highest first."""
+    from src.narratives import momentum as mom
+
+    authority = store.source_authority()
+    intelligence = {}
+    for item in store.content_items():
+        row = store.intelligence_for(item["id"])
+        if row:
+            intelligence[item["id"]] = row
+
+    out = []
+    for narrative in store.narratives():
+        items = store.narrative_items(narrative["id"])
+        if not items:
+            continue
+        opportunity = score_narrative(
+            narrative["id"], narrative["name"], items,
+            mom.compute(items, authority), intelligence, config, services,
+            proof_points,
+        )
+        out.append((opportunity, items))
+    out.sort(key=lambda pair: -pair[0].score_0_10)
+    return out
+
+
+def persist(store, opportunities: list[Opportunity]) -> None:
+    """Replace the opportunities table with this run.
+
+    Scoring is a pure function of the corpus, so a re-run supersedes rather than
+    accumulates -- and because qa_reviews references opportunity ids, QA must review
+    rows that are actually in the table. Reviewing in-memory scores while the table
+    held an earlier run's ids was a foreign-key failure waiting to happen, and was.
+    """
+    store.conn.execute("DELETE FROM qa_reviews")
+    store.conn.execute("DELETE FROM opportunities")
+    for opportunity in opportunities:
+        row = opportunity.as_row()
+        cols = ", ".join(row)
+        marks = ", ".join(":" + k for k in row)
+        store.conn.execute(
+            f"INSERT INTO opportunities ({cols}, created_at) "
+            f"VALUES ({marks}, datetime('now'))", row)
+    store.conn.commit()

@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import sqlite3
 from datetime import datetime, timezone
 from typing import Any
@@ -20,6 +21,41 @@ MIGRATIONS = os.path.join(
 )
 
 JSON_FIELDS = {"topics", "entities", "claims", "metadata", "embedding"}
+
+_ADD_COLUMN = re.compile(
+    r"^\s*ALTER\s+TABLE\s+(\w+)\s+ADD\s+COLUMN\s+(\w+)", re.IGNORECASE
+)
+
+
+def _strip_leading_comments(statement: str) -> str:
+    """Drop leading `--` comment lines.
+
+    A statement split from a migration carries the comment block above it, so an
+    anchored match on ALTER would miss -- which is exactly how the ADD COLUMN guard
+    was silently skipped the first time.
+    """
+    lines = statement.splitlines()
+    while lines and (not lines[0].strip() or lines[0].lstrip().startswith("--")):
+        lines.pop(0)
+    return "\n".join(lines).strip()
+
+
+def _statements(script: str) -> list[str]:
+    """Split a migration into complete SQL statements.
+
+    Uses sqlite3.complete_statement so comments and string literals containing a
+    semicolon do not split a statement in half.
+    """
+    out, buf = [], ""
+    for line in script.splitlines(keepends=True):
+        buf += line
+        if sqlite3.complete_statement(buf):
+            if buf.strip():
+                out.append(buf.strip())
+            buf = ""
+    if buf.strip():
+        out.append(buf.strip())
+    return out
 
 
 def utcnow() -> str:
@@ -43,11 +79,32 @@ class SqliteStore:
         self.conn.execute("PRAGMA foreign_keys = ON")
 
     # --- lifecycle -------------------------------------------------------------
+    def _columns(self, table: str) -> set[str]:
+        return {r[1] for r in self.conn.execute(f"PRAGMA table_info({table})")}
+
     def migrate(self) -> None:
+        """Apply every migration in order. Idempotent.
+
+        Statements are split with sqlite3's own parser rather than on semicolons --
+        a naive split mangles the DDL comments in 001.
+
+        SQLite has no `ADD COLUMN IF NOT EXISTS`, so such statements are guarded by
+        checking the live schema first. Catching "duplicate column name" instead
+        would be wrong: if one ALTER in a file had already succeeded, aborting the
+        file would leave the rest permanently unapplied.
+        """
         for name in sorted(os.listdir(MIGRATIONS)):
-            if name.endswith(".sql"):
-                with open(os.path.join(MIGRATIONS, name)) as fh:
-                    self.conn.executescript(fh.read())
+            if not name.endswith(".sql"):
+                continue
+            with open(os.path.join(MIGRATIONS, name)) as fh:
+                script = fh.read()
+            for statement in _statements(script):
+                add = _ADD_COLUMN.match(_strip_leading_comments(statement))
+                if add:
+                    table, column = add.group(1), add.group(2)
+                    if column in self._columns(table):
+                        continue
+                self.conn.execute(statement)
         self.conn.commit()
 
     def close(self) -> None:
@@ -288,6 +345,26 @@ class SqliteStore:
     def source_authority(self) -> dict[str, int]:
         rows = self.conn.execute("SELECT id, authority_score FROM sources").fetchall()
         return {r["id"]: r["authority_score"] for r in rows}
+
+    # --- qa reviews ------------------------------------------------------------
+    def insert_qa_review(self, row: dict[str, Any]) -> None:
+        """Append a review. Never updates: section 33 wants an audit trail, so an AI
+        decision and a later human override both survive as separate rows."""
+        cols = ", ".join(row)
+        marks = ", ".join(":" + k for k in row)
+        self.conn.execute(
+            f"INSERT INTO qa_reviews ({cols}, created_at) "
+            f"VALUES ({marks}, datetime('now'))", row)
+        self.conn.commit()
+
+    def qa_reviews(self, opportunity_id: str | None = None) -> list[dict[str, Any]]:
+        sql = "SELECT * FROM qa_reviews"
+        params: list[Any] = []
+        if opportunity_id:
+            sql += " WHERE opportunity_id = ?"
+            params.append(opportunity_id)
+        sql += " ORDER BY id DESC"
+        return [dict(r) for r in self.conn.execute(sql, params).fetchall()]
 
     # --- audit -----------------------------------------------------------------
     def audit(self, actor: str, action: str, object_ref: str | None = None,

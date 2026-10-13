@@ -71,6 +71,52 @@ Phase 0: repository and documentation (§39 Phase 0, §44.24–27).
   genuine same-day batch. Changed to flag `date_confidence: low` and keep the value —
   the §14 momentum engine needs the date, and annotation preserves the choice.
 
+### Added — Phase 7 (adversarial AI QA, §19)
+- `prompts/ai_qa.v1.md` — §19's ten questions, versioned. Carries an explicit
+  mandate on question 3: reject when timing is doing the work and substance is not,
+  naming the four tells (single-source clusters, novelty≈1.0 against low relevance,
+  velocity from `treat_as_emerging`, items that are not events).
+- `src/agents/qa.py` — `QA_SCHEMA`, `validate()`, prompt assembly, `as_row()`. The
+  reviewer receives the per-dimension scoring provenance and the unmeasured list,
+  labelled "audit this, do not trust it".
+- `migrations/002_qa_review_fields.sql` — `problems`, `failed_questions`,
+  `prompt_version` as first-class columns on `qa_reviews`.
+- `scripts/run_qa.py` — `--top N`, `--dry-run`, and a `StubQA` for wiring tests.
+- `tests/test_qa.py` — 25 tests. 166 pass in total.
+
+### Resolved — the Phase 6 open decision
+The recency artefact is handled by QA, not by reweighting (owner's choice). It works:
+first live pass over the top four gave **3 REJECT, 1 RESEARCH_MORE, 0 APPROVE** at
+confidence 0.80–0.93, with the model citing `treat_as_emerging` by name. §15's
+weights are unchanged.
+
+### Fixed during 7
+- **A directive sat above `## SYSTEM` in `prompts/ai_qa.v1.md`**, so `load_prompt()`
+  discarded it and the model never received the "you judge, you do not score" rule.
+  Caught by a test, not by reading. A parametrised regression guard now asserts no
+  prompt file strands a directive in its preamble — which immediately found a dead
+  duplicate of the same rule in `prompts/intelligence.v1.md` and removed it.
+- `validate()` rejects a non-APPROVE decision with an empty `problems` list. A
+  rejection without a reason is invisible to §27's dashboard and useless to §30's
+  feedback loop.
+- Scoring ran twice with fresh UUIDs while `opportunities` still held the earlier
+  ids, so inserting a review raised `FOREIGN KEY constraint failed`. `score_all()`
+  and `persist()` now live in `src/scoring/opportunity.py` and both `run_scoring.py`
+  and `run_qa.py` call them; QA persists before it reviews.
+- The migration runner split DDL on bare `;`, which mangled statements containing
+  one. Replaced with `sqlite3.complete_statement`. Its `ADD COLUMN` idempotency
+  guard then missed every statement carrying a leading `--` comment; fixed with
+  `_strip_leading_comments()`. Verified: a fresh database migrates three times
+  cleanly, an existing one upgrades with data intact.
+- Replaced an `__problems__:` prefix smuggled into `risk_flags` with the real
+  columns in migration 002.
+
+### Found by QA, not yet fixed
+Both are upstream defects the deterministic score cannot express:
+- Several clusters count one vendor's own newsroom pages as independent sources.
+  Source diversity needs to key on publisher, not URL.
+- Navigation boilerplate reaches the model in place of article text on some pages.
+
 ### Open decision
 - **Playwright for client-rendered sources (Phase 3c).** DTCC and Clearstream serve a
   navigation-only shell. Reported `js_rendered` rather than silently empty. §8

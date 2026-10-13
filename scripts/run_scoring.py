@@ -18,9 +18,8 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import yaml
 
 from src.database.sqlite_store import SqliteStore
-from src.narratives import momentum as mom
 from src.scoring import weights as wcfg
-from src.scoring.opportunity import score_narrative
+from src.scoring.opportunity import persist, score_all
 
 BRAND = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
                      "config", "brand", "antier.yaml")
@@ -55,24 +54,12 @@ def main():
         store.close()
         return 1
 
-    authority = store.source_authority()
     intel = {}
     for item in store.content_items():
         row = store.intelligence_for(item["id"])
         if row:
             intel[item["id"]] = row
-
-    opportunities = []
-    for narrative in narratives:
-        items = store.narrative_items(narrative["id"])
-        if not items:
-            continue
-        m = mom.compute(items, authority)
-        opportunities.append(
-            score_narrative(narrative["id"], narrative["name"], items, m, intel,
-                            config, services, proof_points)
-        )
-    opportunities.sort(key=lambda o: -o.score_0_10)
+    opportunities = [o for o, _ in score_all(store, config, services, proof_points)]
 
     print("%d narrative(s) scored | weights v%d | %d/%d items have intelligence\n"
           % (len(opportunities), config.version, len(intel),
@@ -96,15 +83,7 @@ def main():
           % config.saturation.get("competitor_axis"))
 
     if not args.dry_run:
-        store.conn.execute("DELETE FROM opportunities")
-        for o in opportunities:
-            row = o.as_row()
-            cols = ", ".join(row)
-            marks = ", ".join(":" + k for k in row)
-            store.conn.execute(
-                f"INSERT INTO opportunities ({cols}, created_at) "
-                f"VALUES ({marks}, datetime('now'))", row)
-        store.conn.commit()
+        persist(store, opportunities)
         store.audit("system", "opportunities_scored",
                     detail="%d scored, weights v%d" % (len(opportunities),
                                                        config.version))

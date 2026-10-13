@@ -71,3 +71,36 @@ opportunities, so it is a feature to surface, not noise to average away.
 
 Every research dossier carries an explicit "claims requiring verification" list
 (§22.13). An unverifiable load-bearing claim blocks the dossier.
+
+## How §19 is implemented
+
+The reviewer is handed the **per-dimension scoring provenance** — each dimension's
+value, the reason string behind it, and the list of dimensions that could not be
+measured — under the heading "audit this, do not trust it". This matters: without
+the provenance a reviewer can only re-read the articles and form a second opinion,
+which is not an audit. With it, the reviewer can name the mechanism that produced a
+score. In the first live run it did exactly that, citing the `treat_as_emerging`
+rule by name.
+
+**A non-APPROVE decision must state a problem.** The validator rejects an empty
+`problems` list on REJECT or RESEARCH_MORE. A rejection with no reason cannot appear
+in §27's "rejected topics with reasons" and carries nothing into §30's feedback
+loop, so it is treated as malformed output rather than a judgement.
+
+**Question 3 carries an explicit mandate.** 30% of the §15 weighting is recency
+(velocity 20%, novelty 10%), so a fresh item can rank highly on timing alone. Rather
+than retune the owner's weights, the prompt instructs rejection on question 3 when
+timing is doing the work and substance is not, listing the tells: a cluster of one
+or two items from a single source; novelty near 1.0 against low Antier relevance;
+velocity produced by the `treat_as_emerging` zero-baseline rule, which means there
+was no baseline rather than that attention is rising; and items that are not events
+at all — job postings, conference listings, product pages, draft specifications,
+support threads.
+
+**The score is evidence, not a verdict.** The prompt says so, and says the output
+carries no number except `confidence`. §15 arithmetic stays in Python (CLAUDE.md
+rule 7); the reviewer argues about the inputs, never the total.
+
+**`human_decision` is written by a person, never by the model.** `as_row()` leaves
+it null and records `prompt_version` as `ai_qa.v1@<model>`, so a later change of
+prompt or model is visible in the audit trail.

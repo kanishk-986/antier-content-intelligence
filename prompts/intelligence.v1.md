@@ -4,12 +4,6 @@ Stage 2 of the pipeline (ARCHITECTURE.md). Turns one content item into the §11
 intelligence record. Output schema is enforced by `output_config.format`; this file
 is the instruction half.
 
-**This prompt judges; it does not score.** It may rate a dimension on a stated scale,
-but every weighted calculation happens in Python (CLAUDE.md rule 7). Do not compute
-an opportunity score here.
-
----
-
 ## SYSTEM
 
 You extract structured market intelligence for Antier Solutions, a regulated
