@@ -37,15 +37,20 @@ def main():
         sources = sources[: args.limit]
 
     print(f"ingesting {len(sources)} source(s) -> {args.db}\n")
+    width = max(len(s["name"]) for s in sources)
+
+    def progress(row: dict, done: int, total: int) -> None:
+        # A full run fetches bodies from a hundred sites and takes tens of minutes.
+        # Printing only at the end makes a slow run look like a hung one.
+        print("  [%3d/%d] %-*s  %-8s %-17s new=%-3d dup=%-3d %s" % (
+            done, total, width, row["source_name"][:width], row.get("via", "-"),
+            row["status"], row["new"], row["duplicates"],
+            (row["detail"] or "")[:46]), flush=True)
+
     report = ingest(store, sources, max_items=args.max_items,
                     fetch_bodies=not args.no_bodies,
-                    use_listing=not args.no_listing)
-
-    width = max(len(r["source_name"]) for r in report.per_source)
-    for row in report.per_source:
-        print("  %-*s  %-8s %-13s new=%-3d dup=%-3d %s" % (
-            width, row["source_name"][:width], row.get("via", "-"), row["status"],
-            row["new"], row["duplicates"], row["detail"][:52]))
+                    use_listing=not args.no_listing,
+                    on_source=progress)
 
     # SOURCE_POLICY.md: a source that yields nothing is a coverage fact and has to
     # survive the run. Without this, "why did 85 of 105 sources yield nothing" can

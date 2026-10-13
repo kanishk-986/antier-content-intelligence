@@ -90,3 +90,44 @@ def test_every_source_appears_in_the_report():
     store.close()
     os.unlink(db)
     assert len(report.per_source) == len(sources)
+
+
+# --- progress reporting -------------------------------------------------------
+
+def _blocked(sid, name):
+    return {"id": sid, "name": name, "url": f"https://{sid}.test",
+            "source_type": "regulator", "authority_score": 9, "topics": "",
+            "active": True, "notes": "BLOCKED: measured 403"}
+
+
+def _tmp_store(sources):
+    fd, db = tempfile.mkstemp(suffix=".db")
+    os.close(fd)
+    os.unlink(db)
+    store = SqliteStore(db)
+    store.migrate()
+    sync_registry(store, sources)
+    return store, db
+
+
+def test_each_source_is_reported_as_it_completes():
+    """A full run fetches bodies from a hundred sites and takes tens of minutes.
+    Reporting only at the end makes a slow run indistinguishable from a hung one."""
+    sources = [_blocked("s1", "Alpha"), _blocked("s2", "Beta")]
+    store, db = _tmp_store(sources)
+    seen = []
+    ingest(store, sources, use_listing=False,
+           on_source=lambda row, done, total: seen.append(
+               (row["source_name"], done, total)))
+    store.close()
+    os.unlink(db)
+    assert seen == [("Alpha", 1, 2), ("Beta", 2, 2)]
+
+
+def test_ingest_works_without_a_progress_callback():
+    sources = [_blocked("s1", "Alpha")]
+    store, db = _tmp_store(sources)
+    report = ingest(store, sources, use_listing=False)
+    store.close()
+    os.unlink(db)
+    assert len(report.per_source) == 1

@@ -13,7 +13,9 @@ import csv
 import json
 import os
 import uuid
+from collections.abc import Callable
 from dataclasses import dataclass, field
+from typing import Any
 
 from src.database.sqlite_store import SqliteStore, utcnow
 from src.ingestion.fetcher import fetch_source
@@ -65,12 +67,18 @@ def sync_registry(store: SqliteStore, sources: list[dict]) -> None:
 
 
 def ingest(store: SqliteStore, sources: list[dict], max_items: int = 20,
-           fetch_bodies: bool = True, use_listing: bool = True) -> IngestionReport:
+           fetch_bodies: bool = True, use_listing: bool = True,
+           on_source: Callable[[dict[str, Any], int, int], None] | None = None,
+           ) -> IngestionReport:
     """Feed first, listing page second.
 
     Phase 3b: six of the twelve highest-authority sources expose no feed, so a
     feed-only pipeline silently excludes the primary-announcement layer. When feed
     discovery reports no_feed, the static listing extractor is tried before giving up.
+
+    `on_source` is called with each source's result as it completes. A full run
+    fetches article bodies from a hundred sites and takes tens of minutes; reporting
+    only at the end makes a slow run indistinguishable from a hung one.
     """
     report = IngestionReport()
     rules = load_rules() if use_listing else {}
@@ -84,6 +92,8 @@ def ingest(store: SqliteStore, sources: list[dict], max_items: int = 20,
                 "status": "blocked_known", "new": 0, "duplicates": 0,
                 "detail": notes.split(";")[0].strip(), "via": "-",
             })
+            if on_source:
+                on_source(report.per_source[-1], len(report.per_source), len(sources))
             continue
 
         report.attempted += 1
@@ -122,6 +132,8 @@ def ingest(store: SqliteStore, sources: list[dict], max_items: int = 20,
             "detail": outcome.detail, "http_status": outcome.http_status,
             "via": via,
         })
+        if on_source:
+            on_source(report.per_source[-1], len(report.per_source), len(sources))
 
     store.audit(
         "system", "ingestion_run",
