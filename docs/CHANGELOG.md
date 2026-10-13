@@ -71,6 +71,29 @@ Phase 0: repository and documentation (§39 Phase 0, §44.24–27).
   genuine same-day batch. Changed to flag `date_confidence: low` and keep the value —
   the §14 momentum engine needs the date, and annotation preserves the choice.
 
+### Changed — the narratives run shows both credibility figures
+It printed `auth=` only, which is §14's raw `authority_coverage` and reads 1.0 on a
+cluster of nothing but vendor press releases. §15 scores that cluster 0.35. The run
+now prints `auth=` and `ind=` side by side, plus the publisher count, how many
+sources are primary parties, and how many items are not yet published. Only the
+second figure reaches the score, and a reader of the output should not have to know
+that.
+
+### Added — the ingestion status vocabulary is enforced
+`src/ingestion/status.py` holds every status the pipeline can emit and who can act
+on it. `classify()` raises on an unknown one, and a test scans the ingestion modules
+for status literals and fails if any is unclassified — the scan finds ten and the
+classification covers exactly ten. Three statuses were added during this work and
+each was silently given no guidance by the health report's hardcoded sets.
+
+### Added — tests for the purge
+`scripts/audit_corpus.py` deletes from the live database and had none, having
+already had three bugs. `tests/test_audit_corpus.py` covers classification (the
+renamed publisher that must not be flagged, the `/resources/` article that must not
+be condemned for its path, absent provenance that must be reported rather than
+deleted, five shapes of unreadable metadata) and the full purge cascade, including
+the `fetch_state` row — the invariant whose violation silently excluded 99 URLs.
+
 ### Fixed — a publisher's refusal was reported as our bug
 McKinsey completes the TLS handshake and then drops the connection. That arrived as
 `error`, which puts it on the health report's "fixable here" list permanently and

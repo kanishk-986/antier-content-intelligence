@@ -66,12 +66,23 @@ def main():
         if narrative.size < args.min_size:
             continue
         shown += 1
-        print("  [%2d items] %-9s vel=%-5s auth=%-5s nov=%-5s emrg=%-5s"
+        # Both figures, because they answer different questions and only the
+        # second reaches section 15. Showing authority alone reads as 1.0 on a
+        # cluster of nothing but vendor press releases.
+        print("  [%2d items] %-9s vel=%-5s auth=%-5s ind=%-5s nov=%-5s emrg=%-5s"
               % (narrative.size, m.status, m.velocity, m.authority_coverage,
-                 m.novelty, m.emergence))
+                 m.independent_authority_coverage, m.novelty, m.emergence))
         print("       terms: %s" % ", ".join(shared_terms(narrative)[:7]))
-        print("       srcs : %d distinct | dated %d, undated %d"
-              % (len(narrative.source_ids()), m.dated_items, m.undated_items))
+        detail = ("       srcs : %d distinct, %d publisher(s) | dated %d, undated %d"
+                  % (len(narrative.source_ids()), m.distinct_publishers,
+                     m.dated_items, m.undated_items))
+        if m.self_reported_sources:
+            detail += " | %d primary part%s" % (
+                m.self_reported_sources,
+                "y" if m.self_reported_sources == 1 else "ies")
+        if m.forthcoming_items:
+            detail += " | %d not yet published" % m.forthcoming_items
+        print(detail)
         for item in narrative.items[:2]:
             print("       - %s" % (item.get("title") or "(untitled)")[:74])
         print()
