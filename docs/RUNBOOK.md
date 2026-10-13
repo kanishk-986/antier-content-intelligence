@@ -120,16 +120,50 @@ is reported and the cycle continues.
 
 ### Setting up delivery
 
-Google Workspace needs an **app password**, not the account password, once 2FA is
-on. Create one at <https://myaccount.google.com/apppasswords>, then:
+Two routes. The brief also writes `outputs/brief-YYYY-MM-DD.html` either way, so
+`--no-send` gives you the intelligence with no credentials at all.
 
+**SMTP with an app password** — simplest, when it is available:
+
+    # https://myaccount.google.com/apppasswords  (needs 2-Step Verification on)
     cp .env.example .env
     # edit .env: SMTP_USER and SMTP_PASSWORD
     chmod 600 .env
 
-Never pass the password on a command line — it lands in shell history and in `ps`.
-`scripts/install-schedule.sh` sources `.env` inside a wrapper so it never reaches
-the launchd plist, which is world-readable.
+**Gmail API with OAuth2** — when the app-passwords page says *"the setting that you
+are looking for is not available for your account"*. That means 2-Step Verification
+is off, or an administrator disabled app passwords for the organisation; the second
+cannot be fixed from the account.
+
+    # create a Desktop-app OAuth client — steps at the top of the script
+    # put GMAIL_CLIENT_ID and GMAIL_CLIENT_SECRET in .env, then:
+    python3 scripts/gmail_authorize.py
+
+A browser opens, you approve, and the script writes `GMAIL_REFRESH_TOKEN` into
+`.env` itself. The token is never printed, so it is never in scrollback.
+
+Three things that matter about this path:
+
+- **The scope is `gmail.send`.** It can send as you and cannot read one message. A
+  leaked token cannot open the inbox, which a full `mail.google.com` scope would.
+- **PKCE.** An installed app cannot keep a client secret secret, so the
+  authorization code is bound to a one-time verifier. An intercepted code is useless.
+- **`access_type=offline` *and* `prompt=consent`.** Without both, Google omits the
+  refresh token on a repeat authorization — setup appears to succeed and leaves
+  nothing to refresh with. A test pins this.
+
+`MAIL_BACKEND` chooses (`gmail` or `smtp`); with a refresh token present the Gmail
+API is the default, because an account that needed OAuth got there by having app
+passwords disabled and falling back to SMTP would just fail again.
+
+Never pass a token or password on a command line — it lands in shell history and in
+`ps`. `scripts/install-schedule.sh` sources `.env` inside a wrapper so nothing
+reaches the launchd plist, which is world-readable.
+
+**If your administrator restricts third-party apps**, the OAuth client itself needs
+allow-listing in the Admin console. That is the same wall app passwords hit, and it
+is the one thing this route cannot work around — ask your admin, or run
+`--no-send` and read the HTML file.
 
 ### Scheduling it
 

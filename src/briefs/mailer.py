@@ -19,6 +19,8 @@ import smtplib
 from dataclasses import dataclass
 from email.message import EmailMessage
 
+from src.briefs import gmail_oauth
+
 REQUIRED = ("SMTP_HOST", "SMTP_PORT", "SMTP_USER", "SMTP_PASSWORD")
 
 
@@ -121,6 +123,19 @@ def build_message(subject: str, markdown: str, sender: str,
     return message
 
 
+def _backend(env: dict[str, str]) -> str:
+    """`gmail` or `smtp`.
+
+    Defaults to the Gmail API when a refresh token is present, because a Workspace
+    account that needed OAuth got there by having app passwords disabled -- falling
+    back to SMTP would just fail again, more confusingly.
+    """
+    chosen = (env.get("MAIL_BACKEND") or "").strip().lower()
+    if chosen in ("gmail", "smtp"):
+        return chosen
+    return "gmail" if (env.get("GMAIL_REFRESH_TOKEN") or "").strip() else "smtp"
+
+
 def send(subject: str, markdown: str, to: list[str],
          env: dict[str, str] | None = None,
          transport=None) -> MailResult:
@@ -128,6 +143,19 @@ def send(subject: str, markdown: str, to: list[str],
     recipients = [address for address in to if address and "@" in address]
     if not recipients:
         return MailResult(False, "no valid recipient address configured", [])
+
+    env = env if env is not None else dict(os.environ)
+
+    if transport is None and _backend(env) == "gmail":
+        sender = (env.get("SMTP_USER") or env.get("GMAIL_SENDER") or "me").strip()
+        message = build_message(subject, markdown, sender, recipients)
+        try:
+            message_id = gmail_oauth.send_message(message, env)
+        except Exception as exc:       # reported, never raised, never with a token
+            return MailResult(False, gmail_oauth.redact(
+                f"{type(exc).__name__}: {exc}"), recipients)
+        return MailResult(True, f"sent via Gmail API ({message_id}) to "
+                                f"{', '.join(recipients)}", recipients)
 
     settings = config_from_env(env)
     message = build_message(subject, markdown, settings["SMTP_USER"], recipients)

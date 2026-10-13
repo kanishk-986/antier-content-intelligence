@@ -127,6 +127,33 @@ open. `editorial_segments` in `listing_rules.yaml` now requires the page that
 it fetches one deliberately absurd path and discards any candidate offering the same
 links, since a genuine listing does not match a 404.
 
+### Added — Gmail API delivery over OAuth2
+Google Workspace returns *"the setting that you are looking for is not available for
+your account"* on the app-passwords page when an administrator has disabled them,
+which cannot be fixed from the account, so SMTP with a password is simply
+unavailable. `src/briefs/gmail_oauth.py` sends through the Gmail API instead, and
+`scripts/gmail_authorize.py` runs the one-time consent.
+
+- **Send-only scope** (`gmail.send`): it can send as the user and cannot read a
+  message. A leaked token cannot open the inbox.
+- **PKCE**: an installed app cannot keep a client secret secret, so the code is
+  bound to a one-time verifier. An intercepted code is useless.
+- **`access_type=offline` plus `prompt=consent`**: without both, Google omits the
+  refresh token on a repeat authorization and setup appears to succeed while leaving
+  nothing to refresh with. Pinned by a test.
+- The authorize script **writes the token into `.env` itself** (chmod 600,
+  preserving comments and replacing rather than duplicating a rotated key) so it is
+  never printed, never in scrollback and never in shell history.
+- Every failure path runs through `redact()`, because Google's error responses echo
+  request fields and an httpx exception carries the response body.
+- `MAIL_BACKEND` selects the backend; a stored refresh token makes Gmail the
+  default, since an account that needed OAuth would only fail SMTP again.
+
+### Added — the brief no longer depends on mail working
+`run_daily.py` writes `brief-YYYY-MM-DD.html` beside the Markdown and takes
+`--no-send` and `--open`. The 10:00 schedule produces the file whether or not
+delivery is configured.
+
 ### Added — the daily brief, routed per persona and mailed at 10:00 (§28, §4)
 - `src/briefs/daily.py` — builds yesterday's brief from scored opportunities, one
   section per §4 persona. Every section appears including empty ones, and a
