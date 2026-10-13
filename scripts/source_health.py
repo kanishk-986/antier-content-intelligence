@@ -27,7 +27,11 @@ from src.narratives.momentum import load_independence
 # edit, and `error` is a bug or a transient.
 ACTIONABLE = {"no_feed", "no_listing", "error"}
 DEFERRED = {"js_rendered"}
-PUBLISHER_CHOICE = {"blocked", "blocked_known"}
+PUBLISHER_CHOICE = {"blocked", "blocked_known", "blocked_transport"}
+# `offsite_redirect` and `not_a_listing` are registry problems: the stored URL does
+# not lead to that publisher's editorial index, so the row needs correcting or
+# pruning. Neither is fixed by a listing rule.
+REGISTRY_FIX = {"offsite_redirect", "not_a_listing"}
 
 
 def main() -> int:
@@ -89,6 +93,8 @@ def main() -> int:
             note = "needs a headless browser (Phase 3c, deferred by section 32)"
         elif status in PUBLISHER_CHOICE:
             note = "the publisher's choice; do not retry blindly"
+        elif status in REGISTRY_FIX:
+            note = "the registry URL is wrong — correct it or prune the row"
         else:
             note = ""
         ind = sum(1 for r in group if r["source_type"] not in party)

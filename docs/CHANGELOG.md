@@ -71,6 +71,25 @@ Phase 0: repository and documentation (§39 Phase 0, §44.24–27).
   genuine same-day batch. Changed to flag `date_confidence: low` and keep the value —
   the §14 momentum engine needs the date, and annotation preserves the choice.
 
+### Fixed — a publisher's refusal was reported as our bug
+McKinsey completes the TLS handshake and then drops the connection. That arrived as
+`error`, which puts it on the health report's "fixable here" list permanently and
+draws attention that cannot fix it. `_classify_transport()` now separates a refusal
+(server disconnected, connection reset, connection refused) from a genuine fault
+(timeout, certificate failure) and reports `blocked_transport`, which
+`source_health.py` groups with the other publisher decisions.
+
+Two statuses introduced by the redirect work — `offsite_redirect` and
+`not_a_listing` — are also now reported as registry problems rather than ingestion
+problems, because the stored URL does not lead to that publisher's editorial index
+and no listing rule will change that.
+
+### Source registry
+`mckinsey.com` → `www.mckinsey.com`. The apex presents a certificate that does not
+verify while `www` handshakes cleanly on TLSv1.3, so the row had been failing for a
+reason that had nothing to do with McKinsey's content. With that corrected the real
+status shows: a transport-level block.
+
 ### Fixed — a redirect could land on a page that is not a listing at all
 `blackrock.com/corporate/newsroom` answers at `/corporate/home`. The section is then
 `corporate`, which matches every path on the site, so the extractor pulled in

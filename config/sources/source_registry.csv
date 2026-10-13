@@ -83,7 +83,7 @@ src-081,IoT Analytics,https://iot-analytics.com/insights/,research_firm,curated,
 src-082,Kantar,https://kantar.com,research_firm,generic,8,weekly,global,"Behavioral data, brand tracking in finance",,true,,GATED; Enterprise Sub
 src-083,Kearney,https://kearney.com,research_firm,generic,8,weekly,global,"Global payments, digital asset integration for banks",,true,,Bespoke Consulting
 src-084,KPMG,https://kpmg.com,research_firm,generic,8,weekly,global,"Digital asset operational risk, tax, GENIUS Act",,true,,Bespoke Consulting
-src-085,McKinsey & Company,https://mckinsey.com,research_firm,generic,8,weekly,global,"Next-gen payments, stablecoin adoption frameworks",,true,,Bespoke Consulting
+src-085,McKinsey & Company,https://www.mckinsey.com,research_firm,generic,8,weekly,global,"Next-gen payments, stablecoin adoption frameworks",,true,,Bespoke Consulting
 src-086,Messari,https://messari.io,data_platform,generic,8,weekly,global,Crypto-native institutional research & governance,,true,,~$1200/yr (Pro)
 src-087,MIT Digital Currency Initiative,https://dci.mit.edu,research_firm,generic,8,weekly,global,Open-source R&D on CBDCs and network security,,true,,Free / Open Source
 src-088,NielsenIQ,https://nielseniq.com,research_firm,generic,8,weekly,global,"Consumer adoption metrics, retail digital payments",,true,,GATED; Enterprise Sub

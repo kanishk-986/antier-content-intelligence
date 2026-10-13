@@ -83,6 +83,27 @@ def rules_for(host: str, rules: dict[str, Any]) -> dict[str, Any]:
     return {}
 
 
+# A server that completes a TLS handshake and then drops the connection, or resets
+# it mid-response, is refusing us. That is the publisher's decision and belongs with
+# the other blocks -- reported as `error` it sits on the health report's "fixable
+# here" list forever, drawing attention that cannot fix it. McKinsey does this.
+_REFUSAL_TELLS = (
+    "server disconnected",
+    "connection reset",
+    "connection refused",
+    "remoteprotocolerror",
+    "incomplete read",
+)
+
+
+def _classify_transport(exc: Exception) -> tuple[str, str]:
+    text = f"{type(exc).__name__}: {exc}".strip()
+    low = text.lower()
+    if any(tell in low for tell in _REFUSAL_TELLS):
+        return "blocked_transport", text[:160]
+    return "error", text[:160]
+
+
 def _registrable(host: str) -> str:
     """Enough of a host to tell one organisation from another. Not a public-suffix
     implementation: it keeps the last three labels for a two-part TLD like .co.uk
@@ -221,7 +242,7 @@ def extract_listing(source: dict[str, Any], seen: set[str],
             try:
                 resp = client.get(listing_url)
             except httpx.HTTPError as exc:
-                out.status, out.detail = "error", str(exc)[:160]
+                out.status, out.detail = _classify_transport(exc)
                 continue
             if resp.status_code in (401, 403, 429):
                 out.status = "blocked"

@@ -3,6 +3,7 @@
 import os
 import sys
 
+import httpx
 import pytest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -197,3 +198,25 @@ def test_the_real_config_carries_stems():
     """The guard is only load-bearing if the config is populated."""
     assert len(STEMS) >= 10
     assert "news" in STEMS and "thinking" in STEMS
+
+
+# --- a refusal is not our bug ------------------------------------------------
+
+@pytest.mark.parametrize("exc,status", [
+    (httpx.RemoteProtocolError("Server disconnected without sending a response."),
+     "blocked_transport"),
+    (httpx.ReadError("Connection reset by peer"), "blocked_transport"),
+    (httpx.ConnectError("Connection refused"), "blocked_transport"),
+    (httpx.ConnectError("[SSL: CERTIFICATE_VERIFY_FAILED] verify failed"), "error"),
+    (httpx.ConnectTimeout("timed out"), "error"),
+])
+def test_transport_refusal_is_not_reported_as_our_error(exc, status):
+    """A server that completes a handshake then drops the connection is refusing us.
+    Reported as `error` it sits on the health report's "fixable here" list forever.
+    McKinsey does exactly this."""
+    assert listing._classify_transport(exc)[0] == status
+
+
+def test_the_detail_survives_classification():
+    _, detail = listing._classify_transport(httpx.ReadError("Connection reset by peer"))
+    assert "Connection reset by peer" in detail
