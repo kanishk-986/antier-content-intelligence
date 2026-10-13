@@ -11,7 +11,7 @@ from §40.
 | 3 | Ingestion + DB | Reliable content pipeline | **done** (feed-based) |
 | 3b | HTML listing extractor | Reach the no-feed primary sources | **done** (static) |
 | 3c | Browser rendering (Playwright) | Reach client-rendered sources | open decision |
-| 4 | Intelligence | Structured market signals | **built**, awaiting API key |
+| 4 | Intelligence | Structured market signals | **done** — runs on the subscription |
 | 5 | Narratives | Market themes instead of article lists | **done** (TF-IDF) |
 | 6 | Scoring | Antier-specific opportunity ranking | |
 | 7 | QA | High-confidence editorial queue | |
@@ -89,9 +89,15 @@ two snapshots. One run cannot measure it, so it is not interpolated.
 
 ## Phase 4 result
 
-Extraction is built, wired and tested. It cannot run: `ANTHROPIC_API_KEY` is not set
-and there is no credential on the machine (`~/.claude.json` is Claude Code's own auth,
-not something a production service should borrow).
+**It runs, with no API credits.** The owner cannot supply a metered key, so a second
+`LLM` implementation routes the model stages through the authenticated `claude` CLI
+and the existing Claude.ai subscription. The injected-client design made this a
+drop-in; nothing downstream changed. `--backend api` remains for a key-based run.
+
+Verified on live data: 11 items extracted, 0 failures. Importance discriminates
+correctly on a corpus that contains noise — a **BIS job posting scored 0.05**, ERC
+draft threads 0.05–0.25, Richmond Fed academic economics 0.10. The §11 instruction
+that importance is "about this business, not the internet" is doing real work.
 
 What exists:
 
@@ -112,9 +118,9 @@ What exists:
 Dry run over the live corpus: 25 attempted, 23 stored, 2 filtered as price
 speculation (§2.2), 0 failed. Re-run attempted 0 — the efficiency rule holds.
 
-**To run it for real:** put the key in `.env`, then
-`python3 scripts/run_intelligence.py --limit 20`. Start with a small `--limit`; the
-full pending corpus is 125 items.
+**To run it:** `python3 scripts/run_intelligence.py --limit 20`. No key needed. Use
+`--limit` and resume — subscription rate limits apply instead of a credit balance,
+and 137 items remain pending.
 
 ## Deferred by §32
 

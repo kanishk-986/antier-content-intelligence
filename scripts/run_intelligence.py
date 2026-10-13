@@ -26,7 +26,11 @@ def main():
     ap.add_argument("--db", default="data/aci.db")
     ap.add_argument("--limit", type=int)
     ap.add_argument("--dry-run", action="store_true",
-                    help="use the deterministic stub; no API call")
+                    help="use the deterministic stub; no model call at all")
+    ap.add_argument("--backend", choices=["cli", "api"], default="cli",
+                    help="cli routes through the `claude` CLI and the owner's "
+                         "subscription (default); api uses ANTHROPIC_API_KEY and "
+                         "bills credits")
     ap.add_argument("--estimate", action="store_true",
                     help="report how many items and roughly how many input tokens")
     ap.add_argument("--keep-speculation", action="store_true",
@@ -48,20 +52,31 @@ def main():
 
     if args.dry_run:
         llm = StubLLM()
-        print("DRY RUN — deterministic stub, no API call. Proves wiring, not judgement.\n")
+        print("DRY RUN — deterministic stub, no model call. Proves wiring, not judgement.\n")
+    elif args.backend == "cli":
+        from src.intelligence.claude_cli import ClaudeCliLLM, ClaudeCliNotAvailable
+        try:
+            llm = ClaudeCliLLM()
+        except ClaudeCliNotAvailable as exc:
+            print(str(exc), file=sys.stderr)
+            store.close()
+            return 1
+        print("extracting via the `claude` CLI — subscription, not API credits.")
+        print("Rate limits apply rather than a credit balance; use --limit and "
+              "resume.\n")
     else:
         if not os.environ.get("ANTHROPIC_API_KEY"):
-            print("ANTHROPIC_API_KEY is not set.\n", file=sys.stderr)
-            print("Put it in .env (never in a shell command, never committed):",
+            print("ANTHROPIC_API_KEY is not set, and --backend api needs it.\n",
                   file=sys.stderr)
+            print("Either use the default --backend cli (your subscription), or put "
+                  "a key in .env:", file=sys.stderr)
             print("  cp .env.example .env && chmod 600 .env", file=sys.stderr)
             print("  export $(grep -v '^#' .env | xargs)", file=sys.stderr)
-            print("\nOr try the wiring first:  --dry-run", file=sys.stderr)
             store.close()
             return 1
         from src.intelligence.extractor import AnthropicLLM
         llm = AnthropicLLM()
-        print("extracting with %s\n" % llm.model)
+        print("extracting with %s via the API — this bills credits.\n" % llm.model)
 
     report = pipeline.run(store, llm, limit=args.limit,
                           skip_speculation=not args.keep_speculation)

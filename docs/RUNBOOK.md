@@ -9,7 +9,8 @@
 | `gh` CLI | ⚠️ installed (2.97.0) but **not logged in** |
 | Docker | ❌ not installed |
 | PostgreSQL / pgvector | ❌ not installed — SQLite used for the vertical slice |
-| `ANTHROPIC_API_KEY` | ❌ not set |
+| `claude` CLI auth | ✅ authenticated against a Claude.ai subscription |
+| `ANTHROPIC_API_KEY` | ❌ not set — **and not required**, see below |
 
 ## Quality gate
 
@@ -33,6 +34,34 @@ git add .github/workflows/ci.yml
 git commit -m "Add CI: lint, tests, secret scan"
 git push
 ```
+
+## Running the LLM stages without API credits
+
+The direct `anthropic` SDK bills metered API credits. The `claude` CLI authenticates
+against a Claude.ai subscription, so routing the model stages through it uses the
+existing plan instead. This is the **default** backend:
+
+```bash
+python3 scripts/run_intelligence.py --limit 20            # subscription (default)
+python3 scripts/run_intelligence.py --limit 20 --backend api   # bills credits
+python3 scripts/run_intelligence.py --dry-run             # no model call at all
+```
+
+Both paths implement the same `LLM` Protocol in `src/intelligence/extractor.py`, so
+nothing downstream knows or cares which ran.
+
+**What you give up, and what it costs you instead:**
+
+| | CLI / subscription | API / credits |
+|---|---|---|
+| Billing | existing plan | metered |
+| Strict schema | prompt-requested, validated after | `output_config.format`, enforced |
+| Limits | subscription rate limits | credit balance |
+| Speed | process spawn per item | faster |
+
+The schema trade-off is safe only because `schema.validate` **rejects** rather than
+clamps — a malformed record fails loudly and is recorded as a failure rather than
+stored. Run with `--limit` and resume; a long run can be throttled.
 
 ## Setup
 

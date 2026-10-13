@@ -111,9 +111,16 @@ Phase 0: repository and documentation (§39 Phase 0, §44.24–27).
 - A truncation test counted `"x"` characters, but the user template contains one
   itself. Replaced with a substring assertion — the test was brittle, not the code.
 
-### Known limitation
-- **Cannot run.** No `ANTHROPIC_API_KEY` and no credential on the machine. Everything
-  except the model call is verified by the dry run.
+### Added — subscription backend
+- `src/intelligence/claude_cli.py` — `LLM` implementation over the authenticated
+  `claude` CLI, so the model stages run on a Claude.ai subscription rather than
+  metered API credits. Now the **default**; `--backend api` selects the key path.
+- 13 further tests (115 total).
+
+The CLI exposes no `output_config.format`, so the schema is requested in the prompt
+and enforced afterwards by `schema.validate`. That is only safe because the validator
+already rejects rather than clamps: a malformed record fails loudly and is recorded as
+a failure instead of stored.
 
 ### Decisions recorded
 - **SQLite before PostgreSQL** for the vertical slice, behind `src/database/store.py`.
