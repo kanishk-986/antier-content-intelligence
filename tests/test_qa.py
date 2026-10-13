@@ -250,3 +250,17 @@ def test_prompt_says_authority_is_not_corroboration():
     assert "authority is not corroboration" in low
     assert "not three witnesses" in low
     assert "feed summary only" in low
+
+
+def test_a_forthcoming_item_is_labelled_for_the_reviewer():
+    """The reviewer cannot tell a 2027 date is unpublished from the string alone."""
+    from datetime import datetime, timedelta, timezone
+    future = (datetime.now(timezone.utc) + timedelta(days=400)).isoformat()
+    out = qa.render(qa.load_prompt()[1], FakeOpportunity(),
+                    [{**item(1), "published_at": future}], {})
+    assert "NOT YET PUBLISHED" in out
+
+
+def test_a_past_date_is_not_labelled_forthcoming():
+    out = qa.render(qa.load_prompt()[1], FakeOpportunity(), [item(1)], {})
+    assert "NOT YET PUBLISHED" not in out

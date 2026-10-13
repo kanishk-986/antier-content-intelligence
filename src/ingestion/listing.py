@@ -266,7 +266,7 @@ def extract_listing(source: dict[str, Any], seen: set[str],
             out.listing_url = final_url
             fresh = [u for u in links if u not in seen][:max_candidates]
             for url in fresh:
-                item = _fetch_article(client, source, url)
+                item = _fetch_article(client, source, url, final_url)
                 if item:
                     out.items.append(item)
             _flag_shared_dates(out.items)
@@ -311,8 +311,14 @@ def _flag_shared_dates(items: list[dict[str, Any]]) -> None:
                 )
 
 
-def _fetch_article(client: httpx.Client, source: dict[str, Any],
-                   url: str) -> dict[str, Any] | None:
+def _fetch_article(client: httpx.Client, source: dict[str, Any], url: str,
+                   listing_url: str | None = None) -> dict[str, Any] | None:
+    """One article from a listing page.
+
+    `listing_url` is the index the link was found on, recorded so an item's
+    provenance is checkable later. It used to be set to the article's own URL, which
+    made the field useless for exactly the audit it exists to support.
+    """
     try:
         page = client.get(url)
     except httpx.HTTPError:
@@ -345,6 +351,7 @@ def _fetch_article(client: httpx.Client, source: dict[str, Any],
         "clean_text": text,
         "content_hash": content_hash(title, text),
         "language": None,
-        "metadata": {"listing_url": url, "source_name": source["name"],
-                     "via": "listing"},
+        "metadata": {"listing_url": listing_url, "article_url": url,
+                     "source_name": source["name"], "via": "listing",
+                     "word_count": len(text.split()), "text_source": "article"},
     }

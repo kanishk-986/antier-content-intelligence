@@ -16,9 +16,11 @@ import json
 import os
 import re
 from dataclasses import dataclass
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from src.intelligence.extractor import LLM
+from src.narratives.momentum import FUTURE_GRACE_HOURS
 
 REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 PROMPT_PATH = os.path.join(REPO, "prompts", "ai_qa.v1.md")
@@ -112,6 +114,20 @@ def load_prompt(path: str = PROMPT_PATH) -> tuple[str, str]:
 THIN_TEXT_WORDS = 60
 
 
+def _is_future(published_at: str | None) -> bool:
+    """A forthcoming publication is not an event. Richmond Fed lists journal issues
+    dated 2027, and the reviewer cannot tell from the date string alone."""
+    if not published_at:
+        return False
+    try:
+        when = datetime.fromisoformat(published_at.replace("Z", "+00:00"))
+    except ValueError:
+        return False
+    if when.tzinfo is None:
+        when = when.replace(tzinfo=timezone.utc)
+    return when > datetime.now(timezone.utc) + timedelta(hours=FUTURE_GRACE_HOURS)
+
+
 def _meta(item: dict[str, Any]) -> dict[str, Any]:
     raw = item.get("metadata")
     if isinstance(raw, dict):
@@ -171,6 +187,9 @@ def render(template: str, opportunity, items: list[dict[str, Any]],
             provenance = f"  [THIN EXTRACTION, {words} words]\n"
         if meta.get("date_confidence") == "low":
             provenance += "  [DATE UNCONFIRMED — shared template date]\n"
+        if _is_future(item.get("published_at")):
+            provenance += ("  [NOT YET PUBLISHED — a forthcoming item, not an "
+                           "event]\n")
         publisher = (item.get("source_name") or meta.get("source_name")
                      or item.get("source_id"))
         articles.append(

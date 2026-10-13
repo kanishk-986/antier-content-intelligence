@@ -44,8 +44,16 @@ def classify(row: dict, stems: list[str]) -> str | None:
     feed_url = meta.get("feed_url")
     if feed_url:
         return None if same_site(feed_url, row["url"]) else "offsite"
-    # No feed_url means the listing extractor produced it.
-    return None if _has_editorial_section(row["url"], stems) else "not_editorial"
+
+    # For a listing item, the question is whether the *index* it came from was an
+    # editorial one -- not whether the article's own path looks editorial. A real
+    # newsroom links articles under /resources/ and /library/ all the time, and
+    # judging the article URL purged legitimate work.
+    listing_url = meta.get("listing_url")
+    if listing_url:
+        return (None if _has_editorial_section(listing_url, stems)
+                else "not_editorial")
+    return "unverifiable_provenance"
 
 
 def main() -> int:
@@ -69,6 +77,10 @@ def main() -> int:
     total = sum(len(v) for v in flagged.values())
     print(f"corpus audit: {len(rows)} item(s), {total} flagged\n")
     for verdict, group in sorted(flagged.items()):
+        if verdict == "unverifiable_provenance":
+            print(f"  {verdict}: {len(group)}  (reported, never purged — these "
+                  "predate provenance recording)\n")
+            continue
         hosts: dict[str, int] = {}
         for row in group:
             host = urlparse(row["url"]).netloc
@@ -87,7 +99,14 @@ def main() -> int:
         print("  re-run with --purge to delete these rows")
         return 0
 
-    ids = [row["id"] for group in flagged.values() for row in group]
+    # unverifiable_provenance is reported, never purged: it means the item predates
+    # provenance recording, not that it is bad.
+    purgeable = {k: v for k, v in flagged.items() if k != "unverifiable_provenance"}
+    if not purgeable:
+        print("  nothing purgeable; the flagged rows only lack recorded provenance")
+        return 0
+    ids = [row["id"] for group in purgeable.values() for row in group]
+    urls = [row["url"] for group in purgeable.values() for row in group]
     conn = store.conn
     # narrative_items and intelligence reference content_items; clear them first so
     # the delete cannot fail halfway and leave a half-purged corpus.
@@ -95,10 +114,33 @@ def main() -> int:
     conn.execute(f"DELETE FROM narrative_items WHERE content_id IN ({marks})", ids)
     conn.execute(f"DELETE FROM intelligence WHERE content_id IN ({marks})", ids)
     conn.execute(f"DELETE FROM content_items WHERE id IN ({marks})", ids)
+    # fetch_state is the section 10.2 "already seen" set. Leaving a purged URL in it
+    # means the item can never be re-ingested -- so purging something legitimate
+    # would exclude it permanently, and silently. That is worse than the
+    # contamination this script exists to remove.
+    umarks = ",".join("?" * len(urls))
+    conn.execute(f"DELETE FROM fetch_state WHERE item_url IN ({umarks})", urls)
+    # A narrative whose every item was contamination is now empty, and an empty
+    # narrative still reaches scoring, where it means nothing. My first version of
+    # this script left one behind.
+    empty = conn.execute(
+        "SELECT id FROM narratives n WHERE NOT EXISTS "
+        "(SELECT 1 FROM narrative_items ni WHERE ni.narrative_id = n.id)").fetchall()
+    if empty:
+        empty_ids = [r["id"] for r in empty]
+        em = ",".join("?" * len(empty_ids))
+        conn.execute(f"DELETE FROM qa_reviews WHERE opportunity_id IN "
+                     f"(SELECT id FROM opportunities WHERE narrative_id IN ({em}))",
+                     empty_ids)
+        conn.execute(f"DELETE FROM opportunities WHERE narrative_id IN ({em})",
+                     empty_ids)
+        conn.execute(f"DELETE FROM narratives WHERE id IN ({em})", empty_ids)
     conn.commit()
     store.audit("system", "corpus_purged",
                 detail=json.dumps({k: len(v) for k, v in flagged.items()}))
-    print(f"  purged {len(ids)} item(s). Re-run narratives, scoring and QA:")
+    print(f"  purged {len(ids)} item(s)"
+          + (f" and {len(empty)} now-empty narrative(s)" if empty else "")
+          + ". Re-run narratives, scoring and QA:")
     print("    python3 scripts/run_narratives.py && python3 scripts/run_scoring.py")
     return 0
 

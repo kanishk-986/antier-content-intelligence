@@ -193,3 +193,16 @@ def test_logging_nothing_is_not_an_error(tmp_path):
     store = _store_with_source(tmp_path)
     assert store.log_fetch_outcome("2026-10-13T06:00:00+00:00", []) == 0
     assert store.source_health() == []
+
+
+def test_purging_an_item_must_not_leave_it_in_the_seen_set(tmp_path):
+    """fetch_state is the section 10.2 "already seen" set. A purged URL left in it
+    can never be re-ingested, so purging something legitimate excludes it
+    permanently and silently -- worse than the contamination being removed."""
+    store = _store_with_source(tmp_path)
+    url = "https://bis.org/news/real-article"
+    store.record_fetch("src-1", url, "hash-1", "2026-10-13T06:00:00+00:00")
+    assert url in store.seen_urls("src-1")
+    store.conn.execute("DELETE FROM fetch_state WHERE item_url = ?", (url,))
+    store.conn.commit()
+    assert url not in store.seen_urls("src-1"), "it can be fetched again"

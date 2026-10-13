@@ -7,6 +7,10 @@ All arithmetic, no LLM (ARCHITECTURE.md determinism boundary):
     authority_coverage = weighted authoritative sources / total sources
     emergence          = velocity + acceleration + novelty + source_diversity
 
+Items dated in the future are excluded from every recency window: an unpublished
+paper is evidence of nothing having happened yet. They are counted in
+`forthcoming_items` rather than dropped.
+
 `authority_coverage` is section 14's figure, untouched. Section 15's
 `source_credibility` instead reads `independent_authority_coverage`, which discounts
 a primary party reporting on itself — see `source_independence` in weights.yaml.
@@ -37,6 +41,14 @@ SELF_REPORTED_WEIGHT = 0.35
 TARGET_PUBLISHERS = 3
 SINGLE_PUBLISHER_FLOOR = 0.5
 
+# A publication date in the future means the item has not been published yet --
+# Richmond Fed lists forthcoming journal issues dated 2027. Section 14's recency
+# maths is meaningless for one: `max(0.0, age)` clamps a negative age to zero, so an
+# unpublished paper scored maximum novelty and counted as published in the last 24
+# hours. A small grace absorbs clock skew and timezone sloppiness on a genuinely
+# fresh item.
+FUTURE_GRACE_HOURS = 24
+
 
 @dataclass
 class Momentum:
@@ -50,6 +62,7 @@ class Momentum:
     independent_sources: int
     self_reported_sources: int
     source_diversity: float
+    forthcoming_items: int
     distinct_publishers: int
     max_publisher_share: float
     publisher_breadth: float
@@ -124,8 +137,13 @@ def compute(items: list[dict[str, Any]], authority: dict[str, int],
     short, mid = windows[0], windows[1]
 
     dated = [(i, _parse(i.get("published_at"))) for i in items]
-    timed = [(i, d) for i, d in dated if d]
-    undated = len(items) - len(timed)
+    horizon = now + timedelta(hours=FUTURE_GRACE_HOURS)
+    # Not yet published, so it is evidence of nothing having happened. Excluded from
+    # every recency window and reported, rather than silently scoring as the newest
+    # thing in the corpus.
+    forthcoming = [(i, d) for i, d in dated if d and d > horizon]
+    timed = [(i, d) for i, d in dated if d and d <= horizon]
+    undated = len(items) - len(timed) - len(forthcoming)
 
     current = sum(1 for _, d in timed if d >= now - timedelta(hours=short))
     # Baseline is the comparable earlier span, so velocity compares like with like
@@ -215,6 +233,7 @@ def compute(items: list[dict[str, Any]], authority: dict[str, int],
                     independent_sources=len(independent),
                     self_reported_sources=len(self_reported),
                     source_diversity=round(source_diversity, 3),
+                    forthcoming_items=len(forthcoming),
                     distinct_publishers=distinct_publishers,
                     max_publisher_share=round(max_publisher_share, 3),
                     publisher_breadth=round(publisher_breadth, 3),

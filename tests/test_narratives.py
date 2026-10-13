@@ -238,3 +238,43 @@ def test_breadth_targets_come_from_config():
 def test_no_items_means_no_breadth():
     m = mom.compute([], {})
     assert m.publisher_breadth == 0.0 and m.distinct_publishers == 0
+
+
+# --- a date in the future is not news ----------------------------------------
+
+def _at(hours):
+    from datetime import timedelta
+    return {"source_id": "a",
+            "published_at": (NOW + timedelta(hours=hours)).isoformat()}
+
+
+def test_a_forthcoming_item_does_not_score_as_the_newest_thing():
+    """Richmond Fed lists forthcoming journal issues dated 2027. max(0.0, age)
+    clamped the negative age to zero, so an unpublished paper scored novelty 1.0 and
+    counted as published in the last 24 hours. QA caught it; now the score does."""
+    m = mom.compute([_at(24 * 400)], {"a": 9}, now=NOW,
+                    source_types={"a": "regulator"})
+    assert m.novelty == 0.0
+    assert m.current == 0
+    assert m.forthcoming_items == 1
+
+
+def test_a_forthcoming_item_does_not_hide_a_real_one():
+    m = mom.compute([_at(24 * 400), _at(-2)], {"a": 9}, now=NOW,
+                    source_types={"a": "regulator"})
+    assert m.forthcoming_items == 1
+    assert m.current == 1
+    assert m.novelty > 0.9, "the genuinely fresh item still sets novelty"
+
+
+def test_clock_skew_is_not_mistaken_for_a_forthcoming_item():
+    """A fresh item timestamped in another timezone must not be discarded."""
+    m = mom.compute([_at(3)], {"a": 9}, now=NOW, source_types={"a": "regulator"})
+    assert m.forthcoming_items == 0 and m.current == 1
+
+
+def test_forthcoming_items_are_not_counted_as_undated():
+    """Undated means the date is unknown. These have a date; it has not arrived."""
+    m = mom.compute([_at(24 * 400), {"source_id": "a", "published_at": None}],
+                    {"a": 9}, now=NOW, source_types={"a": "regulator"})
+    assert m.forthcoming_items == 1 and m.undated_items == 1
