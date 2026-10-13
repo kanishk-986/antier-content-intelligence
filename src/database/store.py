@@ -50,6 +50,17 @@ class Store(Protocol):
                      last_modified: str | None = None) -> None:
         """Remember that a URL was seen, duplicate or not."""
 
+    # --- intelligence ----------------------------------------------------------
+    def items_without_intelligence(self, limit: int | None = None) -> list[dict[str, Any]]:
+        """Content items not yet extracted. The section 10.2 efficiency rule applied
+        to the LLM stage: never re-pay for an item already processed."""
+
+    def insert_intelligence(self, content_id: str, record: dict[str, Any],
+                            prompt_version: str, model: str) -> None:
+        """Store one extracted record."""
+
+    def intelligence_for(self, content_id: str) -> dict[str, Any] | None: ...
+
     # --- narratives ------------------------------------------------------------
     def replace_narratives(self, narratives: list[dict[str, Any]]) -> None:
         """Write a fresh clustering run, discarding the previous one.

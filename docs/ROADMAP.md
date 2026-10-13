@@ -11,7 +11,7 @@ from §40.
 | 3 | Ingestion + DB | Reliable content pipeline | **done** (feed-based) |
 | 3b | HTML listing extractor | Reach the no-feed primary sources | **done** (static) |
 | 3c | Browser rendering (Playwright) | Reach client-rendered sources | open decision |
-| 4 | Intelligence | Structured market signals | blocked on API key |
+| 4 | Intelligence | Structured market signals | **built**, awaiting API key |
 | 5 | Narratives | Market themes instead of article lists | **done** (TF-IDF) |
 | 6 | Scoring | Antier-specific opportunity ranking | |
 | 7 | QA | High-confidence editorial queue | |
@@ -86,6 +86,35 @@ better and allow a higher, more stable threshold.
 
 **Acceleration is 0.0 and says so.** §14 defines it as change in velocity, which needs
 two snapshots. One run cannot measure it, so it is not interpolated.
+
+## Phase 4 result
+
+Extraction is built, wired and tested. It cannot run: `ANTHROPIC_API_KEY` is not set
+and there is no credential on the machine (`~/.claude.json` is Claude Code's own auth,
+not something a production service should borrow).
+
+What exists:
+
+- `prompts/intelligence.v1.md` — the §11 extraction prompt, versioned.
+- `src/intelligence/schema.py` — the §11 JSON schema plus a validator that **rejects**
+  out-of-range values rather than clamping them, because clamping hides a misbehaving
+  prompt and QA depends on sentiment being comparable across items.
+- `src/intelligence/extractor.py` — client injected, not constructed, so the pipeline
+  is testable without a key. Uses `output_config.format` for structured output.
+- `src/intelligence/stub.py` — a deterministic stand-in. Structurally valid,
+  analytically worthless, and its sentiment is **all zeros** rather than invented, so
+  a test cannot pass for the wrong reason.
+- `src/intelligence/pipeline.py` — §10.2 applied to the LLM stage: an item already
+  extracted is never re-sent, because here the cost is money.
+- `scripts/run_intelligence.py --dry-run` proves the wiring end to end with no key;
+  `--estimate` reports volume and rough input tokens before spending anything.
+
+Dry run over the live corpus: 25 attempted, 23 stored, 2 filtered as price
+speculation (§2.2), 0 failed. Re-run attempted 0 — the efficiency rule holds.
+
+**To run it for real:** put the key in `.env`, then
+`python3 scripts/run_intelligence.py --limit 20`. Start with a small `--limit`; the
+full pending corpus is 125 items.
 
 ## Deferred by §32
 

@@ -177,6 +177,62 @@ class SqliteStore:
         )
         self.conn.commit()
 
+    # --- intelligence ----------------------------------------------------------
+    def items_without_intelligence(self, limit: int | None = None) -> list[dict[str, Any]]:
+        sql = ("SELECT c.* FROM content_items c "
+               "LEFT JOIN intelligence i ON i.content_id = c.id "
+               "WHERE i.content_id IS NULL "
+               "ORDER BY c.published_at DESC, c.retrieved_at DESC")
+        params: list[Any] = []
+        if limit:
+            sql += " LIMIT ?"
+            params.append(limit)
+        return [dict(r) for r in self.conn.execute(sql, params).fetchall()]
+
+    def insert_intelligence(self, content_id: str, record: dict[str, Any],
+                            prompt_version: str, model: str) -> None:
+        sentiment = record["sentiment"]
+        self.conn.execute(
+            """
+            INSERT INTO intelligence
+              (content_id, entities, topics, claims, market_sentiment,
+               institutional_sentiment, developer_sentiment, regulatory_sentiment,
+               enterprise_sentiment, community_sentiment, importance_score,
+               prompt_version, extracted_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(content_id) DO UPDATE SET
+               entities=excluded.entities, topics=excluded.topics,
+               claims=excluded.claims, market_sentiment=excluded.market_sentiment,
+               institutional_sentiment=excluded.institutional_sentiment,
+               developer_sentiment=excluded.developer_sentiment,
+               regulatory_sentiment=excluded.regulatory_sentiment,
+               enterprise_sentiment=excluded.enterprise_sentiment,
+               community_sentiment=excluded.community_sentiment,
+               importance_score=excluded.importance_score,
+               prompt_version=excluded.prompt_version,
+               extracted_at=excluded.extracted_at
+            """,
+            (
+                content_id,
+                _encode(record["entities"]),
+                _encode([record["primary_topic"], *record["secondary_topics"]]),
+                _encode(record["claims"]),
+                sentiment["market"], sentiment["institutional"],
+                sentiment["developer"], sentiment["regulatory"],
+                sentiment["enterprise"], sentiment["community"],
+                record["importance"],
+                "%s@%s" % (prompt_version, model),
+                utcnow(),
+            ),
+        )
+        self.conn.commit()
+
+    def intelligence_for(self, content_id: str) -> dict[str, Any] | None:
+        row = self.conn.execute(
+            "SELECT * FROM intelligence WHERE content_id = ?", (content_id,)
+        ).fetchone()
+        return dict(row) if row else None
+
     # --- narratives ------------------------------------------------------------
     def replace_narratives(self, narratives: list[dict[str, Any]]) -> None:
         self.conn.execute("DELETE FROM narrative_items")
