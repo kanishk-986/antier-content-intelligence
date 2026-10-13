@@ -1,0 +1,34 @@
+# Who receives which persona's section of the daily brief (section 4 personas,
+# section 28 daily cycle).
+#
+# A persona is an editorial territory, not a job title: it decides the angle an
+# opportunity should be written from. Routing sends each territory to the person who
+# owns it, so nobody reads four sections to find their one.
+#
+# `email` empty means "include this section in the combined brief but send no
+# separate copy". Nothing here is guessed: every name was confirmed by the owner.
+
+timezone: Asia/Kolkata        # the 10:00 the schedule means
+send_at: "10:00"
+window_hours: 24              # "yesterday", per section 28
+
+# The combined brief, every section in one mail.
+digest:
+  name: Alok Diwan
+  email: diwan.alok@antiersolutions.com
+
+personas:
+  ceo:
+    name: Bikram
+    email: ""                 # add to send the CEO section separately
+    note: Vikram R Singh's territory per config/brand/ceo.yaml
+  cto:
+    name: Shashi
+    email: ""
+  sme:
+    name: ""                  # section 4 ties this persona to named expertise;
+    email: ""                 # unassigned until the owner names someone
+  company:
+    name: Antier Corporate
+    email: ""
+    note: the corporate channel, not a person

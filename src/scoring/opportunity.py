@@ -142,6 +142,19 @@ def score_all(store, config: ScoringConfig,
 
 
 def persist(store, opportunities: list[Opportunity]) -> None:
+    """Replace the opportunity table.
+
+    Takes bare Opportunity objects. `score_all` returns (opportunity, items) pairs,
+    so the obvious `persist(store, score_all(...))` is wrong -- and used to fail
+    several frames later with AttributeError on a tuple, which says nothing about
+    the cause.
+    """
+    if opportunities and isinstance(opportunities[0], tuple):
+        raise TypeError(
+            "persist() takes Opportunity objects; score_all() returns "
+            "(opportunity, items) pairs. Unpack first: "
+            "persist(store, [o for o, _ in score_all(...)])"
+        )
     """Replace the opportunities table with this run.
 
     Scoring is a pure function of the corpus, so a re-run supersedes rather than

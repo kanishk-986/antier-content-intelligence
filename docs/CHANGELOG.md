@@ -127,6 +127,36 @@ open. `editorial_segments` in `listing_rules.yaml` now requires the page that
 it fetches one deliberately absurd path and discards any candidate offering the same
 links, since a genuine listing does not match a 404.
 
+### Added — the daily brief, routed per persona and mailed at 10:00 (§28, §4)
+- `src/briefs/daily.py` — builds yesterday's brief from scored opportunities, one
+  section per §4 persona. Every section appears including empty ones, and a
+  QA-rejected item is shown with its objection rather than removed.
+- `src/briefs/persona.py` — routing. The QA reviewer's `recommended_persona` wins
+  where one exists (§20 makes it the stronger signal); otherwise the narrative is
+  matched against each persona's configured `territory`, deterministically in
+  Python. No match routes to `company` with the reason recorded, never a drop.
+- `src/briefs/mailer.py` — Google Workspace SMTP, multipart plain-text plus a small
+  HTML rendering. Credentials come from the environment only; a send failure is
+  redacted before it is reported, because smtplib puts the server response in the
+  exception and a failed AUTH can echo what was sent. Titles are HTML-escaped —
+  they come from pages we did not write.
+- `scripts/run_daily.py` — the §28 chain end to end, then the brief. A failure
+  stops the chain except in intelligence extraction, which is rate limited and
+  resumable.
+- `scripts/install-schedule.sh` — launchd agent at 10:00 local. launchd rather than
+  cron because cron drops a run if the Mac was asleep; launchd runs it on wake.
+  Credentials are sourced from `.env` inside a wrapper so they never reach the
+  world-readable plist.
+- `config/brand/recipients.yaml` — persona → person. Confirmed with the owner:
+  ceo → Bikram, cto → Shashi. `sme` stays unassigned rather than guessed.
+- First live brief: 12 items across 4 sections from 22 in-window opportunities.
+
+### Fixed — `persist(store, score_all(...))` failed obscurely
+`score_all` returns `(opportunity, items)` pairs and `persist` takes bare
+opportunities, so the obvious call failed several frames later with
+`AttributeError` on a tuple. It now raises a `TypeError` naming the fix. Found by
+making the mistake while writing `run_daily.py`.
+
 ### Fixed — four defects in listing extraction, found by chasing corpus independence
 The §15 independence correction said the corpus was too self-reported. 24 independent
 sources reported `no_feed` with a listing page sitting right there, and the extractor

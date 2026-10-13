@@ -103,6 +103,74 @@ python3 scripts/import_source_registry.py     # live sheet -> config/sources/sou
 Review the diff before committing — the registry is configuration, so a change to it
 is a reviewable change to system behaviour.
 
+## The daily brief at 10:00 (§28)
+
+One command runs the whole cycle and mails the brief:
+
+    python3 scripts/run_daily.py                 # full cycle, send
+    python3 scripts/run_daily.py --dry-run       # write to outputs/, send nothing
+    python3 scripts/run_daily.py --brief-only    # rebuild the brief, skip the pipeline
+    python3 scripts/run_daily.py --hours 48      # wider window after a missed day
+
+Stages run ingestion → intelligence → narratives → scoring → QA → brief. A failure
+stops the chain, because each stage reads what the previous one wrote and scoring a
+stale clustering would produce a brief that looks current and is not. Intelligence
+extraction is the exception: it is rate limited rather than free, so a partial pass
+is reported and the cycle continues.
+
+### Setting up delivery
+
+Google Workspace needs an **app password**, not the account password, once 2FA is
+on. Create one at <https://myaccount.google.com/apppasswords>, then:
+
+    cp .env.example .env
+    # edit .env: SMTP_USER and SMTP_PASSWORD
+    chmod 600 .env
+
+Never pass the password on a command line — it lands in shell history and in `ps`.
+`scripts/install-schedule.sh` sources `.env` inside a wrapper so it never reaches
+the launchd plist, which is world-readable.
+
+### Scheduling it
+
+    ./scripts/install-schedule.sh               # 10:00 local, every day
+    DAILY_HOUR=7 ./scripts/install-schedule.sh  # a different time
+    ./scripts/install-schedule.sh --remove
+
+**launchd, not cron.** cron drops a run entirely if the Mac was asleep at the time;
+launchd runs a missed job once the machine wakes. For a daily brief that is the
+difference between a late mail and no mail. The Mac must be awake or asleep — a
+shut-down machine runs nothing, and §28 assumes a machine that is on.
+
+    launchctl kickstart -p gui/$(id -u)/com.antier.content-intelligence.daily
+    tail -f outputs/launchd.err.log
+
+### Who gets what
+
+`config/brand/recipients.yaml` maps each §4 persona to a person. A persona is an
+editorial *territory*, not a job title: it decides the angle an item should be
+written from, and routing sends each territory to whoever owns it so nobody reads
+four sections to find their one.
+
+| persona | territory | assigned |
+|---|---|---|
+| ceo | strategy, market structure, regulation, capital markets | Bikram |
+| cto | architecture, security, protocols, interoperability | Shashi |
+| sme | deep specialist themes | unassigned |
+| company | enterprise use cases, solutions, case studies | Antier corporate |
+
+An item is routed by the QA reviewer's `recommended_persona` where one exists —
+§20 makes that the stronger signal — and otherwise by matching the narrative
+against each persona's configured territory, which is arithmetic and so belongs in
+Python (CLAUDE.md rule 7). An item matching nothing goes to `company` and says so;
+it is never dropped, because a silent drop makes the brief read as "nothing
+happened in your territory".
+
+Every section appears every day, including empty ones. An empty section reads as
+"we looked and found nothing"; a section that vanishes reads as "nothing was looked
+for". A QA-rejected item is shown **with its objection** rather than removed — the
+objection is usually the most useful line in the brief.
+
 ## Checking source health
 
     python3 scripts/source_health.py               # yield by type + independence share
