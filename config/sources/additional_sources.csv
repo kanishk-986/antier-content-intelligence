@@ -1,0 +1,24 @@
+source_name,url,source_type,category,authority_score,crawl_frequency,region,topics,personas,active,notes
+Ethereum EIPs (ERC-8004 agent identity),https://eips.ethereum.org/EIPS/eip-8004,protocol,curated,10,weekly,global,"agent identity, erc-8004, autonomous agent registry, verifiable ai",cto,true,service-3 gap fill; primary standard venue; feed parses with 0 entries; static spec page, monitor via Ethereum Magicians instead
+Ethereum Magicians — agent standards,https://ethereum-magicians.org/c/eips/5,protocol,curated,9,weekly,global,"agent identity, erc-8004, agentic standards discussion",cto,true,service-3 gap fill
+Coinbase Developer Blog,https://www.coinbase.com/developer-platform/discover/launches,primary_company,curated,10,daily,global,"x402, agent payments, agentic commerce, agent wallet",cto;company,true,service-3 gap fill; x402 primary; BLOCKED HTTP 429 measured 2026-10-13; rate limited, may recover
+Cloudflare Blog,https://blog.cloudflare.com/,primary_company,curated,10,daily,global,"agent identity, agent wallet, autonomous agents, micropayment",cto,true,service-3 gap fill; shipped agent identity + wallets
+MetaMask News,https://metamask.io/news,protocol,curated,9,daily,global,"agent wallet, agent identity, permissioning, mpc",cto,true,service-3 gap fill
+Know Your Agent Network,https://knowyouragent.network/,specialist,curated,7,weekly,global,"kya, know your agent, agent identity verification",cto,true,service-3 gap fill; the KYA layer the charter names
+a16z crypto — AI x crypto,https://a16zcrypto.com/posts/,research_firm,curated,8,weekly,us,"ai agent, agentic, verifiable ai, zkml, privacy",ceo;cto,true,services 3 and 7 gap fill
+Fetch.ai / ASI Alliance,https://fetch.ai/blog,protocol,curated,8,weekly,global,"ai agent, agent-to-agent payments, machine economy, agentic",cto,true,service-3 gap fill
+Ritual,https://ritual.net/blog,protocol,curated,8,weekly,global,"verifiable ai, on-chain inference, ai coprocessor",cto,true,service-3 gap fill
+EigenCloud (EigenLayer),https://blog.eigencloud.xyz/,protocol,curated,8,weekly,global,"verifiable ai, agentic, restaking, autonomous",cto,true,service-3 gap fill
+CMS Newsroom,https://www.cms.gov/newsroom,regulator,curated,10,weekly,us,"healthcare, prior authorization, claims, interoperability",company,true,service-4 gap fill; drives healthcare AI demand
+NAIC — insurance regulators,https://content.naic.org/news,regulator,curated,10,weekly,us,"insurance, insurtech, ai governance, model bulletin",company,true,service-4 gap fill; model AI governance for insurers; BLOCKED HTTP 403 measured 2026-10-13; service-4 gap remains
+InsurTech Insights,https://www.insurtechinsights.com/news/,specialist,curated,7,daily,global,"insurtech, insurance, claims automation, enterprise ai",company,true,service-4 gap fill; open specialist press; BLOCKED HTTP 403 measured 2026-10-13; service-4 gap remains
+Healthcare IT News,https://www.healthcareitnews.com/,specialist,curated,7,daily,us,"healthcare, legacy modernization, workflow, enterprise ai",company,true,service-4 gap fill; open specialist press; BLOCKED HTTP 403 measured 2026-10-13; service-4 gap remains
+Anthropic News,https://www.anthropic.com/news,primary_company,curated,9,weekly,us,"enterprise ai, agent orchestration, agentic, workflow",cto;company,true,service-4 gap fill; primary on agent orchestration
+Helium Foundation,https://blog.helium.com/,protocol,curated,8,weekly,global,"depin, iot, decentralized physical, wireless, uptime",cto,true,service-6 gap fill; no feed or listing found 2026-10-13
+Akash Network,https://akash.network/blog/,protocol,curated,8,weekly,global,"depin, decentralized compute, hardware network",cto,true,service-6 gap fill
+peaq,https://www.peaq.xyz/blog,protocol,curated,8,weekly,global,"depin, iot, machine economy, logistics, spatial",cto,true,service-6 gap fill
+IoT Analytics,https://iot-analytics.com/insights/,research_firm,curated,8,weekly,global,"iot, supply chain, telemetry, enterprise iot market sizing",company,true,service-6 gap fill; partly open
+BIS Innovation Hub,https://www.bis.org/about/bisih/topics.htm,regulator,curated,10,weekly,global,"zero knowledge, confidential, privacy, cbdc, tokeniz, settle",ceo;cto,true,services 7 and 2; Tourbillon and Aurum privacy work
+Aztec,https://aztec.network/blog,protocol,curated,8,weekly,global,"zero knowledge, privacy, confidential, shielded",cto,true,service-7 gap fill
+Aleo,https://aleo.org/blog/,protocol,curated,8,weekly,global,"zero knowledge, privacy, zk, selective disclosure",cto,true,service-7 gap fill; no feed or listing found 2026-10-13
+ZKProof Standards,https://zkproof.org/blog/,standards_body,curated,8,monthly,global,"zero knowledge, zk standards, attestation, privacy",cto,true,service-7 gap fill

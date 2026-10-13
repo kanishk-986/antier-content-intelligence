@@ -1,90 +1,113 @@
 source_id,source_name,url,source_type,category,authority_score,crawl_frequency,region,topics,personas,active,last_seen_at,notes
 src-001,Bank for Intl. Settlements (BIS),https://bis.org,regulator,generic,10,daily,global,"Central bank for central banks, CBDC Innovation Hub",,true,,Public Entity / Free
-src-002,Circle,https://circle.com,primary_company,generic,10,daily,global,"USDC issuance, institutional compliance",,true,,Corporate / APIs vary
-src-003,Clearstream,https://clearstream.com,primary_company,generic,10,daily,global,European digital settlement and clearing,,true,,Member Fees
-src-004,Digital Asset / Canton Network,https://digitalasset.com,primary_company,generic,10,daily,global,Privacy-enabled enterprise blockchain networks,,true,,Enterprise License
-src-005,DTCC,https://dtcc.com,primary_company,generic,10,daily,global,"Tokenized collateral management, smart contracts",,true,,Member Fees
-src-006,Euroclear,https://euroclear.com,primary_company,generic,10,daily,global,"European CSD, tokenized securities piloting",,true,,Member Fees
-src-007,European Union (ESMA),https://esma.europa.eu,regulator,generic,10,daily,global,"MiCA authorization, CASP supervision & transparency",,true,,Public Entity / Free
-src-008,Financial Action Task Force,https://fatf-gafi.org,regulator,generic,10,daily,global,"Global AML/CFT, Crypto Travel Rule creators",,true,,Public Entity / Free
-src-009,Financial Stability Board (FSB),https://fsb.org,regulator,generic,10,daily,global,Global stablecoin supervision recommendations,,true,,Public Entity / Free
-src-010,International Monetary Fund,https://imf.org,regulator,generic,10,daily,global,"Global crypto policy, cross-border digital money",,true,,Public Entity / Free
-src-011,LSEG Digital Settlement House,https://lseg.com,primary_company,generic,10,daily,global,Digital clearing and tokenized market instruments,,true,,Enterprise/Member
-src-012,Mastercard,https://mastercard.com,primary_company,generic,10,daily,global,"Crypto card programs, cross-border digital ID",,true,,Enterprise / Network
-src-013,New York Fed,https://newyorkfed.org,regulator,generic,10,daily,global,"CBDC viability, monetary policy impacts",,true,,Public Entity / Free
-src-014,Paxos,https://paxos.com,primary_company,generic,10,daily,global,"Regulated trust, enterprise issuance (PYUSD)",,true,,Enterprise License
-src-015,Richmond Fed,https://richmondfed.org,regulator,generic,10,daily,global,Payment systems and economic research,,true,,Public Entity / Free
-src-016,Stripe / Bridge,https://stripe.com,primary_company,generic,10,daily,global,"Stablecoin orchestration, traditional e-commerce",,true,,Transaction-based
-src-017,SWIFT,https://swift.com,primary_company,generic,10,daily,global,Multi-chain tokenized asset settlement messaging,,true,,Member Fees
-src-018,Tether,https://tether.to,primary_company,generic,10,daily,global,"USDT issuance, global emerging market liquidity",,true,,Corporate / APIs vary
-src-019,U.S. Treasury,https://treasury.gov,regulator,generic,10,daily,global,"Systemic risk monitoring, illicit finance policy",,true,,Public Entity / Free
-src-020,Visa,https://visa.com,primary_company,generic,10,daily,global,On-chain settlement (USDC on Solana),,true,,Enterprise / Network
-src-021,World Bank,https://worldbank.org,regulator,generic,10,daily,global,Tokenized assets for global financial inclusion,,true,,Public Entity / Free
-src-022,Anchorage Digital,https://anchorage.com,protocol,generic,9,daily,global,Federally chartered digital asset bank/custodian,,true,,Institutional Access
-src-023,BitGo,https://bitgo.com,protocol,generic,9,daily,global,Institutional digital asset custody & prime services,,true,,Enterprise Sub
-src-024,BlackRock,https://blackrock.com,institution,generic,9,daily,global,"Tokenized RWA (BUIDL fund), crypto asset mgmt",,true,,Investment Fees
-src-025,Centrifuge,https://centrifuge.io,protocol,generic,9,daily,global,Private credit and real-world asset DeFi pools,,true,,Platform Fees
-src-026,Chainlink,https://chain.link,protocol,generic,9,daily,global,"Off-chain data oracles (Proof of Reserve, NAV)",,true,,Usage-based (LINK)
-src-027,Citi Bank (Citi GPS/Institute),https://citi.com,institution,generic,9,daily,global,"Institutional market research, securities evolution",,true,,Free / Gated
-src-028,Deutsche Bank Research,https://dbresearch.com,institution,generic,9,daily,global,Macro research on DLT and stablecoin rails,,true,,Institutional Access
-src-029,Fireblocks,https://fireblocks.com,protocol,generic,9,daily,global,Secure institutional crypto transfer & treasury OS,,true,,Enterprise Sub
-src-030,Franklin Templeton (Institute),https://franklintempleton.com,institution,generic,9,daily,global,"Tokenized money market funds (BENJI), insights",,true,,Investment Fees
-src-031,J.P. Morgan (Onyx),https://jpmorgan.com,institution,generic,9,daily,global,"Tokenized deposits, wholesale banking ledgers",,true,,Institutional Access
-src-032,Mento,https://www.mento.org/,protocol,specific_website,9,daily,global,,,true,,
-src-033,Ondo Finance,https://ondo.finance,protocol,generic,9,daily,global,"Tokenizing US Treasuries, yield-bearing equivalents",,true,,Platform Fees
-src-034,Securitize,https://securitize.io,protocol,generic,9,daily,global,"Transfer agent, RWA tokenization (BlackRock BUIDL)",,true,,Platform/Tx Fees
-src-035,State Street,https://statestreet.com,institution,generic,9,daily,global,"Tokenized fund security, digital asset custody",,true,,Institutional Access
-src-036,Superstate,https://superstate.co,protocol,generic,9,daily,global,Regulated on-chain financial products,,true,,Platform Fees
-src-037,World Economic Forum (WEF),https://weforum.org,standards_body,generic,9,daily,global,Public-private tokenization standards/alliances,,true,,Free / Membership
-src-038,21 shares,https://www.21shares.com/en-eu/insights,data_platform,specific_website,8,weekly,global,,,true,,
-src-039,Accenture,https://accenture.com,research_firm,generic,8,weekly,global,"Digital currency implementation, CBDC pilots",,true,,Bespoke Consulting
-src-040,Allium,https://www.allium.so/research-hub,data_platform,specific_website,8,weekly,global,,,true,,
-src-041,Artemis,https://about.artemis.ai/,data_platform,specific_website,8,weekly,global,,,true,,
-src-042,Artemis,https://about.artemis.ai/resources/outstanding-supply,data_platform,specific_website,8,weekly,global,,,true,,
-src-043,Bain & Company,https://bain.com,research_firm,generic,8,weekly,global,"Web3 strategy, financial infrastructure evolution",,true,,Bespoke Consulting
-src-044,Blockworks Research,https://blockworksresearch.com,data_platform,generic,8,weekly,global,"On-chain data, institutional DeFi analytics",,true,,~$2500/yr (Pro)
-src-045,Boston Consulting Group (BCG),https://bcg.com,research_firm,generic,8,weekly,global,"Asset tokenization whitepapers, CBDC strategy",,true,,Bespoke Consulting
-src-046,Brookings,https://www.brookings.edu/,research_firm,specific_website,8,weekly,global,,,true,,
-src-047,Cadwalader,https://cadwalader.com,research_firm,generic,8,weekly,global,"TradFi & DeFi compliance, structural legal tech",,true,,Hourly Retainer
-src-048,CB Insights,https://cbinsights.com,research_firm,generic,8,weekly,global,Predictive startup/VC blockchain intelligence,,true,,GATED; Enterprise Quote
-src-049,Celent,https://www.celent.com/en,research_firm,specific_website,8,weekly,global,,,true,,GATED
-src-050,CFA Institute,https://cfainstitute.org,research_firm,generic,8,weekly,global,Digital asset valuation education and ethics,,true,,Free (Arts) / Member
-src-051,Defillama,https://defillama.com/research,data_platform,specific_website,8,weekly,global,,,true,,BLOCKED HTTP 403 as of 2026-10-06
-src-052,Defillama,https://defillama.com/,data_platform,specific_website,8,weekly,global,,,true,,BLOCKED HTTP 403 as of 2026-10-06
-src-053,Deloitte,https://deloitte.com,research_firm,generic,8,weekly,global,"Blockchain practice, MiCA compliance, audit",,true,,Bespoke Consulting
-src-054,Dune,https://dune.com/home,data_platform,specific_website,8,weekly,global,,,true,,BLOCKED HTTP 403 as of 2026-10-06
-src-055,Dune,https://dune.com/dune/stablecoins,data_platform,specific_website,8,weekly,global,,,true,,BLOCKED HTTP 403 as of 2026-10-06
-src-056,"Edgar, Dunn & Company",https://www.edgardunn.com/,research_firm,specific_website,8,weekly,global,,,true,,
-src-057,Emergen Research,https://emergenresearch.com,research_firm,generic,8,weekly,global,"Market sizing, granular blockchain tech forecasts",,true,,GATED; ~$5450/report
-src-058,Ernst & Young (EY),https://ey.com,research_firm,generic,8,weekly,global,"Blockchain enterprise services, ZK proofs (Nightfall)",,true,,Bespoke Consulting
-src-059,Falconx,https://www.falconx.io/insights?category=All,data_platform,specific_website,8,weekly,global,,,true,,
-src-060,Flagship Advisory,https://flagshipadvisorypartners.com/insights/the-stablecoin-promise-in-cross-border-payments-real-but-not-uniform/,research_firm,specific_website,8,weekly,global,,,true,,
-src-061,Forrester,https://forrester.com,research_firm,generic,8,weekly,global,"Tech readiness, digital custody solution analysis",,true,,GATED; Enterprise Sub
-src-062,Fxcintel,https://www.fxcintel.com/research,research_firm,specific_website,8,weekly,global,,,true,,GATED
-src-063,Gartner,https://gartner.com,research_firm,generic,8,weekly,global,Evaluating institutional tech stacks & vendors,,true,,GATED; Enterprise Sub
-src-064,Getorbital,https://www.getorbital.com/stablecoin-index/payments,data_platform,specific_website,8,weekly,global,,,true,,
-src-065,Kantar,https://kantar.com,research_firm,generic,8,weekly,global,"Behavioral data, brand tracking in finance",,true,,GATED; Enterprise Sub
-src-066,Kearney,https://kearney.com,research_firm,generic,8,weekly,global,"Global payments, digital asset integration for banks",,true,,Bespoke Consulting
-src-067,KPMG,https://kpmg.com,research_firm,generic,8,weekly,global,"Digital asset operational risk, tax, GENIUS Act",,true,,Bespoke Consulting
-src-068,McKinsey & Company,https://mckinsey.com,research_firm,generic,8,weekly,global,"Next-gen payments, stablecoin adoption frameworks",,true,,Bespoke Consulting
-src-069,Messari,https://messari.io,data_platform,generic,8,weekly,global,Crypto-native institutional research & governance,,true,,~$1200/yr (Pro)
-src-070,MIT Digital Currency Initiative,https://dci.mit.edu,research_firm,generic,8,weekly,global,Open-source R&D on CBDCs and network security,,true,,Free / Open Source
-src-071,NielsenIQ,https://nielseniq.com,research_firm,generic,8,weekly,global,"Consumer adoption metrics, retail digital payments",,true,,GATED; Enterprise Sub
-src-072,Paul Hastings,https://paulhastings.com,research_firm,generic,8,weekly,global,Elite legal counsel for crypto regulatory frameworks,,true,,Hourly Retainer
-src-073,PwC,https://pwc.com,research_firm,generic,8,weekly,global,"Global crypto regulation, stablecoin reserve audits",,true,,Bespoke Consulting
-src-074,Redseer,https://redseer.com,research_firm,generic,8,weekly,global,Emerging market digital economy strategy,,true,,Custom / Enterprise
-src-075,S&P Global Market Intelligence,https://spglobal.com,research_firm,generic,8,weekly,global,"Static risk signals, ratings, digital asset analytics",,true,,GATED; Enterprise Sub
-src-076,Simon-Kucher,https://simon-kucher.com,research_firm,generic,8,weekly,global,"Tokenomics, monetization, platform pricing",,true,,Bespoke Consulting
-src-077,Stable Research / Delphi,https://delphidigital.io,data_platform,generic,8,weekly,global,Deep-dive fundamental protocol / tokenomic research,,true,,~$1000+ (Pro)
-src-078,Vision On Chain,https://visaonchainanalytics.com/insights,data_platform,specific_website,8,weekly,global,,,true,,
-src-079,4 Pillars,https://4pillars.io/en,specialist,specific_website,7,weekly,global,,,true,,
-src-080,American Enterprise Inst. (AEI),https://aei.org,specialist,generic,7,weekly,global,Think tank on financial market regulation & tech,,true,,Free / Open Access
-src-081,Assett tokenisation,https://www.assettokenization.com/intelligence,specialist,specific_website,7,weekly,global,,,true,,
-src-082,BeInCrypto Institutional 100,https://awards.beincrypto.com,specialist,generic,7,weekly,global,Institutional digital asset benchmarking,,true,,~$3k App / Custom
-src-083,Blockchain Research Lab,https://blockchainresearchlab.org,specialist,generic,7,weekly,global,Academic research on socioeconomic impacts of DLT,,true,,Free / Open Access
-src-084,F6S,https://f6s.com,specialist,generic,7,weekly,global,Connecting Web3/crypto startups with VC,,true,,Freemium / Pro
-src-085,Frontiers in Blockchain,https://frontiersin.org,specialist,generic,7,weekly,global,Peer-reviewed academic journal (crypto-economics),,true,,Free / Open Access
-src-086,Research 4 pillars,https://research.4pillars.io/en,specialist,specific_website,7,weekly,global,,,true,,BLOCKED HTTP 429 as of 2026-10-06
-src-087,ssrn,https://www.ssrn.com/ssrn/,specialist,specific_website,7,weekly,global,,,true,,BLOCKED HTTP 403 as of 2026-10-06
-src-088,Teroxx,https://teroxx.com/research,specialist,specific_website,7,weekly,global,,,true,,
-src-089,Tokenized Economies Institute,https://tokenizedeconomies.org,specialist,generic,7,weekly,global,"Smart contract frameworks, CSD interoperability",,true,,Free / Open Access
+src-002,BIS Innovation Hub,https://www.bis.org/about/bisih/topics.htm,regulator,curated,10,weekly,global,"zero knowledge, confidential, privacy, cbdc, tokeniz, settle",ceo;cto,true,,services 7 and 2; Tourbillon and Aurum privacy work
+src-003,Circle,https://circle.com,primary_company,generic,10,daily,global,"USDC issuance, institutional compliance",,true,,Corporate / APIs vary
+src-004,Clearstream,https://clearstream.com,primary_company,generic,10,daily,global,European digital settlement and clearing,,true,,Member Fees
+src-005,Cloudflare Blog,https://blog.cloudflare.com/,primary_company,curated,10,daily,global,"agent identity, agent wallet, autonomous agents, micropayment",cto,true,,service-3 gap fill; shipped agent identity + wallets
+src-006,CMS Newsroom,https://www.cms.gov/newsroom,regulator,curated,10,weekly,us,"healthcare, prior authorization, claims, interoperability",company,true,,service-4 gap fill; drives healthcare AI demand
+src-007,Coinbase Developer Blog,https://www.coinbase.com/developer-platform/discover/launches,primary_company,curated,10,daily,global,"x402, agent payments, agentic commerce, agent wallet",cto;company,true,,service-3 gap fill; x402 primary; BLOCKED HTTP 429 measured 2026-10-13; rate limited
+src-008,Digital Asset / Canton Network,https://digitalasset.com,primary_company,generic,10,daily,global,Privacy-enabled enterprise blockchain networks,,true,,Enterprise License
+src-009,DTCC,https://dtcc.com,primary_company,generic,10,daily,global,"Tokenized collateral management, smart contracts",,true,,Member Fees
+src-010,Ethereum EIPs (ERC-8004 agent identity),https://eips.ethereum.org/EIPS/eip-8004,protocol,curated,10,weekly,global,"agent identity, erc-8004, autonomous agent registry, verifiable ai",cto,true,,service-3 gap fill; primary standard venue; feed parses with 0 entries; static spec page
+src-011,Euroclear,https://euroclear.com,primary_company,generic,10,daily,global,"European CSD, tokenized securities piloting",,true,,Member Fees
+src-012,European Union (ESMA),https://esma.europa.eu,regulator,generic,10,daily,global,"MiCA authorization, CASP supervision & transparency",,true,,Public Entity / Free
+src-013,Financial Action Task Force,https://fatf-gafi.org,regulator,generic,10,daily,global,"Global AML/CFT, Crypto Travel Rule creators",,true,,Public Entity / Free
+src-014,Financial Stability Board (FSB),https://fsb.org,regulator,generic,10,daily,global,Global stablecoin supervision recommendations,,true,,Public Entity / Free
+src-015,International Monetary Fund,https://imf.org,regulator,generic,10,daily,global,"Global crypto policy, cross-border digital money",,true,,Public Entity / Free
+src-016,LSEG Digital Settlement House,https://lseg.com,primary_company,generic,10,daily,global,Digital clearing and tokenized market instruments,,true,,Enterprise/Member
+src-017,Mastercard,https://mastercard.com,primary_company,generic,10,daily,global,"Crypto card programs, cross-border digital ID",,true,,Enterprise / Network
+src-018,NAIC — insurance regulators,https://content.naic.org/news,regulator,curated,10,weekly,us,"insurance, insurtech, ai governance, model bulletin",company,true,,service-4 gap fill; model AI governance for insurers; BLOCKED HTTP 403 measured 2026-10-13; service-4 gap remains
+src-019,New York Fed,https://newyorkfed.org,regulator,generic,10,daily,global,"CBDC viability, monetary policy impacts",,true,,Public Entity / Free
+src-020,Paxos,https://paxos.com,primary_company,generic,10,daily,global,"Regulated trust, enterprise issuance (PYUSD)",,true,,Enterprise License
+src-021,Richmond Fed,https://richmondfed.org,regulator,generic,10,daily,global,Payment systems and economic research,,true,,Public Entity / Free
+src-022,Stripe / Bridge,https://stripe.com,primary_company,generic,10,daily,global,"Stablecoin orchestration, traditional e-commerce",,true,,Transaction-based
+src-023,SWIFT,https://swift.com,primary_company,generic,10,daily,global,Multi-chain tokenized asset settlement messaging,,true,,Member Fees
+src-024,Tether,https://tether.to,primary_company,generic,10,daily,global,"USDT issuance, global emerging market liquidity",,true,,Corporate / APIs vary
+src-025,U.S. Treasury,https://treasury.gov,regulator,generic,10,daily,global,"Systemic risk monitoring, illicit finance policy",,true,,Public Entity / Free
+src-026,Visa,https://visa.com,primary_company,generic,10,daily,global,On-chain settlement (USDC on Solana),,true,,Enterprise / Network
+src-027,World Bank,https://worldbank.org,regulator,generic,10,daily,global,Tokenized assets for global financial inclusion,,true,,Public Entity / Free
+src-028,Anchorage Digital,https://anchorage.com,protocol,generic,9,daily,global,Federally chartered digital asset bank/custodian,,true,,Institutional Access
+src-029,Anthropic News,https://www.anthropic.com/news,primary_company,curated,9,weekly,us,"enterprise ai, agent orchestration, agentic, workflow",cto;company,true,,service-4 gap fill; primary on agent orchestration
+src-030,BitGo,https://bitgo.com,protocol,generic,9,daily,global,Institutional digital asset custody & prime services,,true,,Enterprise Sub
+src-031,BlackRock,https://blackrock.com,institution,generic,9,daily,global,"Tokenized RWA (BUIDL fund), crypto asset mgmt",,true,,Investment Fees
+src-032,Centrifuge,https://centrifuge.io,protocol,generic,9,daily,global,Private credit and real-world asset DeFi pools,,true,,Platform Fees
+src-033,Chainlink,https://chain.link,protocol,generic,9,daily,global,"Off-chain data oracles (Proof of Reserve, NAV)",,true,,Usage-based (LINK)
+src-034,Citi Bank (Citi GPS/Institute),https://citi.com,institution,generic,9,daily,global,"Institutional market research, securities evolution",,true,,Free / Gated
+src-035,Deutsche Bank Research,https://dbresearch.com,institution,generic,9,daily,global,Macro research on DLT and stablecoin rails,,true,,Institutional Access
+src-036,Ethereum Magicians — agent standards,https://ethereum-magicians.org/c/eips/5,protocol,curated,9,weekly,global,"agent identity, erc-8004, agentic standards discussion",cto,true,,service-3 gap fill
+src-037,Fireblocks,https://fireblocks.com,protocol,generic,9,daily,global,Secure institutional crypto transfer & treasury OS,,true,,Enterprise Sub
+src-038,Franklin Templeton (Institute),https://franklintempleton.com,institution,generic,9,daily,global,"Tokenized money market funds (BENJI), insights",,true,,Investment Fees
+src-039,J.P. Morgan (Onyx),https://jpmorgan.com,institution,generic,9,daily,global,"Tokenized deposits, wholesale banking ledgers",,true,,Institutional Access
+src-040,Mento,https://www.mento.org/,protocol,specific_website,9,daily,global,,,false,,PRUNED: zero on-pillar items measured 2026-10-12; onchain FX protocol news with no institutional buyer angle
+src-041,MetaMask News,https://metamask.io/news,protocol,curated,9,daily,global,"agent wallet, agent identity, permissioning, mpc",cto,true,,service-3 gap fill
+src-042,Ondo Finance,https://ondo.finance,protocol,generic,9,daily,global,"Tokenizing US Treasuries, yield-bearing equivalents",,true,,Platform Fees
+src-043,Securitize,https://securitize.io,protocol,generic,9,daily,global,"Transfer agent, RWA tokenization (BlackRock BUIDL)",,true,,Platform/Tx Fees
+src-044,State Street,https://statestreet.com,institution,generic,9,daily,global,"Tokenized fund security, digital asset custody",,true,,Institutional Access
+src-045,Superstate,https://superstate.co,protocol,generic,9,daily,global,Regulated on-chain financial products,,true,,Platform Fees
+src-046,World Economic Forum (WEF),https://weforum.org,standards_body,generic,9,daily,global,Public-private tokenization standards/alliances,,true,,Free / Membership
+src-047,21 shares,https://www.21shares.com/en-eu/insights,data_platform,specific_website,8,weekly,global,,,true,,
+src-048,a16z crypto — AI x crypto,https://a16zcrypto.com/posts/,research_firm,curated,8,weekly,us,"ai agent, agentic, verifiable ai, zkml, privacy",ceo;cto,true,,services 3 and 7 gap fill
+src-049,Accenture,https://accenture.com,research_firm,generic,8,weekly,global,"Digital currency implementation, CBDC pilots",,true,,Bespoke Consulting
+src-050,Akash Network,https://akash.network/blog/,protocol,curated,8,weekly,global,"depin, decentralized compute, hardware network",cto,true,,service-6 gap fill
+src-051,Aleo,https://aleo.org/blog/,protocol,curated,8,weekly,global,"zero knowledge, privacy, zk, selective disclosure",cto,true,,service-7 gap fill; no feed or listing found 2026-10-13
+src-052,Allium,https://www.allium.so/research-hub,data_platform,specific_website,8,weekly,global,,,true,,
+src-053,Artemis,https://about.artemis.ai/,data_platform,specific_website,8,weekly,global,,,true,,
+src-054,Artemis,https://about.artemis.ai/resources/outstanding-supply,data_platform,specific_website,8,weekly,global,,,false,,PRUNED: duplicate of about.artemis.ai root entry; keep one canonical URL per property
+src-055,Aztec,https://aztec.network/blog,protocol,curated,8,weekly,global,"zero knowledge, privacy, confidential, shielded",cto,true,,service-7 gap fill
+src-056,Bain & Company,https://bain.com,research_firm,generic,8,weekly,global,"Web3 strategy, financial infrastructure evolution",,true,,Bespoke Consulting
+src-057,Blockworks Research,https://blockworksresearch.com,data_platform,generic,8,weekly,global,"On-chain data, institutional DeFi analytics",,true,,~$2500/yr (Pro)
+src-058,Boston Consulting Group (BCG),https://bcg.com,research_firm,generic,8,weekly,global,"Asset tokenization whitepapers, CBDC strategy",,true,,Bespoke Consulting
+src-059,Brookings,https://www.brookings.edu/,research_firm,specific_website,8,weekly,global,,,true,,
+src-060,Cadwalader,https://cadwalader.com,research_firm,generic,8,weekly,global,"TradFi & DeFi compliance, structural legal tech",,true,,Hourly Retainer
+src-061,CB Insights,https://cbinsights.com,research_firm,generic,8,weekly,global,Predictive startup/VC blockchain intelligence,,true,,GATED; Enterprise Quote
+src-062,Celent,https://www.celent.com/en,research_firm,specific_website,8,weekly,global,,,true,,GATED
+src-063,CFA Institute,https://cfainstitute.org,research_firm,generic,8,weekly,global,Digital asset valuation education and ethics,,true,,Free (Arts) / Member
+src-064,Defillama,https://defillama.com/research,data_platform,specific_website,8,weekly,global,,,false,,BLOCKED HTTP 403 as of 2026-10-06; PRUNED: duplicate of defillama.com root entry; both bot-blocked (HTTP 403)
+src-065,Defillama,https://defillama.com/,data_platform,specific_website,8,weekly,global,,,true,,BLOCKED HTTP 403 as of 2026-10-06
+src-066,Deloitte,https://deloitte.com,research_firm,generic,8,weekly,global,"Blockchain practice, MiCA compliance, audit",,true,,Bespoke Consulting
+src-067,Dune,https://dune.com/home,data_platform,specific_website,8,weekly,global,,,true,,BLOCKED HTTP 403 as of 2026-10-06
+src-068,Dune,https://dune.com/dune/stablecoins,data_platform,specific_website,8,weekly,global,,,false,,BLOCKED HTTP 403 as of 2026-10-06; PRUNED: duplicate of dune.com/home entry; both bot-blocked (HTTP 403)
+src-069,"Edgar, Dunn & Company",https://www.edgardunn.com/,research_firm,specific_website,8,weekly,global,,,true,,
+src-070,EigenCloud (EigenLayer),https://blog.eigencloud.xyz/,protocol,curated,8,weekly,global,"verifiable ai, agentic, restaking, autonomous",cto,true,,service-3 gap fill
+src-071,Emergen Research,https://emergenresearch.com,research_firm,generic,8,weekly,global,"Market sizing, granular blockchain tech forecasts",,true,,GATED; ~$5450/report
+src-072,Ernst & Young (EY),https://ey.com,research_firm,generic,8,weekly,global,"Blockchain enterprise services, ZK proofs (Nightfall)",,true,,Bespoke Consulting
+src-073,Falconx,https://www.falconx.io/insights?category=All,data_platform,specific_website,8,weekly,global,,,true,,
+src-074,Fetch.ai / ASI Alliance,https://fetch.ai/blog,protocol,curated,8,weekly,global,"ai agent, agent-to-agent payments, machine economy, agentic",cto,true,,service-3 gap fill
+src-075,Flagship Advisory,https://flagshipadvisorypartners.com/insights/the-stablecoin-promise-in-cross-border-payments-real-but-not-uniform/,research_firm,specific_website,8,weekly,global,,,true,,
+src-076,Forrester,https://forrester.com,research_firm,generic,8,weekly,global,"Tech readiness, digital custody solution analysis",,true,,GATED; Enterprise Sub
+src-077,Fxcintel,https://www.fxcintel.com/research,research_firm,specific_website,8,weekly,global,,,true,,GATED
+src-078,Gartner,https://gartner.com,research_firm,generic,8,weekly,global,Evaluating institutional tech stacks & vendors,,true,,GATED; Enterprise Sub
+src-079,Getorbital,https://www.getorbital.com/stablecoin-index/payments,data_platform,specific_website,8,weekly,global,,,false,,PRUNED: newest retrieved items dated November 2024; superseded by the /blog path which the listing extractor already reaches
+src-080,Helium Foundation,https://blog.helium.com/,protocol,curated,8,weekly,global,"depin, iot, decentralized physical, wireless, uptime",cto,true,,service-6 gap fill; no feed or listing found 2026-10-13
+src-081,IoT Analytics,https://iot-analytics.com/insights/,research_firm,curated,8,weekly,global,"iot, supply chain, telemetry, enterprise iot market sizing",company,true,,service-6 gap fill; partly open
+src-082,Kantar,https://kantar.com,research_firm,generic,8,weekly,global,"Behavioral data, brand tracking in finance",,true,,GATED; Enterprise Sub
+src-083,Kearney,https://kearney.com,research_firm,generic,8,weekly,global,"Global payments, digital asset integration for banks",,true,,Bespoke Consulting
+src-084,KPMG,https://kpmg.com,research_firm,generic,8,weekly,global,"Digital asset operational risk, tax, GENIUS Act",,true,,Bespoke Consulting
+src-085,McKinsey & Company,https://mckinsey.com,research_firm,generic,8,weekly,global,"Next-gen payments, stablecoin adoption frameworks",,true,,Bespoke Consulting
+src-086,Messari,https://messari.io,data_platform,generic,8,weekly,global,Crypto-native institutional research & governance,,true,,~$1200/yr (Pro)
+src-087,MIT Digital Currency Initiative,https://dci.mit.edu,research_firm,generic,8,weekly,global,Open-source R&D on CBDCs and network security,,true,,Free / Open Source
+src-088,NielsenIQ,https://nielseniq.com,research_firm,generic,8,weekly,global,"Consumer adoption metrics, retail digital payments",,true,,GATED; Enterprise Sub
+src-089,Paul Hastings,https://paulhastings.com,research_firm,generic,8,weekly,global,Elite legal counsel for crypto regulatory frameworks,,true,,Hourly Retainer
+src-090,peaq,https://www.peaq.xyz/blog,protocol,curated,8,weekly,global,"depin, iot, machine economy, logistics, spatial",cto,true,,service-6 gap fill
+src-091,PwC,https://pwc.com,research_firm,generic,8,weekly,global,"Global crypto regulation, stablecoin reserve audits",,true,,Bespoke Consulting
+src-092,Redseer,https://redseer.com,research_firm,generic,8,weekly,global,Emerging market digital economy strategy,,true,,Custom / Enterprise
+src-093,Ritual,https://ritual.net/blog,protocol,curated,8,weekly,global,"verifiable ai, on-chain inference, ai coprocessor",cto,true,,service-3 gap fill
+src-094,S&P Global Market Intelligence,https://spglobal.com,research_firm,generic,8,weekly,global,"Static risk signals, ratings, digital asset analytics",,true,,GATED; Enterprise Sub
+src-095,Simon-Kucher,https://simon-kucher.com,research_firm,generic,8,weekly,global,"Tokenomics, monetization, platform pricing",,true,,Bespoke Consulting
+src-096,Stable Research / Delphi,https://delphidigital.io,data_platform,generic,8,weekly,global,Deep-dive fundamental protocol / tokenomic research,,true,,~$1000+ (Pro)
+src-097,Vision On Chain,https://visaonchainanalytics.com/insights,data_platform,specific_website,8,weekly,global,,,true,,
+src-098,ZKProof Standards,https://zkproof.org/blog/,standards_body,curated,8,monthly,global,"zero knowledge, zk standards, attestation, privacy",cto,true,,service-7 gap fill
+src-099,4 Pillars,https://4pillars.io/en,specialist,specific_website,7,weekly,global,,,true,,
+src-100,American Enterprise Inst. (AEI),https://aei.org,specialist,generic,7,weekly,global,Think tank on financial market regulation & tech,,true,,Free / Open Access
+src-101,Assett tokenisation,https://www.assettokenization.com/intelligence,specialist,specific_website,7,weekly,global,,,true,,
+src-102,BeInCrypto Institutional 100,https://awards.beincrypto.com,specialist,generic,7,weekly,global,Institutional digital asset benchmarking,,true,,~$3k App / Custom
+src-103,Blockchain Research Lab,https://blockchainresearchlab.org,specialist,generic,7,weekly,global,Academic research on socioeconomic impacts of DLT,,true,,Free / Open Access
+src-104,F6S,https://f6s.com,specialist,generic,7,weekly,global,Connecting Web3/crypto startups with VC,,true,,Freemium / Pro
+src-105,Frontiers in Blockchain,https://frontiersin.org,specialist,generic,7,weekly,global,Peer-reviewed academic journal (crypto-economics),,true,,Free / Open Access
+src-106,Healthcare IT News,https://www.healthcareitnews.com/,specialist,curated,7,daily,us,"healthcare, legacy modernization, workflow, enterprise ai",company,true,,service-4 gap fill; open specialist press; BLOCKED HTTP 403 measured 2026-10-13; service-4 gap remains
+src-107,InsurTech Insights,https://www.insurtechinsights.com/news/,specialist,curated,7,daily,global,"insurtech, insurance, claims automation, enterprise ai",company,true,,service-4 gap fill; open specialist press; BLOCKED HTTP 403 measured 2026-10-13; service-4 gap remains
+src-108,Know Your Agent Network,https://knowyouragent.network/,specialist,curated,7,weekly,global,"kya, know your agent, agent identity verification",cto,true,,service-3 gap fill; the KYA layer the charter names
+src-109,Research 4 pillars,https://research.4pillars.io/en,specialist,specific_website,7,weekly,global,,,false,,BLOCKED HTTP 429 as of 2026-10-06; PRUNED: duplicate of 4pillars.io entry; HTTP 429 rate limited
+src-110,ssrn,https://www.ssrn.com/ssrn/,specialist,specific_website,7,weekly,global,,,true,,BLOCKED HTTP 403 as of 2026-10-06
+src-111,Teroxx,https://teroxx.com/research,specialist,specific_website,7,weekly,global,,,false,,"PRUNED: zero on-pillar items measured 2026-10-12; retail trading psychology, which section 2.2 excludes as price/speculation content"
+src-112,Tokenized Economies Institute,https://tokenizedeconomies.org,specialist,generic,7,weekly,global,"Smart contract frameworks, CSD interoperability",,true,,Free / Open Access

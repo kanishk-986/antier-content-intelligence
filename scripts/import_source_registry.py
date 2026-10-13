@@ -33,7 +33,13 @@ SHEET_ID = os.environ.get(
 EXPORT = "https://docs.google.com/spreadsheets/d/%s/export?format=xlsx" % SHEET_ID
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-OUT = os.path.join(REPO, "config", "sources", "source_registry.csv")
+CONF = os.path.join(REPO, "config", "sources")
+OUT = os.path.join(CONF, "source_registry.csv")
+# Curated sources that are not in the sheet, and sources to deactivate. The registry
+# is generated, so hand-editing it would be wiped on the next import -- these two
+# files are the durable place for an editorial decision (section 41.1).
+ADDITIONS = os.path.join(CONF, "additional_sources.csv")
+PRUNE = os.path.join(CONF, "prune_list.csv")
 
 COLUMNS = [
     "source_id", "source_name", "url", "source_type", "category",
@@ -205,6 +211,65 @@ def build_rows(text):
     return rows
 
 
+def load_additions():
+    """Curated sources filling service gaps the sheet does not cover."""
+    if not os.path.exists(ADDITIONS):
+        return []
+    with open(ADDITIONS) as fh:
+        return list(csv.DictReader(fh))
+
+
+def load_prune():
+    """(url_fragment, reason) pairs for sources to mark inactive."""
+    if not os.path.exists(PRUNE):
+        return []
+    with open(PRUNE) as fh:
+        return [(r["url_contains"].strip().lower(), r["reason"])
+                for r in csv.DictReader(fh) if r.get("url_contains", "").strip()]
+
+
+def apply_additions(rows, additions):
+    """Append curated sources, skipping any URL the sheet already provides."""
+    have = {r["url"].rstrip("/").lower() for r in rows}
+    for add in additions:
+        url = normalise_url(add["url"])
+        if url.rstrip("/").lower() in have:
+            continue
+        score = int(add.get("authority_score") or DEFAULT_TIER)
+        rows.append({
+            "source_id": "",
+            "source_name": add["source_name"],
+            "url": url,
+            "source_type": add.get("source_type") or DEFAULT_TYPE,
+            "category": add.get("category") or "curated",
+            "authority_score": score,
+            "crawl_frequency": add.get("crawl_frequency") or FREQUENCY.get(score, "weekly"),
+            "region": add.get("region") or "global",
+            "topics": add.get("topics") or "",
+            "personas": add.get("personas") or "",
+            "active": add.get("active") or "true",
+            "last_seen_at": "",
+            "notes": add.get("notes") or "curated addition",
+        })
+        have.add(url.rstrip("/").lower())
+    return rows
+
+
+def apply_prune(rows, prune):
+    """Deactivate rather than delete: the reason stays auditable in the registry."""
+    pruned = 0
+    for row in rows:
+        low = row["url"].lower()
+        for fragment, reason in prune:
+            if fragment in low:
+                row["active"] = "false"
+                row["notes"] = (row["notes"] + "; " if row["notes"] else "") + \
+                    "PRUNED: " + reason
+                pruned += 1
+                break
+    return pruned
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--xlsx", help="local workbook instead of the live sheet")
@@ -230,6 +295,15 @@ def main():
     if cleanup:
         os.unlink(path)
 
+    additions = load_additions()
+    rows = apply_additions(rows, additions)
+    pruned = apply_prune(rows, load_prune())
+
+    # Re-sort and re-id after merging so ids stay stable by authority then name.
+    rows.sort(key=lambda r: (-int(r["authority_score"]), r["source_name"].lower()))
+    for i, row in enumerate(rows, 1):
+        row["source_id"] = "src-%03d" % i
+
     if not rows:
         print("No sources parsed — refusing to write an empty registry.", file=sys.stderr)
         return 1
@@ -248,7 +322,11 @@ def main():
         print("  tier %2d: %3d" % (tier, len(by_tier[tier])))
     flagged = [r for r in rows if "needs_review" in r["notes"]]
     blocked = [r for r in rows if "BLOCKED" in r["notes"]]
+    inactive = [r for r in rows if r["active"] != "true"]
     print("  needs_review: %d   blocked: %d" % (len(flagged), len(blocked)))
+    print("  curated additions: %d   pruned (deactivated): %d"
+          % (len(additions), pruned))
+    print("  active: %d of %d" % (len(rows) - len(inactive), len(rows)))
     return 0
 
 

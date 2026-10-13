@@ -92,3 +92,47 @@ def test_header_rows_are_not_imported_as_sources():
 
 def test_empty_sheet_yields_no_rows_rather_than_junk():
     assert build_rows("===== SHEET: Specific People =====\nName | Profile Link\n") == []
+
+
+# --- curated additions and pruning -------------------------------------------
+
+def test_curated_additions_are_present_and_flagged():
+    curated = [r for r in rows() if r["category"] == "curated"]
+    assert len(curated) >= 20
+    assert all(r["notes"] for r in curated), "a curated source must say why it is here"
+
+
+def test_pruned_sources_are_deactivated_not_deleted():
+    """Deactivating keeps the reason auditable; deleting loses it."""
+    pruned = [r for r in rows() if "PRUNED:" in r["notes"]]
+    assert pruned, "expected the measured zero-value sources to be pruned"
+    assert all(r["active"] == "false" for r in pruned)
+    assert all(len(r["notes"]) > 30 for r in pruned), "prune must carry a reason"
+
+
+def test_teroxx_and_mento_are_pruned():
+    """Both returned zero on-pillar items when measured; Teroxx is also the
+    price/speculation category section 2.2 excludes."""
+    for host in ("teroxx.com", "mento.org"):
+        match = [r for r in rows() if host in r["url"]]
+        assert match, host
+        assert all(r["active"] == "false" for r in match), host
+
+
+def test_additions_do_not_duplicate_sheet_urls():
+    urls = [r["url"].rstrip("/").lower() for r in rows()]
+    assert len(urls) == len(set(urls))
+
+
+def test_every_service_has_at_least_one_open_source():
+    """The point of the curated additions: no service may be blind."""
+    import sys as _s
+    _s.path.insert(0, os.path.join(REPO, "scripts"))
+    from map_source_coverage import build, load, reachability
+    services, sources = load()
+    coverage, _ = build(services, sources)
+    blind = [
+        rank for rank in services
+        if not [r for r, _ in coverage[rank] if reachability(r) == "open"]
+    ]
+    assert not blind, f"services with no reachable source: {blind}"

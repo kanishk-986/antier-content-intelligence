@@ -1,0 +1,8 @@
+url_contains,reason
+teroxx.com,"zero on-pillar items measured 2026-10-12; retail trading psychology, which section 2.2 excludes as price/speculation content"
+mento.org,"zero on-pillar items measured 2026-10-12; onchain FX protocol news with no institutional buyer angle"
+getorbital.com/stablecoin-index,"newest retrieved items dated November 2024; superseded by the /blog path which the listing extractor already reaches"
+about.artemis.ai/resources/outstanding,"duplicate of about.artemis.ai root entry; keep one canonical URL per property"
+defillama.com/research,"duplicate of defillama.com root entry; both bot-blocked (HTTP 403)"
+dune.com/dune/stablecoins,"duplicate of dune.com/home entry; both bot-blocked (HTTP 403)"
+research.4pillars.io,"duplicate of 4pillars.io entry; HTTP 429 rate limited"

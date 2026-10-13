@@ -45,6 +45,8 @@ def map_source(row, services):
 
 
 def reachability(row):
+    if (row.get("active") or "true").lower() != "true":
+        return "pruned"
     notes = (row.get("notes") or "").upper()
     if "BLOCKED" in notes:
         return "blocked"

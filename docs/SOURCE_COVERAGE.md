@@ -1,5 +1,28 @@
 # SOURCE COVERAGE — sheet mapped onto core services and ICPs
 
+> **Updated 2026-10-13.** 23 curated sources added and 7 pruned; every service now
+> has at least one reachable source, pinned by a test. The matrix below is the
+> original 2026-10-12 measurement of the sheet **alone** — kept because it is the
+> answer to "is the sheet useful". Current state:
+>
+> | # | Service | Open (sheet only) | Open (now) |
+> |---|---|---:|---:|
+> | 1 | RWA Tokenization | 20 | 21 |
+> | 2 | Stablecoin Rails | 27 | 30 |
+> | 3 | AI Agent Infrastructure | **1** | **12** |
+> | 4 | Enterprise AI / InsurTech | **0** | **3** |
+> | 5 | Institutional DeFi | 5 | 5 |
+> | 6 | DePIN | **0** | **4** |
+> | 7 | ZK Privacy | 2 | 7 |
+> | 8 | Audits & Compliance | 21 | 23 |
+>
+> Live-tested: **17 of 23 additions work, 90 items** — a 74% hit rate against the
+> sheet's 36%. Four are blocked (NAIC, InsurTech Insights and Healthcare IT News all
+> 403; Coinbase 429) and two expose nothing (Aleo, Helium). Those are annotated in
+> the registry, so Service 4 reads **adequate** rather than well covered — its
+> coverage rests on CMS, Anthropic and IoT Analytics. **The open-web InsurTech and
+> healthcare trade press is bot-blocked, so Service 4 remains the weakest service.**
+
 Generated 2026-10-12 from `config/sources/source_registry.csv` (89 sources, all four
 tabs of the owner's Research Resources sheet) against `config/brand/services.yaml`.
 
