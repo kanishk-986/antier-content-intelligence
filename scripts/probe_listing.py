@@ -23,7 +23,11 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import httpx
 
 from src.database.sqlite_store import SqliteStore
-from src.ingestion.listing import candidate_links, load_rules
+from src.ingestion.listing import (
+    _has_editorial_section,
+    candidate_links,
+    load_rules,
+)
 from src.ingestion.pipeline import load_registry
 from src.narratives.momentum import load_independence
 
@@ -46,27 +50,56 @@ WORKERS = 12
 UA = "Mozilla/5.0 (compatible; AntierContentIntelligence/1.0; +research)"
 
 
+def decoy_links(client: httpx.Client, base: str, reject: list[str]) -> set[str] | None:
+    """What a path that cannot exist looks like.
+
+    Some sites answer 200 with their "not found" page for any unknown path, so a
+    candidate can score well on a page that is not there. Fetching one deliberately
+    absurd path gives the fingerprint to compare against: a real listing does not
+    offer the same links as a 404.
+    """
+    try:
+        resp = client.get(base.rstrip("/") + "/zzz-no-such-path-" + "x" * 12)
+    except httpx.HTTPError:
+        return None
+    if resp.status_code >= 400:
+        return None          # an honest 404; nothing to guard against
+    return set(candidate_links(resp.text, str(resp.url), reject))
+
+
 def probe_one(client: httpx.Client, base: str, path: str,
-              reject: list[str]) -> tuple[int, str, str]:
+              reject: list[str]) -> tuple[int, str, str, set[str]]:
     url = base.rstrip("/") + path
     try:
         resp = client.get(url)
     except httpx.HTTPError as exc:
-        return (0, path, f"error: {type(exc).__name__}")
+        return (0, path, f"error: {type(exc).__name__}", set())
     if resp.status_code >= 400:
-        return (0, path, f"HTTP {resp.status_code}")
-    links = candidate_links(resp.text, str(resp.url), reject)
-    return (len(links), path, f"HTTP {resp.status_code}, {len(links)} link(s)")
+        return (0, path, f"HTTP {resp.status_code}", set())
+    links = set(candidate_links(resp.text, str(resp.url), reject))
+    return (len(links), path, f"HTTP {resp.status_code}, {len(links)} link(s)", links)
 
 
-def probe_source(source: dict, paths: list[str], reject: list[str]) -> list[tuple]:
+def probe_source(source: dict, paths: list[str], reject: list[str],
+                 editorial: list[str]) -> list[tuple]:
     with httpx.Client(timeout=TIMEOUT, follow_redirects=True,
                       headers={"User-Agent": UA}) as client, \
             cf.ThreadPoolExecutor(max_workers=WORKERS) as pool:
+        decoy = decoy_links(client, source["url"], reject)
         futures = [pool.submit(probe_one, client, source["url"], p, reject)
                    for p in paths]
         results = [f.result() for f in futures]
-    return sorted((r for r in results if r[0] >= MIN_LINKS), reverse=True)
+
+    hits = []
+    for count, path, note, links in results:
+        if count < MIN_LINKS:
+            continue
+        if decoy and links == decoy:
+            continue                      # soft 404: same links as a bogus path
+        if not _has_editorial_section(source["url"].rstrip("/") + path, editorial):
+            continue                      # readable, but not an editorial index
+        hits.append((count, path, note))
+    return sorted(hits, reverse=True)
 
 
 def main() -> int:
@@ -82,6 +115,7 @@ def main() -> int:
 
     rules = load_rules()
     reject = rules.get("reject_patterns", [])
+    editorial = [s.lower() for s in rules.get("editorial_segments", [])]
     paths = list(dict.fromkeys(rules.get("default_paths", []) + EXTRA_PATHS))
     registry = {s["name"]: s for s in load_registry()}
 
@@ -114,7 +148,7 @@ def main() -> int:
           f"{WORKERS} at a time\n")
     found: dict[str, list[tuple]] = {}
     for src in targets:
-        hits = probe_source(src, paths, reject)
+        hits = probe_source(src, paths, reject, editorial)
         found[src["name"]] = hits[: args.top]
         label = src["name"][:38]
         if hits:

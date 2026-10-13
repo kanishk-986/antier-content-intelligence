@@ -71,6 +71,20 @@ Phase 0: repository and documentation (§39 Phase 0, §44.24–27).
   genuine same-day batch. Changed to flag `date_confidence: low` and keep the value —
   the §14 momentum engine needs the date, and annotation preserves the choice.
 
+### Fixed — a redirect could land on a page that is not a listing at all
+`blackrock.com/corporate/newsroom` answers at `/corporate/home`. The section is then
+`corporate`, which matches every path on the site, so the extractor pulled in
+evergreen marketing — the content §2.2 excludes. I worked around this by leaving
+BlackRock out of the overrides; that fixed one source and left the class of bug
+open. `editorial_segments` in `listing_rules.yaml` now requires the page that
+*answers* to carry an editorial stem in its path, and the outcome is reported as
+`not_a_listing`. Stems are matched as substrings, so `our-thinking` qualifies via
+`thinking` without needing an exact name.
+
+`scripts/probe_listing.py` applies the same guard, and gained a real soft-404 check:
+it fetches one deliberately absurd path and discards any candidate offering the same
+links, since a genuine listing does not match a 404.
+
 ### Fixed — four defects in listing extraction, found by chasing corpus independence
 The §15 independence correction said the corpus was too self-reported. 24 independent
 sources reported `no_feed` with a listing page sitting right there, and the extractor

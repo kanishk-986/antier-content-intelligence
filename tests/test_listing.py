@@ -166,3 +166,34 @@ def test_offsite_redirect_detection(registry, final, same):
     measures against the wrong host, and the corpus gains items attributed to a
     source that never published them."""
     assert listing._same_site(registry, final) is same
+
+
+# --- the page that answers must be a listing ---------------------------------
+
+STEMS = [s.lower() for s in (load_rules().get("editorial_segments") or [])]
+
+
+@pytest.mark.parametrize("url,ok,why", [
+    ("https://blackrock.test/corporate/home", False,
+     "newsroom redirected to the homepage; 'corporate' then matched the whole site"),
+    ("https://kpmg.test/xx/en/media.html", True, "media is editorial"),
+    ("https://worldbank.test/ext/en/news", True, "news is editorial"),
+    ("https://ey.test/en_us/newsroom", True, "newsroom is editorial"),
+    ("https://deloitte.test/global/en/our-thinking.html", True,
+     "matched by stem, not by an exact name"),
+    ("https://acme.test/products-and-services", False, "a product index"),
+    ("https://acme.test/about/leadership", False, "neither news nor product"),
+])
+def test_only_an_editorial_index_counts_as_a_listing(url, ok, why):
+    assert listing._has_editorial_section(url, STEMS) is ok, why
+
+
+def test_no_configured_stems_means_no_opinion():
+    """An empty config must not silently reject every source."""
+    assert listing._has_editorial_section("https://x.test/corporate/home", []) is True
+
+
+def test_the_real_config_carries_stems():
+    """The guard is only load-bearing if the config is populated."""
+    assert len(STEMS) >= 10
+    assert "news" in STEMS and "thinking" in STEMS

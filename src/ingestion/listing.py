@@ -101,6 +101,21 @@ def _same_site(registry_url: str, final_url: str) -> bool:
             == _registrable(urlparse(final_url).netloc))
 
 
+def _has_editorial_section(url: str, stems: list[str]) -> bool:
+    """Does this page's path look like an editorial index at all?
+
+    A redirect can land somewhere that is readable but is not a listing.
+    blackrock.com/corporate/newsroom answers at /corporate/home; "corporate" then
+    matches every path on the site, so the extractor pulled in evergreen marketing
+    that section 2.2 excludes. Requiring an editorial stem in the path costs nothing
+    on a real newsroom and stops that class of page entirely.
+    """
+    if not stems:
+        return True
+    sections = _section_segments(urlparse(url).path)
+    return any(stem in seg for seg in sections for stem in stems)
+
+
 def _listing_prefix(path: str) -> str:
     """The directory a listing page sits in.
 
@@ -196,6 +211,7 @@ def extract_listing(source: dict[str, Any], seen: set[str],
     """Fetch one source's listing page(s) and extract article items."""
     rules = rules if rules is not None else load_rules()
     reject = [r.lower() for r in (rules.get("reject_patterns") or [])]
+    editorial = [s.lower() for s in (rules.get("editorial_segments") or [])]
     out = ListingOutcome(source["id"], source["name"], "no_listing")
 
     with httpx.Client(headers={"User-Agent": UA}, timeout=httpx.Timeout(20.0),
@@ -228,6 +244,12 @@ def extract_listing(source: dict[str, Any], seen: set[str],
                 out.status = "offsite_redirect"
                 out.detail = (f"{listing_url} redirects off-domain to "
                               f"{urlparse(final_url).netloc}")
+                continue
+
+            if not _has_editorial_section(final_url, editorial):
+                out.status = "not_a_listing"
+                out.detail = (f"{listing_url} answers at {final_url}, which is not "
+                              "an editorial index")
                 continue
 
             links = candidate_links(resp.text, final_url, reject)

@@ -20,6 +20,30 @@ default_paths:
   - /blog
   - /research
 
+# A listing page is an editorial index. If the page that finally answers carries
+# none of these stems in its path, it is not one -- blackrock.com/corporate/newsroom
+# redirects to /corporate/home, whose "corporate" segment then matched the entire
+# site and admitted evergreen marketing. Matched as substrings, so "our-thinking"
+# qualifies via "thinking".
+editorial_segments:
+  - news
+  - press
+  - media
+  - insight
+  - blog
+  - research
+  - publication
+  - thinking
+  - perspective
+  - report
+  - article
+  - release
+  - announce
+  - stories
+  - viewpoint
+  - commentary
+  - analysis
+
 # Paths and patterns that are never articles.
 reject_patterns:
   - /login
