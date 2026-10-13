@@ -264,3 +264,40 @@ def test_a_forthcoming_item_is_labelled_for_the_reviewer():
 def test_a_past_date_is_not_labelled_forthcoming():
     out = qa.render(qa.load_prompt()[1], FakeOpportunity(), [item(1)], {})
     assert "NOT YET PUBLISHED" not in out
+
+
+# --- a timeout that can actually be enforced ----------------------------------
+
+def test_a_timeout_kills_the_whole_process_tree():
+    """subprocess.run's timeout kills only the direct child and then drains its
+    pipes. The `claude` CLI is a Node wrapper that spawns its own processes, and
+    those inherit the pipe write-ends — so the drain blocks and the timeout never
+    surfaces. Observed unattended: a call with a 180-second limit was still alive
+    after 45 minutes, and the 20-minute stage above it never fired either."""
+    import subprocess
+    import time
+
+    from src.intelligence.claude_cli import _run_in_own_group
+
+    started = time.monotonic()
+    _, _, code = _run_in_own_group(["bash", "-c", "sleep 60 & sleep 60"], "",
+                                   timeout=2)
+    elapsed = time.monotonic() - started
+    assert code is None, "a timeout must report itself, not a return code"
+    assert elapsed < 20, f"took {elapsed:.1f}s; the timeout did not bound it"
+    time.sleep(0.3)
+    left = subprocess.run(["pgrep", "-c", "-f", "sleep 60"],
+                          capture_output=True, text=True).stdout.strip()
+    assert left in ("", "0"), f"{left} orphaned process(es) survived the timeout"
+
+
+def test_a_completed_command_returns_its_output():
+    from src.intelligence.claude_cli import _run_in_own_group
+    out, _, code = _run_in_own_group(["bash", "-c", "echo hello"], "", timeout=10)
+    assert code == 0 and out.strip() == "hello"
+
+
+def test_stdin_reaches_the_command():
+    from src.intelligence.claude_cli import _run_in_own_group
+    out, _, code = _run_in_own_group(["cat"], "from stdin", timeout=10)
+    assert code == 0 and "from stdin" in out

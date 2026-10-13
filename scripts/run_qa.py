@@ -22,6 +22,7 @@ import argparse
 import json
 import os
 import sys
+import time
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -60,6 +61,9 @@ def main():
     ap.add_argument("--db", default="data/aci.db")
     ap.add_argument("--top", type=int, default=5)
     ap.add_argument("--dry-run", action="store_true")
+    ap.add_argument("--budget-minutes", type=float, default=12.0,
+                    help="stop reviewing after this long; the reviews already done "
+                         "are kept and the rest wait for the next run")
     args = ap.parse_args()
 
     config = wcfg.load()
@@ -99,7 +103,15 @@ def main():
 
     prompt = qa.load_prompt()
     tally = {}
+    # Section 20 narrows the queue; it does not have to finish it. A review that
+    # cannot start before the budget runs out is one the next run picks up, and a
+    # brief with four verdicts beats a cycle that never sends.
+    deadline = time.monotonic() + args.budget_minutes * 60
+    skipped = 0
     for opportunity, items in queue:
+        if time.monotonic() >= deadline:
+            skipped += 1
+            continue
         result = qa.review_opportunity(llm, opportunity, items, intel, prompt=prompt)
         if result.review is None:
             print("  %5.2f  ERROR  %-40s %s" % (opportunity.score_0_10,
@@ -122,6 +134,9 @@ def main():
                     detail=json.dumps({"decision": review["decision"],
                                        "failed": review["failed_questions"]}))
 
+    if skipped:
+        print(f"\n  stopped at the {args.budget_minutes:g}-minute budget; "
+              f"{skipped} opportunity(ies) left for the next run")
     print("\n  decisions: %s" % (", ".join("%s=%d" % kv for kv in sorted(tally.items()))
                                  or "none"))
     print("  Section 20: this narrows the queue. Human review is final; nothing is "

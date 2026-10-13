@@ -22,6 +22,7 @@ import json
 import os
 import re
 import shutil
+import signal
 import subprocess
 from typing import Any
 
@@ -39,6 +40,48 @@ class ClaudeCliNotAvailable(RuntimeError):
 
 def available() -> bool:
     return shutil.which("claude") is not None
+
+
+def _run_in_own_group(argv: list[str], prompt: str,
+                      timeout: int) -> tuple[str, str, int | None]:
+    """Run a command with a timeout that is actually enforceable.
+
+    `subprocess.run(timeout=...)` kills only the direct child and then drains its
+    pipes. The `claude` CLI is a Node wrapper that spawns its own processes, and
+    those inherit the pipe write-ends: killing the wrapper leaves them holding the
+    pipe open, so the drain blocks and the timeout never surfaces. Observed in an
+    unattended run -- a call with a 180-second limit was still alive after 45
+    minutes, and the stage above it never hit its own 20-minute limit either,
+    because it was blocked in the same way.
+
+    Running the child in its own session means one signal reaches the whole tree.
+
+    Returns (stdout, stderr, returncode); a returncode of None means it timed out.
+    """
+    proc = subprocess.Popen(
+        argv, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE, text=True,
+        start_new_session=True,          # its own process group, so killpg works
+    )
+    try:
+        stdout, stderr = proc.communicate(prompt, timeout=timeout)
+        return stdout, stderr, proc.returncode
+    except subprocess.TimeoutExpired:
+        _kill_group(proc)
+        try:
+            # The tree is dead, so this returns promptly; the bound is belt and
+            # braces against a process that ignores the signal.
+            stdout, stderr = proc.communicate(timeout=10)
+        except Exception:
+            stdout, stderr = "", ""
+        return stdout or "", stderr or "", None
+
+
+def _kill_group(proc: subprocess.Popen) -> None:
+    try:
+        os.killpg(os.getpgid(proc.pid), signal.SIGKILL)
+    except (ProcessLookupError, PermissionError):
+        proc.kill()
 
 
 class ClaudeCliLLM:
@@ -60,20 +103,15 @@ class ClaudeCliLLM:
         argv = ["claude", "-p"]
         if self._model and self._model != "claude-cli":
             argv += ["--model", self._model]
-        try:
-            proc = subprocess.run(
-                argv, input=prompt, capture_output=True, text=True,
-                timeout=self._timeout, check=False,
-            )
-        except subprocess.TimeoutExpired as exc:
-            raise RuntimeError(f"claude CLI timed out after {self._timeout}s") from exc
-
-        if proc.returncode != 0:
+        stdout, stderr, code = _run_in_own_group(argv, prompt, self._timeout)
+        if code is None:
+            raise RuntimeError(f"claude CLI timed out after {self._timeout}s")
+        if code != 0:
             raise RuntimeError(
-                f"claude CLI exited {proc.returncode}: "
-                f"{(proc.stderr or proc.stdout or '').strip()[:200]}"
+                f"claude CLI exited {code}: "
+                f"{(stderr or stdout or '').strip()[:200]}"
             )
-        return parse_json(proc.stdout)
+        return parse_json(stdout)
 
     @staticmethod
     def _build(system: str, user: str, schema: dict[str, Any]) -> str:

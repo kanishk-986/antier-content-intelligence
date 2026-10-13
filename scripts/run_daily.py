@@ -27,6 +27,7 @@ if _os.path.exists(_VENV) and _os.path.realpath(_sys.executable) != _os.path.rea
 
 import argparse
 import os
+import signal
 import subprocess
 import sys
 from datetime import datetime, timezone
@@ -61,25 +62,37 @@ DEFAULT_STAGE_TIMEOUT = 30 * 60
 def stage(name: str, args: list[str], required: bool, log) -> bool:
     log(f"\n=== {name} ===")
     limit = STAGE_TIMEOUT_SECONDS.get(name, DEFAULT_STAGE_TIMEOUT)
+    # Its own session, so a timeout can signal the whole tree. A stage shells out
+    # to the `claude` CLI, which spawns Node processes that inherit the pipes;
+    # killing only the direct child leaves them holding the pipe open and the
+    # timeout never surfaces. That is how a 20-minute stage ran for 65 minutes.
+    proc = subprocess.Popen(
+        [PYTHON if os.path.exists(PYTHON) else sys.executable,
+         os.path.join(REPO, "scripts", args[0]), *args[1:]],
+        stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, cwd=REPO,
+        start_new_session=True,
+    )
     try:
-        proc = subprocess.run([PYTHON if os.path.exists(PYTHON) else sys.executable,
-                               os.path.join(REPO, "scripts", args[0]), *args[1:]],
-                              capture_output=True, text=True, cwd=REPO, timeout=limit)
-    except subprocess.TimeoutExpired as expired:
-        done = (expired.stdout or b"")
-        if isinstance(done, bytes):
-            done = done.decode("utf-8", "replace")
-        for line in done.strip().splitlines()[-4:]:
+        out, err = proc.communicate(timeout=limit)
+    except subprocess.TimeoutExpired:
+        try:
+            os.killpg(os.getpgid(proc.pid), signal.SIGKILL)
+        except (ProcessLookupError, PermissionError):
+            proc.kill()
+        try:
+            out, err = proc.communicate(timeout=10)
+        except Exception:
+            out, err = "", ""
+        for line in (out or "").strip().splitlines()[-4:]:
             log("  " + line)
         log(f"  {name} hit its {limit // 60}-minute limit and was stopped"
             + ("" if required else " — continuing; this stage is resumable"))
         return not required
-    tail = (proc.stdout or "").strip().splitlines()[-6:]
-    for line in tail:
+
+    for line in (out or "").strip().splitlines()[-6:]:
         log("  " + line)
     if proc.returncode != 0:
-        err = (proc.stderr or "").strip().splitlines()[-4:]
-        for line in err:
+        for line in (err or "").strip().splitlines()[-4:]:
             log("  ! " + line)
         log(f"  {name} exited {proc.returncode}"
             + ("" if required else " — continuing, this stage is resumable"))

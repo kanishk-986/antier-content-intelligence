@@ -1,3 +1,35 @@
 daily cycle 2026-10-13T16:53:10+00:00
 
 === ingestion ===
+    [105/105] Tokenized Economies Institute            feed     no_feed           new=0   dup=0   no RSS/Atom feed found (HTTP 200)
+  
+    logged 105 source outcome(s) at 2026-10-13T17:21:46+00:00
+    attempted 98 | stored 115 | duplicates 12
+    by status: blocked=13, blocked_known=7, error=2, js_rendered=6, no_feed=30, not_a_listing=4, offsite_redirect=2, ok=41
+    db counts: sources=105, content_items=1004, intelligence=89, narratives=148, narrative_items=889, opportunities=148, audit_log=44, fetch_state=1083
+
+=== intelligence ===
+    imp=0.72 tension=0.70  Paxos joins Solana Developer Platf Paxos Joins Solana Developer Platform - 
+    imp=0.72 tension=0.40  Digital asset reconciliation and m Digital Asset Reconciliation for Closing
+    imp=0.72 tension=0.50  Reducing Bitcoin public-key exposu Bitcoin “Bunker Mode” and What It Actual
+  
+    attempted 40 | stored 40 | failed 0 | speculation filtered 0
+    db: sources=105, content_items=1004, intelligence=129, narratives=148, narrative_items=889, opportunities=148, audit_log=45, fetch_state=1083
+
+=== narratives ===
+         terms: 
+         srcs : 1 distinct, 1 publisher(s) | dated 1, undated 0
+         - Invest in What's Next
+  
+    shown 158 of 158 | multi-item narratives: 141 | largest: 33 | singletons: 17
+    persisted 158 narratives at 2026-10-13T17:38:14+00:00
+
+=== scoring ===
+     5.86  monitor              svc 1    investors, managers, sustainability, tools
+           tren=0.50  anti=0.68  audi=0.45  comm=0.27  auth=0.70  nove=0.90  sour=0.84
+  
+    bands: good=5, monitor=30, reject=123
+    competitor saturation axis: not_measured (section 32 defers it; never read as 0)
+    persisted 158 opportunities
+
+=== qa ===
