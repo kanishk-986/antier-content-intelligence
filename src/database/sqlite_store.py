@@ -177,6 +177,62 @@ class SqliteStore:
         )
         self.conn.commit()
 
+    # --- narratives ------------------------------------------------------------
+    def replace_narratives(self, narratives: list[dict[str, Any]]) -> None:
+        self.conn.execute("DELETE FROM narrative_items")
+        self.conn.execute("DELETE FROM narratives")
+        for n in narratives:
+            self.conn.execute(
+                """
+                INSERT INTO narratives
+                  (id, name, description, embedding, first_seen_at, last_seen_at,
+                   velocity, acceleration, saturation, status, baseline_rule)
+                VALUES (:id, :name, :description, :embedding, :first_seen_at,
+                        :last_seen_at, :velocity, :acceleration, :saturation,
+                        :status, :baseline_rule)
+                """,
+                {
+                    "id": n["id"], "name": n["name"],
+                    "description": n.get("description"),
+                    "embedding": _encode(n.get("embedding")),
+                    "first_seen_at": n.get("first_seen_at"),
+                    "last_seen_at": n.get("last_seen_at"),
+                    "velocity": n.get("velocity"),
+                    "acceleration": n.get("acceleration"),
+                    "saturation": n.get("saturation"),
+                    "status": n.get("status"),
+                    "baseline_rule": n.get("baseline_rule"),
+                },
+            )
+            for content_id, sim in n.get("members", []):
+                self.conn.execute(
+                    "INSERT INTO narrative_items (narrative_id, content_id, similarity)"
+                    " VALUES (?, ?, ?)",
+                    (n["id"], content_id, sim),
+                )
+        self.conn.commit()
+
+    def narratives(self) -> list[dict[str, Any]]:
+        rows = self.conn.execute(
+            "SELECT n.*, COUNT(ni.content_id) AS item_count FROM narratives n "
+            "LEFT JOIN narrative_items ni ON ni.narrative_id = n.id "
+            "GROUP BY n.id ORDER BY item_count DESC, n.name"
+        ).fetchall()
+        return [dict(r) for r in rows]
+
+    def narrative_items(self, narrative_id: str) -> list[dict[str, Any]]:
+        rows = self.conn.execute(
+            "SELECT c.* FROM content_items c "
+            "JOIN narrative_items ni ON ni.content_id = c.id "
+            "WHERE ni.narrative_id = ? ORDER BY c.published_at DESC",
+            (narrative_id,),
+        ).fetchall()
+        return [dict(r) for r in rows]
+
+    def source_authority(self) -> dict[str, int]:
+        rows = self.conn.execute("SELECT id, authority_score FROM sources").fetchall()
+        return {r["id"]: r["authority_score"] for r in rows}
+
     # --- audit -----------------------------------------------------------------
     def audit(self, actor: str, action: str, object_ref: str | None = None,
               detail: str | None = None) -> None:

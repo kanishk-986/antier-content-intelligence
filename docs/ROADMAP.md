@@ -12,7 +12,7 @@ from §40.
 | 3b | HTML listing extractor | Reach the no-feed primary sources | **done** (static) |
 | 3c | Browser rendering (Playwright) | Reach client-rendered sources | open decision |
 | 4 | Intelligence | Structured market signals | blocked on API key |
-| 5 | Narratives | Market themes instead of article lists | |
+| 5 | Narratives | Market themes instead of article lists | **done** (TF-IDF) |
 | 6 | Scoring | Antier-specific opportunity ranking | |
 | 7 | QA | High-confidence editorial queue | |
 | 8 | Dashboard | Human review workflow | |
@@ -59,6 +59,33 @@ binaries. Not installed on a guess — it is a call for the owner.
 
 Still unreached after 3b: DTCC and Clearstream (`js_rendered`), Euroclear, FATF and
 IMF (HTTP 403), Digital Asset (no listing page found).
+
+## Phase 5 result
+
+148 items cluster into 40 narratives, 16 of them cross-source — the §12 behaviour:
+several separate stories becoming one theme. Real examples from the live corpus:
+
+- **Centrifuge + Chainlink + Ondo** (15 items) — tokenized distribution and on-chain value
+- **ESMA + Circle** — EU securities regulation and tokenised collateral
+- **Mastercard + Stripe/Bridge** — card-linked stablecoin spend
+- **CMS + Anthropic** — healthcare AI and verification programmes
+
+Similarity sits behind `src/narratives/similarity.py`, so embeddings replace TF-IDF
+as a second implementation rather than a rewrite — the same pattern as the store.
+
+**The threshold was swept, not guessed**, and the first guess was badly wrong: 0.28
+gave 130 narratives from 148 items with **zero** cross-source clusters, grouping by
+publisher instead of topic. The table in `cluster.py` records the sweep. Two fixes
+mattered: clustering on title plus lede rather than the full body, and adding
+publisher boilerplate to the stopword list.
+
+**Honest deviation from §12:** it asks for 10–20 narratives from ~100 items. This
+corpus spans all eight charter services rather than one theme, so 40 is the analogue;
+forcing it lower merges unrelated services. Embeddings should separate similarities
+better and allow a higher, more stable threshold.
+
+**Acceleration is 0.0 and says so.** §14 defines it as change in velocity, which needs
+two snapshots. One run cannot measure it, so it is not interpolated.
 
 ## Deferred by §32
 

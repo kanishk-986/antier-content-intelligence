@@ -77,6 +77,28 @@ Phase 0: repository and documentation (§39 Phase 0, §44.24–27).
   sanctions Playwright "where permitted"; ~150 MB of browser binaries is not
   installed on a guess.
 
+### Added — Phase 5 (narrative clustering)
+- `src/narratives/similarity.py` — `Similarity` Protocol plus TF-IDF cosine. No
+  sklearn; TF-IDF over a few hundred documents is standard library.
+- `src/narratives/cluster.py` — average-link agglomerative clustering. Average-link
+  over single-link because single-link chains: one article mentioning stablecoins and
+  DePIN would merge two unrelated narratives.
+- `src/narratives/momentum.py` — §14 velocity, acceleration, authority coverage,
+  source diversity, novelty, emergence, with the zero-baseline rule recorded.
+- `scripts/run_narratives.py` — cluster, score, persist, report.
+- Store gains `replace_narratives`, `narratives`, `narrative_items`,
+  `source_authority`.
+- 18 further tests (75 total), including determinism checks on both similarity and
+  clustering.
+
+### Fixed during 5
+- First threshold (0.28, guessed) produced 130 narratives from 148 items with **zero**
+  cross-source clusters — it clustered by publisher house style, the opposite of §12.
+  Three changes fixed it: sweeping the threshold to 0.05 against the live corpus,
+  clustering on title plus a 600-character lede rather than the whole article, and
+  adding publisher boilerplate ("clients", "leveraging", "insights") to the stopword
+  list. Cross-source clusters went 0 → 16.
+
 ### Decisions recorded
 - **SQLite before PostgreSQL** for the vertical slice, behind `src/database/store.py`.
   Postgres, pgvector and Docker are absent from the build machine; installing them

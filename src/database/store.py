@@ -50,6 +50,23 @@ class Store(Protocol):
                      last_modified: str | None = None) -> None:
         """Remember that a URL was seen, duplicate or not."""
 
+    # --- narratives ------------------------------------------------------------
+    def replace_narratives(self, narratives: list[dict[str, Any]]) -> None:
+        """Write a fresh clustering run, discarding the previous one.
+
+        Clustering is a pure function of the corpus, so a re-run supersedes rather
+        than accumulates. Audit history lives in audit_log, not in stale clusters.
+        """
+
+    def narratives(self) -> list[dict[str, Any]]:
+        """Stored narratives, largest first."""
+
+    def narrative_items(self, narrative_id: str) -> list[dict[str, Any]]:
+        """Content items belonging to one narrative."""
+
+    def source_authority(self) -> dict[str, int]:
+        """{source_id: authority_score}, for momentum's authority coverage."""
+
     # --- audit -----------------------------------------------------------------
     def audit(self, actor: str, action: str, object_ref: str | None = None,
               detail: str | None = None) -> None:
