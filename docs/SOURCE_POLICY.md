@@ -109,6 +109,55 @@ adds ~150 MB of browser binaries, so it is not installed on a guess.
    from here, so the date is kept and annotated `date_confidence: low` rather than
    nulled — nulling destroys what the §14 momentum engine needs.
 
+## Independence is a registry property, not a scoring one
+
+§15's `source_credibility` now discounts self-reported and single-publisher evidence
+(`SCORING.md`). That stops the score flattering a vendor-only corpus; it does not
+make the corpus better. The registry has to.
+
+Measured on the first full corpus:
+
+| source type | in registry | yielded items | items | role |
+|---|---|---|---|---|
+| primary_company | 15 | 7 | 61 | primary party |
+| protocol | 19 | 6 | 50 | primary party |
+| regulator | 12 | 6 | 27 | independent |
+| institution | 6 | 1 | 10 | independent |
+| standards_body | 2 | **0** | 0 | independent |
+| specialist | 12 | **0** | 0 | independent |
+| research_firm | 29 | **0** | 0 | independent |
+| data_platform | 10 | **0** | 0 | independent |
+
+**75% of items came from primary parties, and 53 independent sources across four
+types produced nothing at all.** The registry is not short of independent sources —
+it is short of independent sources that can be *read*. Vendors publish clean feeds
+on marketing infrastructure; research firms gate their work, and data platforms
+render in JavaScript.
+
+So the corpus composition is an *ingestion* outcome, not an editorial choice, and it
+was invisible: a source that yields nothing leaves no trace in `content_items`.
+
+## Every run records why a source was silent
+
+`source_fetch_log` (migration 003) keeps one row per source per run: status, `via`,
+HTTP status, counts and detail. `fetch_state` records the items a source produced
+and so is silent about the runs where it produced none — which is the case that
+matters, because a 403, a JavaScript-rendered listing and a genuinely quiet week are
+indistinguishable in a corpus and only the third is acceptable.
+
+    python3 scripts/source_health.py               # yield by type, independence share
+    python3 scripts/source_health.py --actionable   # independent sources we can fix
+
+The report sorts failures by who can fix them:
+
+- `no_feed`, `no_listing`, `error` — **ours**: a missing listing rule or feed URL.
+- `js_rendered` — needs a headless browser, deferred by §32 (Phase 3c).
+- `blocked`, `blocked_known` — the publisher's decision. §10.2 and §33: a measured
+  bot-block is reported, never retried blindly.
+
+An independent source with a fixable status is the highest-value work in the system,
+because it changes what every later stage is reasoning about.
+
 ## Known-unreachable sources
 
 Reachability is **measured, not assumed**, and re-probed periodically. As of

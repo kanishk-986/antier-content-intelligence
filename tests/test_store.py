@@ -112,3 +112,84 @@ def test_unconfirmed_date_is_stored_as_null_not_fabricated(store):
     store.upsert_source(SOURCE)
     store.insert_content({**item("d" * 64), "published_at": None})
     assert store.content_items()[0]["published_at"] is None
+
+
+# --- source health log (migration 003) ---------------------------------------
+
+def _store_with_source(tmp_path, **over):
+    store = SqliteStore(str(tmp_path / "h.db"))
+    store.migrate()
+    src = {"id": "src-1", "name": "BIS", "url": "https://bis.org",
+           "source_type": "regulator", "authority_score": 10, "topics": "",
+           "active": True}
+    src.update(over)
+    store.upsert_source(src)
+    return store
+
+
+def _outcome(**over):
+    row = {"source_id": "src-1", "status": "ok", "via": "feed", "http_status": 200,
+           "new": 3, "duplicates": 1, "detail": "3 new item(s)"}
+    row.update(over)
+    return row
+
+
+def test_a_silent_source_is_recorded_not_lost(tmp_path):
+    """fetch_state only holds items. A run that produced none left no trace, so a
+    403 and a quiet week were indistinguishable."""
+    store = _store_with_source(tmp_path)
+    store.log_fetch_outcome("2026-10-13T06:00:00+00:00",
+                            [_outcome(status="blocked", new=0, http_status=403,
+                                      detail="HTTP 403")])
+    health = store.source_health()
+    assert len(health) == 1
+    assert health[0]["status"] == "blocked"
+    assert health[0]["http_status"] == 403
+    assert health[0]["new_items"] == 0
+
+
+def test_health_joins_the_registry_so_type_is_available(tmp_path):
+    store = _store_with_source(tmp_path)
+    store.log_fetch_outcome("2026-10-13T06:00:00+00:00", [_outcome()])
+    row = store.source_health()[0]
+    assert row["source_type"] == "regulator" and row["source_name"] == "BIS"
+    assert row["authority_score"] == 10
+
+
+def test_health_returns_the_latest_run_by_default(tmp_path):
+    store = _store_with_source(tmp_path)
+    store.log_fetch_outcome("2026-10-12T06:00:00+00:00", [_outcome(status="no_feed")])
+    store.log_fetch_outcome("2026-10-13T06:00:00+00:00", [_outcome(status="ok")])
+    assert store.source_health()[0]["status"] == "ok"
+    old = store.source_health("2026-10-12T06:00:00+00:00")
+    assert old[0]["status"] == "no_feed", "an earlier run stays queryable"
+
+
+def test_an_unsynced_registry_row_is_skipped_not_an_fk_error(tmp_path):
+    """The log references sources(id). A registry row never synced is a registry
+    problem, and must not abort the run's logging."""
+    store = _store_with_source(tmp_path)
+    logged = store.log_fetch_outcome(
+        "2026-10-13T06:00:00+00:00",
+        [_outcome(), _outcome(source_id="src-never-synced")])
+    assert logged == 1
+    assert len(store.source_health()) == 1
+
+
+def test_a_missing_status_is_recorded_as_error_not_null(tmp_path):
+    store = _store_with_source(tmp_path)
+    store.log_fetch_outcome("2026-10-13T06:00:00+00:00", [_outcome(status=None)])
+    assert store.source_health()[0]["status"] == "error"
+
+
+def test_long_detail_is_truncated_not_rejected(tmp_path):
+    store = _store_with_source(tmp_path)
+    store.log_fetch_outcome("2026-10-13T06:00:00+00:00",
+                            [_outcome(detail="x" * 900)])
+    assert len(store.source_health()[0]["detail"]) == 400
+
+
+def test_logging_nothing_is_not_an_error(tmp_path):
+    store = _store_with_source(tmp_path)
+    assert store.log_fetch_outcome("2026-10-13T06:00:00+00:00", []) == 0
+    assert store.source_health() == []

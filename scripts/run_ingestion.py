@@ -13,7 +13,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from src.database.sqlite_store import SqliteStore
+from src.database.sqlite_store import SqliteStore, utcnow
 from src.ingestion.pipeline import ingest, load_registry, sync_registry
 
 
@@ -47,7 +47,14 @@ def main():
             width, row["source_name"][:width], row.get("via", "-"), row["status"],
             row["new"], row["duplicates"], row["detail"][:52]))
 
-    print(f"\n  attempted {report.attempted} | stored {report.stored} | "
+    # SOURCE_POLICY.md: a source that yields nothing is a coverage fact and has to
+    # survive the run. Without this, "why did 85 of 105 sources yield nothing" can
+    # only be answered by probing all of them again.
+    run_at = utcnow()
+    logged = store.log_fetch_outcome(run_at, report.per_source)
+    print(f"\n  logged {logged} source outcome(s) at {run_at}")
+
+    print(f"  attempted {report.attempted} | stored {report.stored} | "
           f"duplicates {report.duplicates}")
     print("  by status: " + ", ".join(f"{k}={v}" for k, v in
                                       sorted(report.by_status().items())))

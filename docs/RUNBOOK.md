@@ -103,6 +103,19 @@ python3 scripts/import_source_registry.py     # live sheet -> config/sources/sou
 Review the diff before committing — the registry is configuration, so a change to it
 is a reviewable change to system behaviour.
 
+## Checking source health
+
+    python3 scripts/source_health.py               # yield by type + independence share
+    python3 scripts/source_health.py --actionable   # independent sources we can fix
+    python3 scripts/source_health.py --run 2026-10-13T06:00:00+00:00
+
+Run it after every ingestion. Two numbers matter more than the item count:
+
+- **independent items as a share of the corpus.** Below 50%, the corpus is mostly
+  vendor self-reporting and cannot support a claim however large it is.
+- **independent sources with a fixable status.** These are the ones worth work; a
+  `blocked` research firm is not a bug.
+
 ## Troubleshooting
 
 **A source returns nothing.** Check `SOURCE_POLICY.md` → known-unreachable sources

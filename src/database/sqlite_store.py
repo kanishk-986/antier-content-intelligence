@@ -12,6 +12,7 @@ import json
 import os
 import re
 import sqlite3
+import uuid
 from datetime import datetime, timezone
 from typing import Any
 
@@ -349,6 +350,51 @@ class SqliteStore:
     def source_authority(self) -> dict[str, int]:
         rows = self.conn.execute("SELECT id, authority_score FROM sources").fetchall()
         return {r["id"]: r["authority_score"] for r in rows}
+
+    def log_fetch_outcome(self, run_at: str, rows: list[dict[str, Any]]) -> int:
+        """Record one ingestion run's outcome per source. Called with the whole
+        report so a run is one transaction: a partial log would misreport coverage."""
+        known = self.source_ids()
+        payload = []
+        for row in rows:
+            if row["source_id"] not in known:
+                continue        # a registry row never synced; not a fetch outcome
+            payload.append({
+                "id": str(uuid.uuid4()),
+                "source_id": row["source_id"],
+                "run_at": run_at,
+                "status": row.get("status") or "error",
+                "via": row.get("via"),
+                "http_status": row.get("http_status"),
+                "new_items": int(row.get("new") or 0),
+                "duplicate_items": int(row.get("duplicates") or 0),
+                "detail": (row.get("detail") or "")[:400] or None,
+            })
+        if payload:
+            self.conn.executemany(
+                """
+                INSERT INTO source_fetch_log
+                  (id, source_id, run_at, status, via, http_status,
+                   new_items, duplicate_items, detail)
+                VALUES (:id, :source_id, :run_at, :status, :via, :http_status,
+                        :new_items, :duplicate_items, :detail)
+                """, payload)
+            self.conn.commit()
+        return len(payload)
+
+    def source_ids(self) -> set[str]:
+        return {r["id"] for r in self.conn.execute("SELECT id FROM sources")}
+
+    def source_health(self, run_at: str | None = None) -> list[dict[str, Any]]:
+        """Latest outcome per source, newest run unless one is named."""
+        rows = self.conn.execute(
+            """
+            SELECT l.*, s.name AS source_name, s.source_type, s.authority_score
+            FROM source_fetch_log l JOIN sources s ON s.id = l.source_id
+            WHERE l.run_at = COALESCE(?, (SELECT MAX(run_at) FROM source_fetch_log))
+            ORDER BY s.authority_score DESC, s.name COLLATE NOCASE
+            """, (run_at,)).fetchall()
+        return [dict(r) for r in rows]
 
     def source_types(self) -> dict[str, str]:
         """Registry type per source. Feeds the momentum independence correction:
