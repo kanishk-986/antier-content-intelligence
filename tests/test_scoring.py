@@ -26,6 +26,9 @@ class FakeMomentum:
     independence: float = 1.0
     independent_sources: int = 1
     self_reported_sources: int = 0
+    distinct_publishers: int = 3
+    max_publisher_share: float = 0.34
+    publisher_breadth: float = 1.0
     baseline_rule: str = "ratio"
 
 
@@ -216,3 +219,34 @@ def test_thesis_and_persona_are_empty_not_invented():
     row = _score([item(1, "Stablecoin rails")]).as_row()
     assert row["thesis"] == ""
     assert row["persona"] is None
+
+
+def test_credibility_is_scaled_by_publisher_breadth():
+    """The gap QA caught deterministically: one independent publisher carrying three
+    items scored full credibility because that publisher really is independent."""
+    one = FakeMomentum(independent_authority_coverage=1.0, publisher_breadth=0.667,
+                       distinct_publishers=1)
+    three = FakeMomentum(independent_authority_coverage=1.0, publisher_breadth=1.0,
+                         distinct_publishers=3)
+    assert rel.source_credibility(one).value == 0.667
+    assert rel.source_credibility(three).value == 1.0
+    assert "1 publisher)" in rel.source_credibility(one).basis
+
+
+def test_the_two_corrections_compound():
+    """A single vendor newsroom is both self-reported and concentrated."""
+    m = FakeMomentum(authority_coverage=1.0, independent_authority_coverage=0.35,
+                     self_reported_sources=1, independent_sources=0,
+                     publisher_breadth=0.667, distinct_publishers=1)
+    dim = rel.source_credibility(m)
+    assert dim.value == 0.233
+    assert "primary parties" in dim.basis and "breadth" in dim.basis
+
+
+def test_breadth_absent_leaves_the_figure_alone():
+    """An older momentum object must not be silently zeroed by a missing field."""
+    @dataclass
+    class Old:
+        authority_coverage: float = 0.8
+        independent_authority_coverage: float = 0.8
+    assert rel.source_credibility(Old()).value == 0.8

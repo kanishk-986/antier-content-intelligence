@@ -201,3 +201,40 @@ def test_independence_weight_comes_from_config_not_code():
                     independence={"primary_party_types": {"protocol"},
                                   "self_reported_weight": 0.0})
     assert m.independent_authority_coverage == 0.0
+
+
+# --- publisher breadth --------------------------------------------------------
+
+def test_breadth_does_not_punish_volume():
+    """Why section 14's source_diversity cannot feed section 15: 15 items across 3
+    publishers scores 0.2 there, worse than 1 item from 1 publisher."""
+    wide = mom.compute(_items(*("abc" * 5)), {}, source_types={})
+    assert wide.source_diversity == 0.2, "section 14's ratio, unchanged"
+    assert wide.publisher_breadth == 1.0, "three publishers is full corroboration"
+
+
+def test_a_single_publisher_is_floored_not_zeroed():
+    """Three items from one regulator's newsroom is weak corroboration and is still
+    evidence. The live FSB cluster is exactly this case."""
+    m = mom.compute(_items("a", "a", "a"), {}, source_types={})
+    assert m.distinct_publishers == 1
+    assert m.max_publisher_share == 1.0
+    assert m.publisher_breadth == 0.667
+
+
+def test_breadth_rises_with_distinct_publishers():
+    got = [mom.compute(_items(*ids), {}).publisher_breadth
+           for ids in (("a",), ("a", "b"), ("a", "b", "c"), ("a", "b", "c", "d"))]
+    assert got == sorted(got), got
+    assert got[-1] == got[-2] == 1.0, "target reached, no reward for piling on"
+
+
+def test_breadth_targets_come_from_config():
+    m = mom.compute(_items("a", "b"), {},
+                    breadth={"target_publishers": 2, "single_publisher_floor": 0.0})
+    assert m.publisher_breadth == 1.0
+
+
+def test_no_items_means_no_breadth():
+    m = mom.compute([], {})
+    assert m.publisher_breadth == 0.0 and m.distinct_publishers == 0

@@ -26,6 +26,9 @@ independent_authority_coverage
                   = (authoritative_independent
                      + self_reported_weight * authoritative_self_reported)
                     / total_sources
+max_publisher_share
+                  = items_from_largest_publisher / total_items
+publisher_breadth = floor + (1 - floor) * min(1, distinct_publishers / target)
 ```
 
 Also tracked: current volume, baseline volume, growth rate, unique-source count,
@@ -112,7 +115,7 @@ Per CLAUDE.md rule 5, scoring and parsing are the tested surfaces. Required:
 | Commercial relevance | `intelligence.importance_score` × service priority | **Multiplicative, not averaged** — see below |
 | Authority potential | service priority, lifted by a `proof_points` match | Capped until a real case-study corpus exists (PRD §12) |
 | Novelty | `momentum.novelty` (recency) | A **proxy**. The real §17 contrarian-angle agent is an unbuilt LLM stage. |
-| Source credibility | `momentum.independent_authority_coverage` | Registry tiers, never volume (§5.2) — and never a primary party's account of itself. See below |
+| Source credibility | `independent_authority_coverage` × `publisher_breadth` | Registry tiers, never volume (§5.2); never a primary party's account of itself; never one publisher read as several. See below |
 
 ## Authority is not corroboration
 
@@ -141,14 +144,45 @@ audit trail and the QA reviewer can see both numbers.
 party, so the corrected figure equals the raw one and `self_reported_sources` is 0.
 That is a visible degradation, not a silent one.
 
-### Known gap, owner's call
+## One publisher is not several
 
-`source_diversity` (distinct sources ÷ items) measures single-publisher
-concentration, but §14 feeds it only into `emergence` — no §15 dimension reads it.
-So three items from one regulator's newsroom still score full credibility, because
-that regulator *is* independent. The QA reviewer catches it (it did, on an FSB
-cluster), but deterministically it is unscored. Adding it to §15 would change the
-owner's dimension set, so it is flagged rather than done.
+Independence by source type leaves a second hole: three items from one regulator's
+newsroom score full coverage, because that regulator genuinely *is* independent.
+The live FSB cluster was exactly this — three items, one publisher, credibility 1.0.
+On this corpus **24 of 40 narratives come from a single publisher**.
+
+§14's `source_diversity` (distinct sources ÷ items) measures the concentration, but
+it cannot feed §15, because it falls as item count rises:
+
+| narrative | §14 `source_diversity` | `publisher_breadth` |
+|---|---|---|
+| 1 item, 1 publisher | 1.0 | 0.667 |
+| 3 items, 1 publisher | 0.333 | 0.667 |
+| 3 items, 3 publishers | 1.0 | 1.0 |
+| **15 items, 3 publishers** | **0.2** | **1.0** |
+
+The ratio rates a well-covered 15-item narrative *below* a single stray item. That
+penalises coverage, which inverts the intent, so §14's figure stays where the
+blueprint put it — feeding `emergence` only.
+
+`publisher_breadth` counts distinct publishers against a target instead
+(`source_breadth` in `weights.yaml`: target 3, floor 0.5). Three independent
+publishers is full corroboration; a single publisher is **floored at 0.667, not
+zeroed**, because one regulator's publication is still evidence. Nothing is gained
+by piling on past the target.
+
+The two corrections compound, as they should — a lone vendor newsroom is both
+self-reported and concentrated:
+
+| cluster | coverage | breadth | credibility |
+|---|---|---|---|
+| 3 independent publishers | 1.0 | 1.0 | **1.0** |
+| FSB: 3 items, 1 standards body | 1.0 | 0.667 | **0.667** |
+| Chainlink/Ondo/Centrifuge: 3 vendors | 0.35 | 1.0 | **0.35** |
+| Paxos: 5 items, 1 vendor | 0.35 | 0.667 | **0.233** |
+
+Every component stays in the dimension's `detail`, so the audit trail shows which
+correction did what.
 
 ## Unmeasured dimensions cap the band
 

@@ -132,7 +132,12 @@ products. Mastercard on Mastercard"*, *"all 3 items come from a single publisher
 the FSB's own newsroom"*, and *"every item is labelled THIN EXTRACTION (24, 18 and
 21 words)"*.
 
-This is the intended division of labour. Independence-by-source-type is
-deterministic and belongs in the score (`SCORING.md`, "Authority is not
-corroboration"). Single-publisher concentration and "this cluster is a keyword
-collision" are judgements, and belong here.
+The division of labour shifted once as a result. Single-publisher concentration was
+a QA-only judgement; it is now deterministic too (`SCORING.md`, "One publisher is
+not several"), because QA catching it on one FSB cluster did not stop 23 other
+single-publisher narratives scoring full credibility. What stays here is what cannot
+be computed: "this cluster is a keyword collision", "this is a product page, not an
+event", "the claim is not supported in the text you can see".
+
+That is the pattern to expect. QA is the place a systematic defect first becomes
+visible, and once visible it usually belongs in the deterministic layer.

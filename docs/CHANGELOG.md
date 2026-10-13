@@ -71,6 +71,28 @@ Phase 0: repository and documentation (§39 Phase 0, §44.24–27).
   genuine same-day batch. Changed to flag `date_confidence: low` and keep the value —
   the §14 momentum engine needs the date, and annotation preserves the choice.
 
+### Added — publisher breadth in `source_credibility` (owner-approved)
+The gap flagged in the previous entry, now closed. Independence by source type did
+not catch concentration: three items from one regulator's newsroom scored full
+credibility, because that regulator really is independent. **24 of 40 narratives on
+the live corpus come from a single publisher.**
+
+§14's `source_diversity` measures it but cannot feed §15 — being a ratio over item
+count, it rates 15 items across 3 publishers (0.2) *below* 1 item from 1 publisher
+(1.0), penalising coverage. So `momentum` adds `distinct_publishers`,
+`max_publisher_share` and `publisher_breadth`, which counts publishers against a
+target (`source_breadth` in `weights.yaml`: target 3, floor 0.5).
+`source_credibility` is now `independent_authority_coverage × publisher_breadth`.
+
+Implemented **inside the existing dimension rather than as an eighth one**, because
+an eighth dimension requires taking weight from the other seven — that is the
+owner's call and would make past runs incomparable. The seven §15 weights and
+`weights.yaml` version 1 are untouched.
+
+Effect: the FSB cluster's credibility falls 1.0 → 0.667 (5.65 → 5.31) and Paxos
+0.35 → 0.233 (5.37 → 5.25), while a 5-publisher institutional narrative now ranks
+highest on credibility at 0.48. Bands: monitor=7, reject=33.
+
 ### Fixed — the two defects QA found in its own first run
 - **Authority was being read as corroboration.** §15's `source_credibility` read
   §14's `authority_coverage`, on which a vendor's own newsroom scores 1.0 by design

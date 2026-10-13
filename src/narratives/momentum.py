@@ -34,6 +34,8 @@ AUTHORITATIVE_FLOOR = 8
 # Fallback only; the real values come from weights.yaml so a change is a config diff.
 PRIMARY_PARTY_TYPES = ("protocol", "primary_company")
 SELF_REPORTED_WEIGHT = 0.35
+TARGET_PUBLISHERS = 3
+SINGLE_PUBLISHER_FLOOR = 0.5
 
 
 @dataclass
@@ -48,6 +50,9 @@ class Momentum:
     independent_sources: int
     self_reported_sources: int
     source_diversity: float
+    distinct_publishers: int
+    max_publisher_share: float
+    publisher_breadth: float
     novelty: float
     emergence: float
     status: str                 # emerging | rising | stable | declining
@@ -76,6 +81,16 @@ def load_independence(path: str = WEIGHTS) -> dict[str, Any]:
     }
 
 
+def load_breadth(path: str = WEIGHTS) -> dict[str, Any]:
+    with open(path) as fh:
+        cfg = yaml.safe_load(fh).get("source_breadth") or {}
+    return {
+        "target_publishers": int(cfg.get("target_publishers", TARGET_PUBLISHERS)),
+        "single_publisher_floor": float(
+            cfg.get("single_publisher_floor", SINGLE_PUBLISHER_FLOOR)),
+    }
+
+
 def _parse(ts: str | None) -> datetime | None:
     if not ts:
         return None
@@ -90,7 +105,8 @@ def compute(items: list[dict[str, Any]], authority: dict[str, int],
             now: datetime | None = None, windows: list[int] | None = None,
             zero_baseline: dict[str, Any] | None = None,
             source_types: dict[str, str] | None = None,
-            independence: dict[str, Any] | None = None) -> Momentum:
+            independence: dict[str, Any] | None = None,
+            breadth: dict[str, Any] | None = None) -> Momentum:
     """Momentum for one narrative's items.
 
     `source_types` maps source id to its registry type. Absent it, no source can be
@@ -103,6 +119,7 @@ def compute(items: list[dict[str, Any]], authority: dict[str, int],
     windows = windows or load_windows()
     zero_baseline = zero_baseline if zero_baseline is not None else load_zero_baseline()
     independence = independence if independence is not None else load_independence()
+    breadth = breadth if breadth is not None else load_breadth()
     source_types = source_types or {}
     short, mid = windows[0], windows[1]
 
@@ -155,6 +172,22 @@ def compute(items: list[dict[str, Any]], authority: dict[str, int],
         independent_authority_coverage = 0.0
         independence_ratio = 0.0
 
+    # Breadth, not section 14's ratio: how many publishers carried this, against a
+    # target. Counting distinct publishers rather than dividing by item count means
+    # wide coverage is never punished for being voluminous.
+    counts: dict[str, int] = {}
+    for i in items:
+        counts[i["source_id"]] = counts.get(i["source_id"], 0) + 1
+    distinct_publishers = len(counts)
+    max_publisher_share = (max(counts.values()) / len(items)) if items else 0.0
+    floor = breadth["single_publisher_floor"]
+    target = max(1, breadth["target_publishers"])
+    if distinct_publishers:
+        reach = min(1.0, distinct_publishers / target)
+        publisher_breadth = floor + (1.0 - floor) * reach
+    else:
+        publisher_breadth = 0.0
+
     newest = max((d for _, d in timed), default=None)
     if newest is None:
         novelty = 0.0
@@ -182,6 +215,9 @@ def compute(items: list[dict[str, Any]], authority: dict[str, int],
                     independent_sources=len(independent),
                     self_reported_sources=len(self_reported),
                     source_diversity=round(source_diversity, 3),
+                    distinct_publishers=distinct_publishers,
+                    max_publisher_share=round(max_publisher_share, 3),
+                    publisher_breadth=round(publisher_breadth, 3),
                     novelty=round(novelty, 3), emergence=round(emergence, 3),
                     status=status, baseline_rule=rule,
                     dated_items=len(timed), undated_items=undated)

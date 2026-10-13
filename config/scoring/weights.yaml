@@ -71,3 +71,16 @@ saturation:
 source_independence:
   primary_party_types: [protocol, primary_company]
   self_reported_weight: 0.35
+
+# Publisher breadth. Section 14's source_diversity (distinct sources / items) does
+# measure single-publisher concentration, but it falls as item count rises: 15 items
+# from 3 publishers scores 0.2, worse than 1 item from 1 publisher. That penalises
+# coverage, which is the opposite of the intent, so it feeds emergence only.
+#
+# This measures breadth directly instead — how many distinct publishers carried the
+# narrative, against a target — and scales section 15's source_credibility by it.
+# Three independent publishers is treated as full corroboration; one is floored
+# rather than zeroed, because a single regulator's publication is still evidence.
+source_breadth:
+  target_publishers: 3
+  single_publisher_floor: 0.5

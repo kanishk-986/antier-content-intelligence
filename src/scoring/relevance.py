@@ -192,20 +192,38 @@ def source_credibility(momentum) -> DimensionScore:
     primary company and protocol announcements). Section 15 asks something else:
     whether the topic "can be evidenced reliably". Fifteen Chainlink and Ondo press
     releases are authoritative and corroborate nothing, so this dimension reads the
-    independence-corrected figure instead."""
-    value = getattr(momentum, "independent_authority_coverage",
-                    momentum.authority_coverage)
+    independence-corrected figure instead.
+
+    That alone misses concentration: three items from one regulator's newsroom score
+    full coverage, because that regulator genuinely is independent. So the figure is
+    scaled by publisher breadth — how many distinct publishers carried the narrative.
+    Three is treated as full corroboration and one is floored, not zeroed, because a
+    single regulator's publication is still evidence."""
+    coverage = getattr(momentum, "independent_authority_coverage",
+                       momentum.authority_coverage)
+    breadth = getattr(momentum, "publisher_breadth", 1.0)
+    publishers = getattr(momentum, "distinct_publishers", None)
+    value = coverage * breadth
+
+    reason = f"independent authority coverage {coverage}"
     self_reported = getattr(momentum, "self_reported_sources", 0)
-    reason = f"independent authority coverage {value}"
     if self_reported:
         reason += (f" ({self_reported} of "
                    f"{self_reported + getattr(momentum, 'independent_sources', 0)}"
                    " sources are primary parties, discounted)")
-    return DimensionScore(round(float(value), 3), reason,
-                          detail={"tier_based": True,
-                                  "authority_coverage": momentum.authority_coverage,
-                                  "independence": getattr(momentum, "independence", None),
-                                  "self_reported_sources": self_reported})
+    if publishers is not None and breadth < 1.0:
+        reason += (f", x{breadth} breadth ({publishers} publisher"
+                   f"{'' if publishers == 1 else 's'})")
+    return DimensionScore(
+        round(float(value), 3), reason,
+        detail={"tier_based": True,
+                "authority_coverage": momentum.authority_coverage,
+                "independent_authority_coverage": coverage,
+                "independence": getattr(momentum, "independence", None),
+                "self_reported_sources": self_reported,
+                "distinct_publishers": publishers,
+                "max_publisher_share": getattr(momentum, "max_publisher_share", None),
+                "publisher_breadth": breadth})
 
 
 def trend_velocity(momentum) -> DimensionScore:
