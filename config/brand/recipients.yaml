@@ -3,10 +3,11 @@
 #
 # A persona is an editorial territory, not a job title: it decides the angle an
 # opportunity should be written from. Routing sends each territory to the person who
-# owns it, so nobody reads four sections to find their one.
+# owns it, so nobody reads five sections to find their one.
 #
 # `email` empty means "include this section in the combined brief but send no
-# separate copy". Nothing here is guessed: every name was confirmed by the owner.
+# separate copy". Nothing here is guessed -- every name was confirmed by the owner
+# on 2026-10-13.
 
 timezone: Asia/Kolkata        # the 10:00 the schedule means
 send_at: "10:00"
@@ -14,20 +15,27 @@ window_hours: 24              # "yesterday", per section 28
 
 # The combined brief, every section in one mail.
 digest:
-  name: Alok Diwan
-  email: diwan.alok@antiersolutions.com
+  name: Kanishk Raj
+  email: kanishk.raj@antiersolutions.com
 
 personas:
   ceo:
-    name: Bikram
-    email: ""                 # add to send the CEO section separately
-    note: Vikram R Singh's territory per config/brand/ceo.yaml
+    name: Vikram R Singh
+    email: ""                 # add an address to also send this section on its own
+    note: CEO & Founder (section 43)
+  coo:
+    name: Shashi Pal
+    email: ""
+    note: >
+      Owner extension beyond section 4's four personas. config/brand/coo.yaml
+      carries a first-draft territory that should be reviewed -- a wrong territory
+      routes the wrong items here, which is worse than routing none.
   cto:
-    name: Shashi
+    name: ""                  # unassigned
     email: ""
   sme:
-    name: ""                  # section 4 ties this persona to named expertise;
-    email: ""                 # unassigned until the owner names someone
+    name: ""                  # section 4 ties this persona to named expertise
+    email: ""
   company:
     name: Antier Corporate
     email: ""

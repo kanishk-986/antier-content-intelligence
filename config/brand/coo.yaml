@@ -1,0 +1,28 @@
+# Persona: COO — Shashi Pal
+#
+# OWNER EXTENSION, beyond section 4. The blueprint names four personas (company,
+# ceo, cto, sme); this one was added on the owner's instruction on 2026-10-13.
+# The territory below is a first draft from the COO's remit and should be reviewed
+# — a wrong territory routes the wrong items here, which is worse than none.
+persona: coo
+label: COO
+name: Shashi Pal
+territory:
+  - operations
+  - execution
+  - delivery
+  - scale
+  - partnerships
+  - client onboarding
+  - implementation
+  - compliance operations
+  - risk management
+  - cost
+  - efficiency
+angle: How this actually gets built, run and scaled
+framing:
+  stablecoin_infrastructure: What it takes to run this in production
+  rwa_tokenization: Operational lift and what breaks at scale
+  ai_blockchain: Where this changes delivery and cost
+  regulation: What compliance has to absorb operationally
+formats: [operational playbook, implementation note, readiness checklist]

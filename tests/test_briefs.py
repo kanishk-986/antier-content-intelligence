@@ -8,8 +8,9 @@ import pytest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+from src.brand import load_personas, persona_names
 from src.briefs import daily, mailer
-from src.briefs.persona import PERSONAS, assign, load_personas, load_recipients
+from src.briefs.persona import assign, load_recipients
 
 NOW_ISO = "2026-10-13T12:00:00+00:00"
 from datetime import datetime, timedelta, timezone
@@ -137,7 +138,7 @@ def _render(opportunities, items, reviews=None):
 def test_every_persona_section_appears_even_when_empty():
     """An empty section reads as "we looked"; a missing one reads as "we didn't"."""
     out = _render([], [item(1)])
-    for persona in PERSONAS:
+    for persona in persona_names():
         label = PERSONA_CONFIGS[persona].get("label") or persona
         assert f"## {label}" in out
     assert "Searched, not skipped" in out
@@ -145,7 +146,32 @@ def test_every_persona_section_appears_even_when_empty():
 
 def test_the_configured_names_appear():
     out = _render([], [item(1)])
-    assert "Bikram" in out and "Shashi" in out
+    assert "Vikram R Singh" in out and "Shashi Pal" in out
+
+
+def test_the_coo_section_exists():
+    """An owner extension beyond section 4's four personas. It has to reach the
+    brief, and the QA validator has to accept it as a recommendation."""
+    from src.agents.qa import PERSONAS as QA_PERSONAS
+    assert "coo" in persona_names()
+    assert "coo" in QA_PERSONAS, (
+        "the QA schema rejected a persona the brief can route; the list used to be "
+        "hardcoded in three places")
+    assert "COO" in _render([], [item(1)])
+
+
+def test_an_operations_narrative_routes_to_the_coo():
+    o = FakeOpportunity(narrative_name="operational scale and delivery cost")
+    assert assign(o, [], PERSONA_CONFIGS).persona == "coo"
+
+
+def test_the_prompt_lists_exactly_the_configured_personas():
+    """The prompt is a static file, so it drifts from config silently. A model told
+    the wrong enum returns a value the validator then rejects."""
+    from src.agents import qa as qa_module
+    system, _ = qa_module.load_prompt()
+    for persona in persona_names():
+        assert f"`{persona}`" in system, f"{persona} missing from the QA prompt"
 
 
 def test_a_rejected_item_is_shown_with_its_objection():
@@ -247,3 +273,11 @@ def test_links_and_headings_survive_rendering():
     assert '<a href="https://x/a">Title</a>' in out
     assert "<strong>bold</strong>" in out
     assert out.count("<ul>") == out.count("</ul>") == 1
+
+
+def test_a_recipient_name_matching_the_label_is_not_repeated():
+    """The corporate channel's recipient name is the label, which read as
+    "Antier Corporate — Antier Corporate"."""
+    out = _render([], [item(1)])
+    assert "Antier Corporate — Antier Corporate" not in out
+    assert "## Antier Corporate" in out

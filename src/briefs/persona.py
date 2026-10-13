@@ -1,5 +1,10 @@
 """Assign an opportunity to an editorial persona (section 4, section 18).
 
+The persona list comes from `src/brand.py`, which discovers it from
+`config/brand/`. It used to be a tuple here, a second tuple in the QA schema and a
+sentence in the QA prompt -- so adding the COO persona would have had the QA
+validator reject a recommendation this router could place perfectly well.
+
 A persona is a territory, not a job title. The question is which angle an
 opportunity should be written from, and the answer routes it to the person who owns
 that angle.
@@ -27,12 +32,9 @@ from typing import Any
 
 import yaml
 
-REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-BRAND = os.path.join(REPO, "config", "brand")
-RECIPIENTS = os.path.join(BRAND, "recipients.yaml")
+from src.brand import BRAND, FALLBACK
 
-PERSONAS = ("ceo", "cto", "sme", "company")
-FALLBACK = "company"
+RECIPIENTS = os.path.join(BRAND, "recipients.yaml")
 
 _WORD = re.compile(r"[a-z][a-z0-9+#.-]{2,}")
 
@@ -42,17 +44,6 @@ class Assignment:
     persona: str
     reason: str
     from_qa: bool
-
-
-def load_personas(brand_dir: str = BRAND) -> dict[str, dict[str, Any]]:
-    out: dict[str, dict[str, Any]] = {}
-    for persona in PERSONAS:
-        path = os.path.join(brand_dir, f"{persona}.yaml")
-        if not os.path.exists(path):
-            continue
-        with open(path) as fh:
-            out[persona] = yaml.safe_load(fh) or {}
-    return out
 
 
 def load_recipients(path: str = RECIPIENTS) -> dict[str, Any]:

@@ -86,10 +86,11 @@ Leave it empty only on a clean APPROVE. Put issues in the specific buckets
 (`evidence_issues`, `factual_issues`, `brand_issues`, `risk_flags`) when they fit
 one; a problem can appear in both `problems` and a bucket.
 
-`recommended_persona` is one of `company`, `ceo`, `cto`, `sme`, or empty on reject.
-Pick by territory: CEO gets market structure and capital markets, CTO gets
-architecture and protocols, Corporate gets enterprise use cases, SME gets deep
-specialist themes.
+`recommended_persona` is one of `ceo`, `coo`, `cto`, `sme`, `company`, or empty on reject.
+Pick by territory: CEO gets market structure, capital markets and regulation; COO
+gets operations, delivery, scale and what compliance has to absorb operationally;
+CTO gets architecture, protocols and interoperability; SME gets deep specialist
+themes; Corporate gets enterprise use cases and case studies.
 
 Never invent a fact to justify a decision. If the material does not say something,
 that absence is itself a finding.

@@ -19,6 +19,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
+from src.brand import persona_names
 from src.intelligence.extractor import LLM
 from src.narratives.momentum import FUTURE_GRACE_HOURS
 
@@ -28,7 +29,10 @@ PROMPT_VERSION = "ai_qa.v1"
 
 DECISIONS = ("APPROVE", "REJECT", "RESEARCH_MORE")
 PRIORITIES = ("high", "medium", "low")
-PERSONAS = ("company", "ceo", "cto", "sme", "")
+# Discovered from config/brand/, plus "" for a rejected item that gets no persona.
+# This was a hardcoded tuple, which meant adding the COO persona would have had the
+# validator reject a recommendation the brief router could place perfectly well.
+PERSONAS = (*persona_names(), "")
 
 MAX_ARTICLES = 6
 ARTICLE_CHARS = 700

@@ -22,7 +22,8 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
-from src.briefs.persona import PERSONAS, assign, load_personas, load_recipients
+from src.brand import load_personas, persona_names
+from src.briefs.persona import assign, load_recipients
 
 # More than this in one section and it stops being a brief.
 MAX_PER_PERSONA = 5
@@ -96,7 +97,7 @@ def build(store, opportunities, window_hours: int = 24,
     reviews = _reviews_by_opportunity(store)
     brief = Brief(generated_at=now.isoformat(timespec="seconds"),
                   window_hours=window_hours,
-                  sections={p: [] for p in PERSONAS})
+                  sections={p: [] for p in persona_names()})
 
     considered = fresh = 0
     for opportunity in opportunities:
@@ -156,12 +157,15 @@ def render_markdown(brief: Brief, recipients: dict[str, Any] | None = None) -> s
                " — the objection is usually the most useful line.")
     out.append("")
 
-    for persona in PERSONAS:
+    for persona in persona_names():
         config = personas.get(persona, {})
         who = people.get(persona) or {}
         label = config.get("label") or persona
         name = who.get("name") or ""
-        heading = f"## {label}" + (f" — {name}" if name else "")
+        # The corporate channel's recipient name is the label, so it would read
+        # "Antier Corporate — Antier Corporate".
+        show_name = name and name.strip().lower() != str(label).strip().lower()
+        heading = f"## {label}" + (f" — {name}" if show_name else "")
         out.append(heading)
         territory = ", ".join(config.get("territory") or [])
         if territory:

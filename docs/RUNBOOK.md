@@ -154,10 +154,22 @@ four sections to find their one.
 
 | persona | territory | assigned |
 |---|---|---|
-| ceo | strategy, market structure, regulation, capital markets | Bikram |
-| cto | architecture, security, protocols, interoperability | Shashi |
+| ceo | strategy, market structure, regulation, capital markets | Vikram R Singh |
+| coo | operations, delivery, scale, partnerships, compliance ops | Shashi Pal |
+| cto | architecture, security, protocols, interoperability | unassigned |
 | sme | deep specialist themes | unassigned |
 | company | enterprise use cases, solutions, case studies | Antier corporate |
+
+`coo` is an **owner extension beyond §4**, which names four personas. Its territory
+in `config/brand/coo.yaml` is a first draft and should be reviewed — a wrong
+territory routes the wrong items there, which is worse than routing none.
+
+**Adding a persona is a config change.** `src/brand.py` discovers them from
+`config/brand/*.yaml` by their `persona:` field, so a new file is enough. The list
+used to be hardcoded in three places — the QA schema, this router and the QA prompt
+— which meant adding the COO would have had the QA validator reject a
+recommendation the brief could route perfectly well. A test now asserts the prompt
+lists exactly the configured personas, because a static prompt drifts silently.
 
 An item is routed by the QA reviewer's `recommended_persona` where one exists —
 §20 makes that the stronger signal — and otherwise by matching the narrative
