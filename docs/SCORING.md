@@ -85,3 +85,66 @@ Per CLAUDE.md rule 5, scoring and parsing are the tested surfaces. Required:
 - a zero baseline is covered explicitly
 - a missing dimension is an error, not a zero
 - similar stories cluster; unrelated stories separate (§34)
+
+
+---
+
+# Implementation notes (added Phase 6, 2026-10-13)
+
+## Where each dimension comes from
+
+| Dimension | Source | Notes |
+|---|---|---|
+| Trend velocity | `momentum.velocity`, normalised | Unbounded ratio; 2× or better saturates to 1.0 |
+| Antier relevance | signal match vs `config/brand/services.yaml` | **Title hits count double.** Body text is long enough that a stray "payment" matches; a title is what an item is about. Body-only evidence is halved. |
+| Audience relevance | ICP named in text, else the matched service's ICPs | Direct naming beats indirect inference |
+| Commercial relevance | `intelligence.importance_score` × service priority | **Multiplicative, not averaged** — see below |
+| Authority potential | service priority, lifted by a `proof_points` match | Capped until a real case-study corpus exists (PRD §12) |
+| Novelty | `momentum.novelty` (recency) | A **proxy**. The real §17 contrarian-angle agent is an unbuilt LLM stage. |
+| Source credibility | `momentum.authority_coverage` | Registry tiers, never volume (§5.2) |
+
+## Unmeasured dimensions cap the band
+
+If any dimension could not be measured, the band is capped just below `good`
+(6.99). An un-extracted narrative can be **monitored but never promoted**.
+
+This is the same rule the competitor axis follows: a missing input is not a pass.
+Without it, the first live run put a support-forum thread
+("thanks, test, really, appreciate") **above** a Chainlink cross-chain narrative,
+because a generous fallback beat a real but unextracted signal.
+
+## Two defects found by reading live output
+
+Both were invisible in theory and obvious in a ranked list.
+
+1. **Relevance scored body noise.** A support thread scored 0.68 on stablecoin rails
+   because the word "payment" appeared in a signature. Fixed by weighting title hits
+   double and halving body-only evidence; that thread now scores 0.23.
+2. **Service priority floored commercial relevance.** The formula averaged model
+   importance with service priority, so a Richmond Fed economics paper the model rated
+   **0.10** still scored **0.55** — high enough to out-rank real narratives. Priority
+   now *scales* the judgement rather than substituting for it: the same item scores
+   0.33.
+
+## Known limitation: 30% of the weight is recency
+
+§15 assigns trend velocity 20% and novelty 10%. On a corpus ingested in one batch,
+recency is largely an artefact of which feed happened to publish that morning, so a
+fresh low-value item can still out-rank older substance. After both fixes above, the
+Richmond Fed paper sits at 6.43 against Chainlink's 6.10 — much closer, but still
+ahead.
+
+**This is not silently reweighted.** The weights are the owner's, in
+`config/scoring/weights.yaml`, and changing them is an editorial decision. Three ways
+to resolve it:
+
+1. **Adjust the weights** — e.g. velocity 15% / novelty 5%, with the 10% moved to
+   Antier relevance. One diff in `weights.yaml`, version-bumped.
+2. **Let Phase 7 handle it.** §19's AI QA asks exactly this: *"is the narrative
+   genuinely emerging, or merely noisy?"* The adversarial reviewer is the designed
+   place to reject a recency artefact.
+3. **Extract more.** Every item extracted makes `commercial_relevance` real instead of
+   a fallback, and the Richmond Fed paper falls as its 0.10 importance propagates.
+   25 of 148 items are extracted so far.
+
+Option 2 is what the blueprint intends.

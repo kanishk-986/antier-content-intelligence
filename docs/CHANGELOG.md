@@ -122,6 +122,30 @@ and enforced afterwards by `schema.validate`. That is only safe because the vali
 already rejects rather than clamps: a malformed record fails loudly and is recorded as
 a failure instead of stored.
 
+### Added — Phase 6 (Antier relevance scoring)
+- `src/scoring/{weights,relevance,saturation,opportunity}.py`,
+  `scripts/run_scoring.py`. All seven §15 dimensions, weighted sum in Python from
+  version-pinned weights. No model is called in this phase.
+- 26 further tests (141 total), including a determinism check.
+- `docs/SCORING.md` gains an implementation-notes section recording where each
+  dimension comes from and what is still a proxy.
+
+### Fixed during 6 — both found by reading ranked live output
+- Relevance scored body noise: a support thread scored 0.68 on stablecoin rails
+  because "payment" appeared in a signature. Title hits now count double and
+  body-only evidence is halved; that thread scores 0.23.
+- Service priority floored commercial relevance: averaging model importance with
+  priority gave a Richmond Fed economics paper rated 0.10 a score of 0.55. Priority
+  now scales the judgement rather than substituting for it; the same item scores 0.33.
+- Unmeasured dimensions now cap the band below `good`, so an un-extracted narrative
+  can be monitored but never promoted.
+
+### Open decision
+- **30% of §15's weight is recency** (velocity 20% + novelty 10%), which on a
+  single-batch corpus favours whatever published that morning. Not silently
+  reweighted — the weights are the owner's. `docs/SCORING.md` sets out three
+  resolutions; Phase 7's adversarial QA is the one the blueprint intends.
+
 ### Decisions recorded
 - **SQLite before PostgreSQL** for the vertical slice, behind `src/database/store.py`.
   Postgres, pgvector and Docker are absent from the build machine; installing them

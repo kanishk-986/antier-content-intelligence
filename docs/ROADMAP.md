@@ -13,7 +13,7 @@ from §40.
 | 3c | Browser rendering (Playwright) | Reach client-rendered sources | open decision |
 | 4 | Intelligence | Structured market signals | **done** — runs on the subscription |
 | 5 | Narratives | Market themes instead of article lists | **done** (TF-IDF) |
-| 6 | Scoring | Antier-specific opportunity ranking | |
+| 6 | Scoring | Antier-specific opportunity ranking | **done** |
 | 7 | QA | High-confidence editorial queue | |
 | 8 | Dashboard | Human review workflow | |
 | 9 | Research dossiers | Long-form content pipeline | |
