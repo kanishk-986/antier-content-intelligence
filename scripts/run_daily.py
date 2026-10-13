@@ -45,11 +45,35 @@ PYTHON = os.path.join(REPO, ".venv", "bin", "python")
 OUTPUTS = os.path.join(REPO, "outputs")
 
 
+# A stage that never returns is worse than one that fails: the cycle produces no
+# brief at all and nothing says why. Measured: an intelligence pass managed 7 items
+# in three hours once the subscription started rate limiting, with no upper bound.
+STAGE_TIMEOUT_SECONDS = {
+    "ingestion": 45 * 60,
+    "intelligence": 25 * 60,
+    "narratives": 15 * 60,
+    "scoring": 10 * 60,
+    "qa": 20 * 60,
+}
+DEFAULT_STAGE_TIMEOUT = 30 * 60
+
+
 def stage(name: str, args: list[str], required: bool, log) -> bool:
     log(f"\n=== {name} ===")
-    proc = subprocess.run([PYTHON if os.path.exists(PYTHON) else sys.executable,
-                           os.path.join(REPO, "scripts", args[0]), *args[1:]],
-                          capture_output=True, text=True, cwd=REPO)
+    limit = STAGE_TIMEOUT_SECONDS.get(name, DEFAULT_STAGE_TIMEOUT)
+    try:
+        proc = subprocess.run([PYTHON if os.path.exists(PYTHON) else sys.executable,
+                               os.path.join(REPO, "scripts", args[0]), *args[1:]],
+                              capture_output=True, text=True, cwd=REPO, timeout=limit)
+    except subprocess.TimeoutExpired as expired:
+        done = (expired.stdout or b"")
+        if isinstance(done, bytes):
+            done = done.decode("utf-8", "replace")
+        for line in done.strip().splitlines()[-4:]:
+            log("  " + line)
+        log(f"  {name} hit its {limit // 60}-minute limit and was stopped"
+            + ("" if required else " — continuing; this stage is resumable"))
+        return not required
     tail = (proc.stdout or "").strip().splitlines()[-6:]
     for line in tail:
         log("  " + line)

@@ -7,6 +7,7 @@ because here the cost is money rather than bandwidth.
 from __future__ import annotations
 
 import json
+import time
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -20,18 +21,38 @@ class ExtractionReport:
     stored: int = 0
     failed: int = 0
     speculation_filtered: int = 0
+    stopped_early: bool = False
+    remaining: int = 0
     errors: list[tuple[str, str]] = field(default_factory=list)
     records: list[dict[str, Any]] = field(default_factory=list)
 
 
 def run(store, llm: LLM, limit: int | None = None,
-        skip_speculation: bool = True) -> ExtractionReport:
+        skip_speculation: bool = True,
+        budget_seconds: float | None = None,
+        now=time.monotonic) -> ExtractionReport:
+    """Extract intelligence for items that have none.
+
+    `budget_seconds` stops the pass cleanly when the wall clock runs out, between
+    items rather than mid-call. Extraction is resumable by design -- an item already
+    extracted is never re-sent -- so stopping early costs nothing but time.
+
+    It exists because the subscription rate limits rather than charges: a pass that
+    normally takes 20 seconds an item managed 7 items in three hours once limiting
+    started, with no upper bound. Without a budget the daily cycle has no end, and a
+    cycle that never ends sends no brief at all.
+    """
     report = ExtractionReport()
     prompt = load_prompt()
     sources = {s["id"]: s for s in store.active_sources()}
     items = store.items_without_intelligence(limit=limit)
+    started = now()
 
     for item in items:
+        if budget_seconds is not None and now() - started >= budget_seconds:
+            report.stopped_early = True
+            report.remaining = len(items) - report.attempted
+            break
         report.attempted += 1
         source = sources.get(item["source_id"], {})
         result = extract_item(llm, item, source, prompt=prompt)

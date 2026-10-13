@@ -248,3 +248,55 @@ def test_all_six_sentiments_persist(store):
     row = store.intelligence_for("h")
     for dim in SENTIMENT_DIMENSIONS:
         assert f"{dim}_sentiment" in row, dim
+
+
+# --- the wall-clock budget ----------------------------------------------------
+
+class _Clock:
+    """A monotonic clock the test advances by hand, so no test sleeps."""
+
+    def __init__(self, step=0.0):
+        self.now = 0.0
+        self.step = step
+
+    def __call__(self):
+        value = self.now
+        self.now += self.step
+        return value
+
+
+def _fill(store, count):
+    for i in range(count):
+        add(store, f"i{i}", f"Stablecoin settlement item {i}", "settlement rails")
+
+
+def test_a_pass_stops_at_its_budget_and_says_what_is_left(store):
+    """A pass that normally takes 20 seconds an item managed 7 items in three hours
+    once the subscription started rate limiting. Without a budget the daily cycle
+    has no end, and a cycle that never ends sends no brief at all."""
+    _fill(store, 10)
+    report = pipeline.run(store, StubLLM(), budget_seconds=90, now=_Clock(step=30.0))
+    assert report.stopped_early
+    assert 0 < report.attempted < 10
+    assert report.remaining == 10 - report.attempted
+
+
+def test_no_budget_means_no_early_stop(store):
+    _fill(store, 3)
+    report = pipeline.run(store, StubLLM())
+    assert not report.stopped_early and report.attempted == 3
+
+
+def test_a_generous_budget_completes_the_pass(store):
+    _fill(store, 3)
+    report = pipeline.run(store, StubLLM(), budget_seconds=3600, now=_Clock(step=1.0))
+    assert not report.stopped_early and report.attempted == 3
+
+
+def test_what_was_extracted_before_the_budget_is_kept(store):
+    """Stopping early must not discard work: extraction is resumable precisely
+    because an item already extracted is never re-sent."""
+    _fill(store, 10)
+    report = pipeline.run(store, StubLLM(), budget_seconds=60, now=_Clock(step=30.0))
+    assert report.stored == report.attempted > 0
+    assert store.counts()["intelligence"] == report.stored

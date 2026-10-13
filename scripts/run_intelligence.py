@@ -35,6 +35,9 @@ from src.intelligence.stub import StubLLM
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--db", default="data/aci.db")
+    ap.add_argument("--budget-minutes", type=float, default=20.0,
+                    help="stop cleanly after this long; extraction is resumable, "
+                         "and the subscription rate limits rather than charges")
     ap.add_argument("--limit", type=int)
     ap.add_argument("--dry-run", action="store_true",
                     help="use the deterministic stub; no model call at all")
@@ -90,7 +93,8 @@ def main():
         print("extracting with %s via the API — this bills credits.\n" % llm.model)
 
     report = pipeline.run(store, llm, limit=args.limit,
-                          skip_speculation=not args.keep_speculation)
+                          skip_speculation=not args.keep_speculation,
+                          budget_seconds=args.budget_minutes * 60)
 
     for row in sorted(report.records, key=lambda r: -r["importance"])[:12]:
         print("  imp=%.2f tension=%.2f  %-34s %s" % (
@@ -101,6 +105,10 @@ def main():
         for cid, err in report.errors[:8]:
             print("    %s  %s" % (cid[:8], err[:88]))
 
+    if report.stopped_early:
+        print(f"\n  stopped at the {args.budget_minutes:g}-minute budget with "
+              f"{report.remaining} item(s) still pending — resume by running this "
+              "again; nothing already extracted is re-sent")
     print("\n  attempted %d | stored %d | failed %d | speculation filtered %d"
           % (report.attempted, report.stored, report.failed,
              report.speculation_filtered))
