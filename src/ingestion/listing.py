@@ -45,6 +45,21 @@ _SLUG_WORDS = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+){2,}")   # >=3 hyphenated word
 _YEAR = re.compile(r"/20\d\d(?:[/-]|$)")
 _NEXT_SHELL = re.compile(r"/_next/static|window\.__NUXT__|__remixContext")
 
+# Locale and CMS-plumbing path segments carry no topic, so they must not be treated
+# as a section: matching on "en" or "en_gl" would admit the entire site. Enumerating
+# locales is a losing game -- ey.com uses /en_gl, kpmg.com /xx -- so the shape is
+# matched instead: one or two letters, optionally a two-part tag like en_gl.
+_LOCALE_SHAPE = re.compile(r"^[a-z]{2}([_-][a-z]{2})?$|^[a-z]$")
+_PLUMBING_SEGMENTS = {
+    "ext", "content", "web", "site", "sites", "global", "www", "html",
+    "index", "home", "page", "pages", "default", "xx", "dam", "etc",
+}
+
+
+def _is_locale(segment: str) -> bool:
+    seg = segment.split(".")[0].lower()
+    return bool(_LOCALE_SHAPE.match(seg)) or seg in _PLUMBING_SEGMENTS
+
 
 @dataclass
 class ListingOutcome:
@@ -68,20 +83,72 @@ def rules_for(host: str, rules: dict[str, Any]) -> dict[str, Any]:
     return {}
 
 
+def _registrable(host: str) -> str:
+    """Enough of a host to tell one organisation from another. Not a public-suffix
+    implementation: it keeps the last three labels for a two-part TLD like .co.uk
+    and the last two otherwise, which is sufficient to catch a redirect that leaves
+    the publisher behind."""
+    labels = host.lower().split(":")[0].strip(".").split(".")
+    if len(labels) <= 2:
+        return ".".join(labels)
+    if len(labels[-1]) == 2 and len(labels[-2]) <= 3:
+        return ".".join(labels[-3:])
+    return ".".join(labels[-2:])
+
+
+def _same_site(registry_url: str, final_url: str) -> bool:
+    return (_registrable(urlparse(registry_url).netloc)
+            == _registrable(urlparse(final_url).netloc))
+
+
+def _listing_prefix(path: str) -> str:
+    """The directory a listing page sits in.
+
+    A listing URL ending in a filename -- /xx/en/our-insights.html, common on AEM
+    and SharePoint sites -- has no path below it, so `startswith(prefix + "/")`
+    rejected every link on the page. KPMG, Deloitte and EY all failed this way.
+    """
+    path = path.rstrip("/")
+    last = path.rsplit("/", 1)[-1]
+    if "." in last and not last.startswith("."):
+        path = path[: -len(last)].rstrip("/")
+    # A prefix of nothing but locale segments constrains nothing: deloitte.com's
+    # /global/en/our-thinking.html would reduce to /global/en, which prefixes the
+    # entire site. Section matching is the only constraint left in that case.
+    segments = [s for s in path.strip("/").split("/") if s]
+    if segments and all(_is_locale(s) for s in segments):
+        return ""
+    return path
+
+
+def _section_segments(path: str) -> set[str]:
+    """The topical segments of a listing path, ignoring locale and CMS plumbing.
+
+    A CMS often serves its listing and its articles under sibling prefixes: the
+    World Bank lists at /ext/en/news and publishes at /en/news/press-release/...
+    A strict prefix test drops every article. Matching on the topical segment
+    instead keeps /products-and-services/... out while letting the siblings in.
+    """
+    return {seg.split(".")[0].lower() for seg in path.strip("/").split("/")
+            if seg and not _is_locale(seg)}
+
+
 def candidate_links(html: str, listing_url: str, reject: list[str]) -> list[str]:
     """Article-looking links from a listing page, same host only.
 
     Three constraints, all required:
 
     1. Same host as the listing.
-    2. **Under the listing's own path prefix.** An article reached from /news lives
-       under /news. Without this the slug heuristic happily matches
+    2. **Within the listing's section.** Under the listing's own directory, or
+       under one of its topical segments. An article reached from /news lives under
+       /news somewhere. Without this the slug heuristic happily matches
        /products-and-services/capital-liquidity-optimization, which is a product
        page -- precisely the marketing content section 2.2 forbids in the corpus.
     3. A path containing a year, or a slug of at least three hyphenated words.
     """
     base = urlparse(listing_url)
-    prefix = base.path.rstrip("/")
+    prefix = _listing_prefix(base.path)
+    sections = _section_segments(base.path)
     out: list[str] = []
     seen: set[str] = set()
 
@@ -95,9 +162,12 @@ def candidate_links(html: str, listing_url: str, reject: list[str]) -> list[str]
         path = parsed.path.rstrip("/")
         if not path or path.count("/") < 1:
             continue
-        # Constraint 2: must sit below the listing page, and be deeper than it.
+        # Constraint 2: below the listing's directory, or inside its section.
         if prefix and not path.startswith(prefix + "/"):
-            continue
+            segments = {seg.split(".")[0].lower()
+                        for seg in path.strip("/").split("/")}
+            if not sections or not (sections & segments):
+                continue
         low = absolute.lower()
         if any(bad in low for bad in reject):
             continue
@@ -144,14 +214,30 @@ def extract_listing(source: dict[str, Any], seen: set[str],
             if resp.status_code >= 400:
                 continue
 
-            links = candidate_links(resp.text, listing_url, reject)
+            # The URL after redirects, not the one requested. kpmg.com/news lands
+            # on /xx/en/media.html, and its article links sit under
+            # /xx/en/media/press-releases/... Deriving the section from the
+            # requested /news rejected every one of them.
+            final_url = str(resp.url)
+
+            # ...but a redirect that leaves the domain changes who is speaking.
+            # cadwalader.com/press-releases lands on hlc.com, a different firm;
+            # same-host filtering then measures against the wrong host and the
+            # corpus gains items attributed to a source that never published them.
+            if not _same_site(source["url"], final_url):
+                out.status = "offsite_redirect"
+                out.detail = (f"{listing_url} redirects off-domain to "
+                              f"{urlparse(final_url).netloc}")
+                continue
+
+            links = candidate_links(resp.text, final_url, reject)
             if len(links) < JS_SHELL_LINK_FLOOR and _NEXT_SHELL.search(resp.text):
                 shell_seen = True
                 continue
             if not links:
                 continue
 
-            out.listing_url = listing_url
+            out.listing_url = final_url
             fresh = [u for u in links if u not in seen][:max_candidates]
             for url in fresh:
                 item = _fetch_article(client, source, url)
@@ -160,7 +246,7 @@ def extract_listing(source: dict[str, Any], seen: set[str],
             _flag_shared_dates(out.items)
             if out.items:
                 out.status = "ok"
-                out.detail = (f"{len(out.items)} item(s) from {listing_url} "
+                out.detail = (f"{len(out.items)} item(s) from {final_url} "
                               f"({len(links)} candidates)")
                 return out
 

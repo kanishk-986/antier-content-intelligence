@@ -40,9 +40,25 @@ reject_patterns:
   - /author/
   - /page/
   - /feed
+  - /content/dam/
+  - /assets-shared/
+  - /etc.clientlibs/
   - .pdf
   - .zip
   - .xlsx
+  - .doc
+  - .ppt
+  # Image and media assets. A CMS stores them on article-shaped paths -- Deloitte
+  # serves /content/dam/.../2025/Our-thinking-....jpg, which carries a year and a
+  # hyphenated slug and so passed every other test.
+  - .jpg
+  - .jpeg
+  - .png
+  - .gif
+  - .svg
+  - .webp
+  - .mp4
+  - .mp3
 
 overrides:
   circle.com:
@@ -61,3 +77,19 @@ overrides:
   euroclear.com:
     listing_paths: [/newsandinsights]
     note: measured HTTP 403 on the root; listing may also block
+  # Added after probing with scripts/probe_listing.py, then verified by running the
+  # extractor. News and press paths only: these firms' /insights pages are evergreen
+  # service and thought-leadership hubs ("Agentic AI in M&A | Transaction Advisory"),
+  # which is the marketing content section 2.2 keeps out of the corpus.
+  worldbank.org:
+    listing_paths: [/en/news]
+  ey.com:
+    listing_paths: [/us/en/newsroom, /newsroom]
+  kpmg.com:
+    listing_paths: [/news]
+  # Not added, and why:
+  #   blackrock.com  - /corporate/newsroom redirects to the homepage; the links
+  #                    there are evergreen marketing, not dated news.
+  #   cadwalader.com - /press-releases redirects off-domain to hlc.com.
+  #   jpmorgan.com, accenture.com, nielseniq.com - only /insights resolves, which
+  #                    is a thought-leadership hub, not news (section 2.2).

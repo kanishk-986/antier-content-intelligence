@@ -71,6 +71,56 @@ Phase 0: repository and documentation (§39 Phase 0, §44.24–27).
   genuine same-day batch. Changed to flag `date_confidence: low` and keep the value —
   the §14 momentum engine needs the date, and annotation preserves the choice.
 
+### Fixed — four defects in listing extraction, found by chasing corpus independence
+The §15 independence correction said the corpus was too self-reported. 24 independent
+sources reported `no_feed` with a listing page sitting right there, and the extractor
+could not read any of them, for four separate reasons:
+
+- **A listing URL ending in a filename rejected every link.** The prefix test
+  `path.startswith(prefix + "/")` can never match below `/xx/en/our-insights.html`.
+  KPMG, Deloitte and EY all list that way. `_listing_prefix()` reduces such a URL to
+  its directory.
+- **Articles under a sibling path were dropped.** The World Bank lists at
+  `/ext/en/news` and publishes at `/en/news/press-release/2026/...`; all eight press
+  releases were rejected. The constraint is now the listing's directory **or** one of
+  its topical segments, which still excludes the Phase 3b product-page regression.
+- **A locale segment counted as a topic.** `ey.com/en_gl/insights` then admitted 88
+  service pages, because `en_gl` matched the whole site. `_is_locale()` matches the
+  shape (one or two letters, optional two-part tag) rather than a list, and a prefix
+  of nothing but locale segments is discarded.
+- **The post-redirect URL was never used.** `candidate_links()` got the requested URL,
+  not the one that answered. `kpmg.com/news` lands on `/xx/en/media.html`, so the
+  section was derived from a path that no longer existed. This bug alone hid KPMG's
+  entire newsroom.
+
+Media assets joined `reject_patterns`: Deloitte serves
+`/content/dam/.../2025/Our-thinking-digital-assets.jpg`, which carries a year and a
+hyphenated slug and passed every other test.
+
+### Fixed — items could be attributed to a publisher that never wrote them
+With redirects followed properly, `cadwalader.com/press-releases` resolves to
+**`hlc.com`**, a different firm. Same-host filtering then measures against the new
+host, so every link on it qualifies. `_same_site()` compares registrable domains and
+the outcome is reported as `offsite_redirect`. A redirect that leaves the domain
+changes who is speaking.
+
+### Added — `scripts/probe_listing.py`
+Finds a source's listing path by probing candidates concurrently and scoring each
+with the extractor's own `candidate_links()`, so a path that scores is one the
+pipeline can read rather than one that merely exists. Prints an `overrides:` block
+for `listing_rules.yaml`. §41.1 requires a new source to be addable by
+configuration; that only holds if finding the configuration is repeatable, which is
+how 24 sources stayed silent.
+
+### Source registry
+Added verified listing paths for the **World Bank** (8 press releases, 319–750
+words), **KPMG** (5, 1051–1258 words) and **EY** (12). Deliberately not added, with
+reasons recorded in `listing_rules.yaml`: BlackRock (newsroom redirects to a
+homepage of evergreen marketing), Cadwalader (off-domain), and J.P. Morgan,
+Accenture and NielsenIQ (only `/insights` hubs resolve — "Agentic AI in M&A |
+Transaction Advisory" is the marketing §2.2 excludes). A readable page is not a
+source.
+
 ### Added — publisher breadth in `source_credibility` (owner-approved)
 The gap flagged in the previous entry, now closed. Independence by source type did
 not catch concentration: three items from one regulator's newsroom scored full

@@ -3,8 +3,11 @@
 import os
 import sys
 
+import pytest
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+from src.ingestion import listing
 from src.ingestion.listing import (
     _flag_shared_dates,
     candidate_links,
@@ -101,3 +104,65 @@ def test_too_few_items_to_judge_are_left_alone():
     items = [{"published_at": "2026-10-12T00:00:00+00:00", "metadata": {}}]
     _flag_shared_dates(items)
     assert "date_confidence" not in items[0]["metadata"]
+
+
+# --- the section constraint, and the four bugs it had ------------------------
+
+def test_a_listing_url_ending_in_a_filename_still_matches_links():
+    """KPMG, Deloitte and EY list at /xx/en/our-insights.html. A prefix of
+    "...our-insights.html/" prefixes nothing, so every link was rejected."""
+    html = '<a href="/xx/en/media/press-releases/2026/05/kpmg-signs-alliance">x</a>'
+    got = listing.candidate_links(html, "https://kpmg.test/xx/en/media.html", [])
+    assert got == ["https://kpmg.test/xx/en/media/press-releases/2026/05/kpmg-signs-alliance"]
+
+
+def test_articles_under_a_sibling_path_are_kept():
+    """The World Bank lists at /ext/en/news and publishes at /en/news/... A strict
+    prefix test dropped all eight of its press releases."""
+    html = ('<a href="/en/news/press-release/2026/10/12/world-bank-launches-hub">x</a>')
+    got = listing.candidate_links(html, "https://worldbank.test/ext/en/news", [])
+    assert len(got) == 1 and "/en/news/press-release/" in got[0]
+
+
+def test_a_locale_segment_is_never_treated_as_a_section():
+    """ey.com lists at /en_gl/insights. Treating "en_gl" as a section admitted 88
+    service pages from the whole site; only /insights should qualify."""
+    html = ('<a href="/en_gl/services/strategy/corporate-growth-strategy">no</a>'
+            '<a href="/en_gl/insights/consulting/how-a-leader-transformed">yes</a>')
+    got = listing.candidate_links(html, "https://ey.test/en_gl/insights", [])
+    assert len(got) == 1 and "/insights/" in got[0]
+
+
+@pytest.mark.parametrize("path,expected", [
+    ("/global/en/our-thinking.html", ""),       # all-locale prefix constrains nothing
+    ("/xx/en/media.html", ""),
+    ("/en/news", "/en/news"),
+    ("/ext/en/news", "/ext/en/news"),
+])
+def test_an_all_locale_prefix_is_dropped(path, expected):
+    assert listing._listing_prefix(path) == expected
+
+
+def test_media_assets_are_rejected():
+    """Deloitte serves /content/dam/.../2025/Our-thinking-xyz.jpg, which carries a
+    year and a hyphenated slug and passed every other test."""
+    html = ('<a href="/global/en/our-thinking/2025/Our-thinking-digital-assets.jpg">x</a>'
+            '<a href="/global/en/our-thinking/2025/tokenised-funds-outlook">y</a>')
+    reject = [r.lower() for r in listing.load_rules()["reject_patterns"]]
+    got = listing.candidate_links(html, "https://deloitte.test/global/en/our-thinking",
+                                  reject)
+    assert len(got) == 1 and got[0].endswith("tokenised-funds-outlook")
+
+
+@pytest.mark.parametrize("registry,final,same", [
+    ("https://kpmg.com", "https://kpmg.com/xx/en/media.html", True),
+    ("https://kpmg.com", "https://www.kpmg.com/news", True),
+    ("https://cadwalader.com", "https://www.hlc.com/", False),
+    ("https://acme.co.uk", "https://news.acme.co.uk/x", True),
+    ("https://acme.co.uk", "https://other.co.uk/x", False),
+])
+def test_offsite_redirect_detection(registry, final, same):
+    """cadwalader.com/press-releases lands on hlc.com. Same-host filtering then
+    measures against the wrong host, and the corpus gains items attributed to a
+    source that never published them."""
+    assert listing._same_site(registry, final) is same

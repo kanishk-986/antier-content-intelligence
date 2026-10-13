@@ -109,6 +109,79 @@ adds ~150 MB of browser binaries, so it is not installed on a guess.
    from here, so the date is kept and annotated `date_confidence: low` rather than
    nulled — nulling destroys what the §14 momentum engine needs.
 
+## Four defects in the listing extractor, all found by chasing independence
+
+The §15 independence correction said the corpus was too self-reported. Fixing that
+meant reading the independent sources that yielded nothing, and 24 of them reported
+`no_feed` with a listing page sitting right there. The extractor could not read
+them, for four separate reasons.
+
+**1. A listing URL ending in a filename rejected every link.** The path-prefix
+constraint tested `path.startswith(prefix + "/")`, and KPMG, Deloitte and EY list at
+`/xx/en/our-insights.html`. Nothing is below a filename, so the pass rate was zero.
+`_listing_prefix()` now reduces such a URL to its directory.
+
+**2. Articles under a sibling path were dropped.** The World Bank lists at
+`/ext/en/news` and publishes at `/en/news/press-release/2026/...`. A strict prefix
+test rejected all eight press releases, each of which carried a date and a clean
+slug. The constraint is now "under the listing's directory **or** inside one of its
+topical segments", which still excludes
+`/products-and-services/capital-liquidity-optimization` — the Phase 3b regression
+that put the constraint there.
+
+**3. A locale segment was treated as a topic.** With segment matching in place,
+`ey.com/en_gl/insights` admitted 88 service pages, because `en_gl` matched every
+path on the site. Enumerating locales is a losing game — `/xx`, `/en_gl`, `/en_us`,
+`/global/en` — so `_is_locale()` matches the *shape*: one or two letters, optionally
+a two-part tag. A prefix made only of locale segments is discarded entirely, since
+`/global/en` prefixes an entire site.
+
+**4. The post-redirect URL was never used.** `candidate_links()` received the URL
+that was *requested*, not the one that answered. `kpmg.com/news` lands on
+`/xx/en/media.html` whose articles live under `/xx/en/media/press-releases/`, so the
+section was computed from a path that no longer existed. This one bug alone hid
+KPMG's entire newsroom.
+
+### And one data-integrity bug the fix exposed
+
+With redirects followed properly, `cadwalader.com/press-releases` resolved to
+**`hlc.com`** — a different firm. Same-host filtering then measures against the
+*new* host, so every link on it qualifies, and the corpus gains items attributed to
+a publisher that never wrote them. `_same_site()` now compares registrable domains
+and the outcome is reported as `offsite_redirect`. A redirect that leaves the domain
+changes who is speaking.
+
+### What was actually gained
+
+Three independent sources now read, verified by running the extractor and reading
+the output:
+
+| source | items | dates | bodies |
+|---|---|---|---|
+| World Bank | 8 | 2026-09 to 2026-10 | 319–750 words |
+| KPMG | 5 | 2026-06 to 2026-08 | 1051–1258 words |
+| EY | 12 | 2025 | 557–1138 words |
+
+Deliberately **not** added, with the reason recorded in `listing_rules.yaml`:
+BlackRock (its `/corporate/newsroom` redirects to the homepage, whose links are
+evergreen marketing), Cadwalader (off-domain), and J.P. Morgan, Accenture and
+NielsenIQ — only their `/insights` hubs resolve, and a page titled
+"Agentic AI in M&A | Transaction Advisory | Accenture" is the marketing content
+§2.2 keeps out. A readable page is not the same as a source.
+
+## Finding a listing path is a repeatable operation
+
+    python3 scripts/probe_listing.py --status no_feed error --independent-only
+    python3 scripts/probe_listing.py --name "World Bank" "KPMG"
+
+It probes candidate paths concurrently and scores each by the extractor's own
+`candidate_links()`, so a path that scores is a path the pipeline can read — not
+merely one that exists. It prints an `overrides:` block for `listing_rules.yaml`.
+
+§41.1 requires a new source to be addable through configuration rather than code.
+That only holds if *finding* the configuration is repeatable; otherwise every new
+source is a hand investigation, which is how 24 of them stayed silent.
+
 ## Independence is a registry property, not a scoring one
 
 §15's `source_credibility` now discounts self-reported and single-publisher evidence
