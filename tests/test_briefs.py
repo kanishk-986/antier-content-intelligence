@@ -321,3 +321,36 @@ def test_the_from_header_reaches_the_message():
                      "MAIL_FROM": "kanishk.raj@antiersolutions.com"},
                 transport=lambda m, s: captured.update(msg=m))
     assert captured["msg"]["From"] == "kanishk.raj@antiersolutions.com"
+
+
+# --- running under the wrong interpreter --------------------------------------
+
+def test_every_script_re_execs_into_the_venv():
+    """macOS ships Python 3.9, which cannot parse `str | None` at runtime and has
+    none of this project's dependencies. `python3 scripts/x.py` is the obvious thing
+    to type and it crashed with a TypeError that says nothing about the cause."""
+    import glob
+    root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    scripts = glob.glob(os.path.join(root, "scripts", "*.py"))
+    assert scripts, "no scripts found; the glob is wrong"
+    missing = []
+    for path in scripts:
+        with open(path) as fh:
+            if "_VENV" not in fh.read():
+                missing.append(os.path.basename(path))
+    assert not missing, f"these would crash under system python: {missing}"
+
+
+def test_the_bootstrap_runs_before_any_annotation_is_evaluated():
+    """It has to come before the first `def`, or the TypeError fires first."""
+    import glob
+    root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    for path in glob.glob(os.path.join(root, "scripts", "*.py")):
+        with open(path) as fh:
+            body = fh.read()
+        venv_at = body.index("_VENV")
+        first_def = body.find("\ndef ")
+        if first_def != -1:
+            assert venv_at < first_def, (
+                f"{os.path.basename(path)}: the venv bootstrap must precede the "
+                "first def")

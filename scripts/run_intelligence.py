@@ -9,6 +9,17 @@ store writes and the efficiency rule can all be exercised with no key and no net
 It proves the plumbing, not the model's judgement.
 """
 
+# macOS ships Python 3.9, which cannot parse `str | None` at runtime and has none
+# of this project's dependencies. Re-exec into the project venv so `python3
+# scripts/x.py` works regardless of which interpreter the shell found first.
+import os as _os
+import sys as _sys
+
+_VENV = _os.path.join(_os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))),
+                      ".venv", "bin", "python")
+if _os.path.exists(_VENV) and _os.path.realpath(_sys.executable) != _os.path.realpath(_VENV):
+    _os.execv(_VENV, [_VENV, _os.path.abspath(__file__), *_sys.argv[1:]])
+
 import argparse
 import os
 import sys
