@@ -13,7 +13,7 @@ deciding who owns it fails loudly.
 from __future__ import annotations
 
 # Ours to fix: a missing listing rule, a wrong feed URL, or a bug.
-ACTIONABLE = {"no_feed", "no_listing", "error"}
+ACTIONABLE = {"no_feed", "no_listing", "no_sitemap", "error"}
 
 # Deferred by section 32: needs a headless browser (Phase 3c).
 DEFERRED = {"js_rendered"}

@@ -18,8 +18,15 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from src.database.sqlite_store import SqliteStore, utcnow
+from src.ingestion import sitemap
 from src.ingestion.fetcher import fetch_source
 from src.ingestion.listing import extract_listing, load_rules
+
+# A sitemap is worth trying only where the other two paths came up empty. `blocked`
+# is absent deliberately: a publisher refusing our client is not invited to be
+# approached another way.
+SITEMAP_ELIGIBLE = frozenset({"no_feed", "no_listing", "js_rendered",
+                              "not_a_listing"})
 
 REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 REGISTRY = os.path.join(REPO, "config", "sources", "source_registry.csv")
@@ -68,6 +75,7 @@ def sync_registry(store: SqliteStore, sources: list[dict]) -> None:
 
 def ingest(store: SqliteStore, sources: list[dict], max_items: int = 20,
            fetch_bodies: bool = True, use_listing: bool = True,
+           use_sitemap: bool = True,
            on_source: Callable[[dict[str, Any], int, int], None] | None = None,
            ) -> IngestionReport:
     """Feed first, listing page second.
@@ -81,7 +89,7 @@ def ingest(store: SqliteStore, sources: list[dict], max_items: int = 20,
     only at the end makes a slow run indistinguishable from a hung one.
     """
     report = IngestionReport()
-    rules = load_rules() if use_listing else {}
+    rules = load_rules() if (use_listing or use_sitemap) else {}
 
     for source in sources:
         notes = source.get("notes", "")
@@ -108,6 +116,21 @@ def ingest(store: SqliteStore, sources: list[dict], max_items: int = 20,
                 outcome.status = listing.status
                 outcome.items = listing.items
                 outcome.detail = listing.detail
+
+        # Third path. A sitemap is the one route a publisher builds for machines and
+        # declares in robots.txt, and it does not care whether the page it points at
+        # is rendered in the browser -- which is how Ondo, previously js_rendered,
+        # becomes readable without a headless browser. Opt-in per source.
+        if (use_sitemap and not outcome.items
+                and outcome.status in SITEMAP_ELIGIBLE
+                and sitemap.enabled_for(source, rules)):
+            found = sitemap.extract_sitemap(source, seen, rules,
+                                            max_items=max_items)
+            if found.items:
+                via = "sitemap"
+                outcome.status = "ok"
+                outcome.items = found.items
+                outcome.detail = found.detail
 
         new_count, dupe_count = 0, 0
         for item in outcome.items:

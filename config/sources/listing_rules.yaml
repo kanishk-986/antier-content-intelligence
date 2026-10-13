@@ -64,6 +64,21 @@ reject_patterns:
   - /author/
   - /page/
   - /feed
+  # People and section fronts. A sitemap lists the whole site, so these reach the
+  # extractor where a newsroom index would never have linked them: DTCC's
+  # /press-releases/dtcc-executive-bios/syed-ali is 213 words of biography and
+  # clears the 400-character article floor.
+  - executive-bios
+  - /expert/
+  - /experts/
+  - /analyst
+  - /leadership
+  - /our-people
+  - /people/
+  - /team/
+  - /speakers
+  - /biography
+  - /bios/
   - /content/dam/
   - /assets-shared/
   - /etc.clientlibs/
@@ -83,6 +98,27 @@ reject_patterns:
   - .webp
   - .mp4
   - .mp3
+
+# Sitemap ingestion (src/ingestion/sitemap.py) is the third path, after feed and
+# listing page. It is opt-in per source for the same reason listing paths are: a
+# sitemap lists the entire site with no editorial curation behind it, so whether it
+# yields articles or section fronts has to be measured, never assumed.
+#
+# Verified by running the extractor and reading every item:
+#   ondo.finance      6/6 real posts, dated      (was js_rendered)
+#   circle.com        5/5 pressroom and blog     (was no_feed)
+#   statestreet.com   5/6 insights, dated        (was no_feed)
+#
+# Not enabled, and why:
+#   dtcc.com     4/6 — the rest are section fronts and executive bios. Its sitemap
+#                is the only machine route it offers, so this is worth revisiting
+#                with a path allowlist rather than abandoning.
+#   celent.com   3/6 — "Research", "Globaldata Reports" and the homepage all clear
+#                the article floor. Needs a per-path rule.
+sitemap_sources:
+  - ondo.finance
+  - circle.com
+  - statestreet.com
 
 overrides:
   circle.com:

@@ -24,6 +24,8 @@ def main():
     ap.add_argument("--max-items", type=int, default=20, help="per source")
     ap.add_argument("--no-bodies", action="store_true",
                     help="skip article downloads; feed metadata only")
+    ap.add_argument("--no-sitemap", action="store_true",
+                    help="skip the sitemap fallback")
     ap.add_argument("--no-listing", action="store_true",
                     help="feeds only; skip the phase 3b listing fallback")
     args = ap.parse_args()
@@ -50,6 +52,7 @@ def main():
     report = ingest(store, sources, max_items=args.max_items,
                     fetch_bodies=not args.no_bodies,
                     use_listing=not args.no_listing,
+                    use_sitemap=not args.no_sitemap,
                     on_source=progress)
 
     # SOURCE_POLICY.md: a source that yields nothing is a coverage fact and has to
