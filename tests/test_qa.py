@@ -188,3 +188,65 @@ def test_no_directive_is_stranded_above_the_system_header(name):
         assert tell not in preamble, (
             f"{name}: directive {tell!r} sits above '## SYSTEM' and is dropped"
         )
+
+
+# --- evidence provenance reaches the reviewer ---------------------------------
+
+def test_source_breakdown_collapses_one_publishers_pages():
+    """Five pages from one newsroom must not read as five sources."""
+    items = [{**item(i), "source_name": "Paxos", "source_type": "primary_company"}
+             for i in range(5)]
+    out = qa.render(qa.load_prompt()[1], FakeOpportunity(), items, {})
+    assert "Paxos (primary_company): 5 item(s)" in out
+
+
+def test_source_breakdown_names_each_distinct_publisher():
+    items = [{**item(1), "source_name": "Chainlink", "source_type": "protocol"},
+             {**item(2, source="s2"), "source_name": "ESMA", "source_type": "regulator"}]
+    out = qa.render(qa.load_prompt()[1], FakeOpportunity(), items, {})
+    assert "Chainlink (protocol): 1 item(s)" in out
+    assert "ESMA (regulator): 1 item(s)" in out
+
+
+@pytest.mark.parametrize("meta,tell", [
+    ({"text_source": "feed_summary", "word_count": 24}, "FEED SUMMARY ONLY, 24 words"),
+    ({"text_source": "none"}, "NO BODY TEXT EXTRACTED"),
+    ({"text_source": "article", "word_count": 12}, "THIN EXTRACTION, 12 words"),
+    ({"date_confidence": "low"}, "DATE UNCONFIRMED"),
+])
+def test_thin_evidence_is_labelled_for_the_reviewer(meta, tell):
+    """A reviewer asked whether claims are supported cannot answer honestly if a
+    24-word blurb is presented as the article."""
+    out = qa.render(qa.load_prompt()[1], FakeOpportunity(),
+                    [{**item(1), "metadata": meta}], {})
+    assert tell in out
+
+
+def test_a_full_article_carries_no_warning():
+    body = " ".join(["word"] * 400)
+    out = qa.render(qa.load_prompt()[1], FakeOpportunity(),
+                    [{**item(1), "clean_text": body,
+                      "metadata": {"text_source": "article", "word_count": 400}}], {})
+    assert "FEED SUMMARY" not in out and "THIN EXTRACTION" not in out
+
+
+def test_metadata_is_read_whether_dict_or_json_string():
+    for meta in ({"text_source": "feed_summary", "word_count": 9},
+                 '{"text_source": "feed_summary", "word_count": 9}'):
+        out = qa.render(qa.load_prompt()[1], FakeOpportunity(),
+                        [{**item(1), "metadata": meta}], {})
+        assert "FEED SUMMARY ONLY, 9 words" in out
+
+
+def test_corrupt_metadata_does_not_break_the_review():
+    out = qa.render(qa.load_prompt()[1], FakeOpportunity(),
+                    [{**item(1), "metadata": "{not json"}], {})
+    assert "Visa expands settlement" in out
+
+
+def test_prompt_says_authority_is_not_corroboration():
+    system, _ = qa.load_prompt()
+    low = system.lower()
+    assert "authority is not corroboration" in low
+    assert "not three witnesses" in low
+    assert "feed summary only" in low

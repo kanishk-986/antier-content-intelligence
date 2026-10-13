@@ -335,8 +335,12 @@ class SqliteStore:
 
     def narrative_items(self, narrative_id: str) -> list[dict[str, Any]]:
         rows = self.conn.execute(
-            "SELECT c.* FROM content_items c "
+            # source_name and source_type travel with the item so a reviewer can
+            # see that five "sources" are one vendor's newsroom.
+            "SELECT c.*, s.name AS source_name, s.source_type AS source_type "
+            "FROM content_items c "
             "JOIN narrative_items ni ON ni.content_id = c.id "
+            "LEFT JOIN sources s ON s.id = c.source_id "
             "WHERE ni.narrative_id = ? ORDER BY c.published_at DESC",
             (narrative_id,),
         ).fetchall()
@@ -345,6 +349,12 @@ class SqliteStore:
     def source_authority(self) -> dict[str, int]:
         rows = self.conn.execute("SELECT id, authority_score FROM sources").fetchall()
         return {r["id"]: r["authority_score"] for r in rows}
+
+    def source_types(self) -> dict[str, str]:
+        """Registry type per source. Feeds the momentum independence correction:
+        a primary party reporting on itself is not corroboration."""
+        rows = self.conn.execute("SELECT id, source_type FROM sources").fetchall()
+        return {r["id"]: r["source_type"] for r in rows}
 
     # --- qa reviews ------------------------------------------------------------
     def insert_qa_review(self, row: dict[str, Any]) -> None:

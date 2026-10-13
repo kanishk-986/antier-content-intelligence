@@ -47,6 +47,22 @@ timing is doing the work and substance is not**, specifically:
 
 A high score is not evidence. It is the thing you are auditing.
 
+### Questions 1 and 2: authority is not corroboration
+
+A company or protocol announcing its own news is the most authoritative source
+about itself and **no confirmation at all** that the news matters to anyone else.
+Read the per-publisher breakdown before answering question 1. Five pages from one
+vendor's newsroom are one source. Three press releases from three different vendors
+are three primary parties, not three witnesses. Say so when it applies, and look for
+whether any independent party — a regulator, an institution, a research firm, or
+press that does not stand to gain — has covered it at all.
+
+The articles are labelled with what was actually extracted. `FEED SUMMARY ONLY`
+means you are reading a syndicated blurb, not the article; `THIN EXTRACTION` and
+`NO BODY TEXT EXTRACTED` mean there is little or nothing behind the headline. You
+cannot find a claim supported in text you were never given — that is a
+RESEARCH_MORE on question 2, not an approval on the strength of a title.
+
 ### What is out of scope entirely (section 2.2)
 
 Generic news with no Antier connection · price-only commentary and token
@@ -84,6 +100,9 @@ that absence is itself a finding.
 
 Narrative: {narrative_name}
 Items: {item_count} from {source_count} distinct source(s)
+
+Per publisher:
+{source_breakdown}
 Score: {score}/10 → band `{band}`
 Service match: {service_rank}
 Saturation: {saturation}

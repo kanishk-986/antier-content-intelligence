@@ -37,6 +37,7 @@ def main():
         return 1
 
     authority = store.source_authority()
+    source_types = store.source_types()
     similarity = TfidfSimilarity()
     narratives = cluster_items(items, similarity, threshold=args.threshold)
 
@@ -46,7 +47,7 @@ def main():
     payload = []
     shown = 0
     for narrative in narratives:
-        m = mom.compute(narrative.items, authority)
+        m = mom.compute(narrative.items, authority, source_types=source_types)
         dates = [i.get("published_at") for i in narrative.items if i.get("published_at")]
         payload.append({
             "id": str(uuid.uuid4()),

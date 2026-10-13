@@ -184,11 +184,28 @@ def novelty(momentum) -> DimensionScore:
 
 
 def source_credibility(momentum) -> DimensionScore:
-    """Can the topic be evidenced reliably? Authority coverage from the registry
-    tiers. Section 5.2: popularity is never authority."""
-    return DimensionScore(round(float(momentum.authority_coverage), 3),
-                          f"authority coverage {momentum.authority_coverage}",
-                          detail={"tier_based": True})
+    """Can the topic be evidenced reliably? Registry tiers, never volume (section
+    5.2) — and never a primary party's account of itself.
+
+    Section 14's `authority_coverage` answers "how authoritative are these sources",
+    on which a vendor's own newsroom scores top marks by design (tier 10 includes
+    primary company and protocol announcements). Section 15 asks something else:
+    whether the topic "can be evidenced reliably". Fifteen Chainlink and Ondo press
+    releases are authoritative and corroborate nothing, so this dimension reads the
+    independence-corrected figure instead."""
+    value = getattr(momentum, "independent_authority_coverage",
+                    momentum.authority_coverage)
+    self_reported = getattr(momentum, "self_reported_sources", 0)
+    reason = f"independent authority coverage {value}"
+    if self_reported:
+        reason += (f" ({self_reported} of "
+                   f"{self_reported + getattr(momentum, 'independent_sources', 0)}"
+                   " sources are primary parties, discounted)")
+    return DimensionScore(round(float(value), 3), reason,
+                          detail={"tier_based": True,
+                                  "authority_coverage": momentum.authority_coverage,
+                                  "independence": getattr(momentum, "independence", None),
+                                  "self_reported_sources": self_reported})
 
 
 def trend_velocity(momentum) -> DimensionScore:

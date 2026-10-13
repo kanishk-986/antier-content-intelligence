@@ -118,6 +118,7 @@ def score_all(store, config: ScoringConfig,
     from src.narratives import momentum as mom
 
     authority = store.source_authority()
+    source_types = store.source_types()
     intelligence = {}
     for item in store.content_items():
         row = store.intelligence_for(item["id"])
@@ -131,7 +132,8 @@ def score_all(store, config: ScoringConfig,
             continue
         opportunity = score_narrative(
             narrative["id"], narrative["name"], items,
-            mom.compute(items, authority), intelligence, config, services,
+            mom.compute(items, authority, source_types=source_types),
+            intelligence, config, services,
             proof_points,
         )
         out.append((opportunity, items))

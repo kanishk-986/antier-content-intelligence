@@ -71,6 +71,35 @@ Phase 0: repository and documentation (§39 Phase 0, §44.24–27).
   genuine same-day batch. Changed to flag `date_confidence: low` and keep the value —
   the §14 momentum engine needs the date, and annotation preserves the choice.
 
+### Fixed — the two defects QA found in its own first run
+- **Authority was being read as corroboration.** §15's `source_credibility` read
+  §14's `authority_coverage`, on which a vendor's own newsroom scores 1.0 by design
+  (§5.2 tier 10 is "primary company/protocol announcements"). Live corpus: **28 of
+  40 narratives scored a perfect 1.0, and 24 of 40 had no independent source at
+  all** — a 15-item Chainlink/Ondo/Centrifuge cluster of pure press releases among
+  them. `momentum` now also computes `independent_authority_coverage`,
+  `independence`, `independent_sources` and `self_reported_sources`; a primary party
+  is discounted by `source_independence.self_reported_weight` (0.35, in
+  `weights.yaml`) rather than discarded, because it is real evidence of its own
+  actions and none that they matter. §14's figure is untouched and stays visible in
+  the dimension `detail`. Re-scored: the top opportunity falls 6.43 → 6.00 and the
+  Chainlink cluster 6.10 → 5.45.
+- **Feed summaries were indistinguishable from articles.** When `trafilatura`
+  extracts nothing the fetcher falls back to the feed summary — right call, but
+  unrecorded, so 18 of 144 items reached the model as sub-60-word blurbs formatted
+  like full articles. Items now carry `text_source` and `word_count`, and the QA
+  prompt labels them `FEED SUMMARY ONLY`, `THIN EXTRACTION` or `NO BODY TEXT
+  EXTRACTED`.
+- `narrative_items()` joins the registry so `source_name` and `source_type` travel
+  with each item; the QA prompt gains a per-publisher breakdown.
+
+### Corrected
+The Phase 7 note that QA had found "navigation boilerplate reaching the model in
+place of article text" **overstated it**. Measured: 1 of 144 items, not the "four of
+six" the reviewer asserted. The real defect behind that complaint was the unlabelled
+feed-summary fallback above. The reviewer's other finding — self-reported sources —
+held up and was worse than reported.
+
 ### Added — Phase 7 (adversarial AI QA, §19)
 - `prompts/ai_qa.v1.md` — §19's ten questions, versioned. Carries an explicit
   mandate on question 3: reject when timing is doing the work and substance is not,

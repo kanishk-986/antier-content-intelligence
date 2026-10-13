@@ -108,6 +108,42 @@ def load_prompt(path: str = PROMPT_PATH) -> tuple[str, str]:
     return sections["SYSTEM"], sections["USER"]
 
 
+# Below this, a body is too short to support a claim and the reviewer is told so.
+THIN_TEXT_WORDS = 60
+
+
+def _meta(item: dict[str, Any]) -> dict[str, Any]:
+    raw = item.get("metadata")
+    if isinstance(raw, dict):
+        return raw
+    if isinstance(raw, str) and raw.strip():
+        try:
+            parsed = json.loads(raw)
+        except (TypeError, ValueError):
+            return {}
+        return parsed if isinstance(parsed, dict) else {}
+    return {}
+
+
+def _source_breakdown(items: list[dict[str, Any]]) -> str:
+    """Per-publisher counts, so a cluster of one vendor's own newsroom pages cannot
+    read as independent corroboration. Three press releases from three vendors are
+    three primary parties, not three witnesses."""
+    counts: dict[str, int] = {}
+    for item in items:
+        meta = _meta(item)
+        label = (item.get("source_name") or meta.get("source_name")
+                 or item.get("source_id") or "unknown")
+        stype = item.get("source_type") or meta.get("source_type")
+        if stype:
+            label = f"{label} ({stype})"
+        counts[label] = counts.get(label, 0) + 1
+    if not counts:
+        return "(no sources)"
+    ordered = sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))
+    return "\n".join(f"- {name}: {n} item(s)" for name, n in ordered)
+
+
 def render(template: str, opportunity, items: list[dict[str, Any]],
            intelligence: dict[str, dict[str, Any]]) -> str:
     rows = [
@@ -120,10 +156,29 @@ def render(template: str, opportunity, items: list[dict[str, Any]],
     articles = []
     for item in items[:MAX_ARTICLES]:
         body = (item.get("clean_text") or "")[:ARTICLE_CHARS]
+        meta = _meta(item)
+        words = meta.get("word_count")
+        if words is None:
+            words = len((item.get("clean_text") or "").split())
+        # A reviewer asked whether claims are supported cannot answer honestly
+        # without knowing it is reading a feed blurb rather than the article.
+        provenance = ""
+        if meta.get("text_source") == "feed_summary":
+            provenance = f"  [FEED SUMMARY ONLY, {words} words — not the article text]\n"
+        elif meta.get("text_source") == "none" or not body:
+            provenance = "  [NO BODY TEXT EXTRACTED — title and URL only]\n"
+        elif words < THIN_TEXT_WORDS:
+            provenance = f"  [THIN EXTRACTION, {words} words]\n"
+        if meta.get("date_confidence") == "low":
+            provenance += "  [DATE UNCONFIRMED — shared template date]\n"
+        publisher = (item.get("source_name") or meta.get("source_name")
+                     or item.get("source_id"))
         articles.append(
             f"- **{item.get('title') or '(untitled)'}**\n"
             f"  published: {item.get('published_at') or 'UNCONFIRMED'}\n"
             f"  url: {item.get('url')}\n"
+            f"  publisher: {publisher}\n"
+            f"{provenance}"
             f"  {body}"
         )
     if len(items) > MAX_ARTICLES:
@@ -146,6 +201,7 @@ def render(template: str, opportunity, items: list[dict[str, Any]],
         narrative_name=opportunity.narrative_name,
         item_count=len(items),
         source_count=len({i["source_id"] for i in items}),
+        source_breakdown=_source_breakdown(items),
         score=opportunity.score_0_10,
         band=opportunity.band,
         service_rank=opportunity.service_rank or "none",

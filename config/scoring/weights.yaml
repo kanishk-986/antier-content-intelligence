@@ -56,3 +56,18 @@ authority_tiers:
 saturation:
   competitor_axis: not_measured
   axes_available: [antier_own_coverage, market_wide_volume]
+
+# Source independence. Section 5.2 ranks authority, and tier 10 explicitly includes
+# "primary company/protocol announcements" — a vendor is the most authoritative
+# source about its own actions. But section 15's `source_credibility` asks whether a
+# topic "can be evidenced reliably", which is a question about corroboration, not
+# authority. A cluster of fifteen Chainlink and Ondo press releases scored authority
+# coverage 1.0, because every one of them is a tier-9 primary party.
+#
+# So authority_coverage stays exactly as section 14 defines it, and a separate
+# independence-corrected figure feeds the section 15 dimension. A primary party is
+# credible about what it did and provides no outside confirmation that it matters,
+# so it is discounted, not discarded.
+source_independence:
+  primary_party_types: [protocol, primary_company]
+  self_reported_weight: 0.35

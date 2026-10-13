@@ -155,3 +155,49 @@ def test_novelty_decays_with_age():
     fresh = mom.compute([item(1, "a", "x", hours_ago=1)], AUTH, now=NOW)
     stale = mom.compute([item(1, "a", "x", hours_ago=160)], AUTH, now=NOW)
     assert fresh.novelty > stale.novelty
+
+
+# --- source independence (section 15 source_credibility) ----------------------
+
+def _items(*source_ids):
+    return [{"source_id": s, "published_at": None} for s in source_ids]
+
+
+def test_a_vendors_own_newsroom_is_not_corroboration():
+    """The live defect: fifteen Chainlink/Ondo/Centrifuge press releases scored
+    authority coverage 1.0, because section 5.2 rates a primary party tier 9."""
+    m = mom.compute(_items("a", "b", "c"), {"a": 9, "b": 9, "c": 10},
+                    source_types={"a": "protocol", "b": "protocol",
+                                  "c": "primary_company"})
+    assert m.authority_coverage == 1.0, "section 14's figure is unchanged"
+    assert m.independent_authority_coverage == 0.35
+    assert m.independence == 0.0
+    assert m.self_reported_sources == 3 and m.independent_sources == 0
+
+
+def test_an_independent_authority_lifts_credibility():
+    vendors = mom.compute(_items("a", "b"), {"a": 9, "b": 9},
+                          source_types={"a": "protocol", "b": "protocol"})
+    with_reg = mom.compute(_items("a", "b"), {"a": 9, "b": 10},
+                           source_types={"a": "protocol", "b": "regulator"})
+    assert with_reg.independent_authority_coverage > vendors.independent_authority_coverage
+
+
+def test_a_primary_party_below_the_floor_earns_nothing():
+    m = mom.compute(_items("a"), {"a": 5}, source_types={"a": "protocol"})
+    assert m.independent_authority_coverage == 0.0
+
+
+def test_missing_source_types_degrades_visibly_not_silently():
+    """With no registry types nothing can be identified as a primary party. The
+    corrected figure must equal the raw one and say independence is unverified."""
+    m = mom.compute(_items("a", "b"), {"a": 9, "b": 9})
+    assert m.independent_authority_coverage == m.authority_coverage == 1.0
+    assert m.self_reported_sources == 0
+
+
+def test_independence_weight_comes_from_config_not_code():
+    m = mom.compute(_items("a"), {"a": 9}, source_types={"a": "protocol"},
+                    independence={"primary_party_types": {"protocol"},
+                                  "self_reported_weight": 0.0})
+    assert m.independent_authority_coverage == 0.0

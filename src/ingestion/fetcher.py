@@ -159,11 +159,15 @@ def fetch_source(source: dict[str, Any], seen: set[str], max_items: int = 20,
                         ) or ""
                 except httpx.HTTPError:
                     pass
+            text_source = "article" if clean_text else None
             if not clean_text:
                 # Fall back to the feed summary; better a short real body than none.
+                # But record which it is: a 24-word blurb and a full article are not
+                # the same evidence, and every later stage was treating them alike.
                 summary = entry.get("summary") or ""
                 clean_text = re.sub(r"<[^>]+>", " ", summary)
                 clean_text = re.sub(r"\s+", " ", clean_text).strip()
+                text_source = "feed_summary" if clean_text else "none"
 
             out.items.append({
                 "source_id": sid,
@@ -176,7 +180,9 @@ def fetch_source(source: dict[str, Any], seen: set[str], max_items: int = 20,
                 "clean_text": clean_text or None,
                 "content_hash": content_hash(title, clean_text),
                 "language": None,
-                "metadata": {"feed_url": feed_url, "source_name": name},
+                "metadata": {"feed_url": feed_url, "source_name": name,
+                             "text_source": text_source,
+                             "word_count": len(clean_text.split())},
             })
 
     if out.items:

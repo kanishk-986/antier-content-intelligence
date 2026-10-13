@@ -104,3 +104,35 @@ rule 7); the reviewer argues about the inputs, never the total.
 **`human_decision` is written by a person, never by the model.** `as_row()` leaves
 it null and records `prompt_version` as `ai_qa.v1@<model>`, so a later change of
 prompt or model is visible in the audit trail.
+
+## The reviewer is told what the evidence actually is
+
+Two things were being hidden from QA, both found by the first live run and both now
+supplied.
+
+**Per-publisher breakdown.** The prompt previously said "N items from M distinct
+sources", which let five pages of one vendor's newsroom read as five-source
+corroboration. The opportunity block now lists counts per publisher with the
+registry type, and the prompt states the rule: five pages from one newsroom are one
+source; three press releases from three vendors are three primary parties, not three
+witnesses.
+
+**Extraction provenance.** When `trafilatura` cannot extract an article body, the
+fetcher falls back to the feed summary — correct behaviour, but nothing recorded
+which one was stored, so a 24-word blurb reached the reviewer formatted exactly like
+a full article. Items now carry `text_source` (`article` / `feed_summary` / `none`)
+and `word_count` in metadata, and the prompt labels them `FEED SUMMARY ONLY`,
+`THIN EXTRACTION` or `NO BODY TEXT EXTRACTED`. A reviewer cannot find a claim
+supported in text it was never given, so that is a RESEARCH_MORE on question 2
+rather than an approval on the strength of a headline.
+
+Both changed real verdicts immediately. On the second live run the reviewer wrote,
+unprompted: *"Two of three sources are primary parties announcing their own
+products. Mastercard on Mastercard"*, *"all 3 items come from a single publisher —
+the FSB's own newsroom"*, and *"every item is labelled THIN EXTRACTION (24, 18 and
+21 words)"*.
+
+This is the intended division of labour. Independence-by-source-type is
+deterministic and belongs in the score (`SCORING.md`, "Authority is not
+corroboration"). Single-publisher concentration and "this cluster is a keyword
+collision" are judgements, and belong here.

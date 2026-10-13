@@ -17,6 +17,17 @@ authority_coverage= weighted_authoritative_sources / total_sources
 emergence         = velocity + acceleration + novelty + source_diversity
 ```
 
+Plus an independence correction that §14 does not define but §15 needs:
+
+```
+self_reported     = sources whose registry type is a primary party
+independence      = independent_sources / total_sources
+independent_authority_coverage
+                  = (authoritative_independent
+                     + self_reported_weight * authoritative_self_reported)
+                    / total_sources
+```
+
 Also tracked: current volume, baseline volume, growth rate, unique-source count,
 authoritative-source count, recency.
 
@@ -101,7 +112,43 @@ Per CLAUDE.md rule 5, scoring and parsing are the tested surfaces. Required:
 | Commercial relevance | `intelligence.importance_score` × service priority | **Multiplicative, not averaged** — see below |
 | Authority potential | service priority, lifted by a `proof_points` match | Capped until a real case-study corpus exists (PRD §12) |
 | Novelty | `momentum.novelty` (recency) | A **proxy**. The real §17 contrarian-angle agent is an unbuilt LLM stage. |
-| Source credibility | `momentum.authority_coverage` | Registry tiers, never volume (§5.2) |
+| Source credibility | `momentum.independent_authority_coverage` | Registry tiers, never volume (§5.2) — and never a primary party's account of itself. See below |
+
+## Authority is not corroboration
+
+§5.2 puts "primary company/protocol announcements" at tier 10, and that is right:
+a vendor is the most authoritative source in the world about what it just did.
+But §15's `source_credibility` asks a different question — whether the topic "can
+be evidenced reliably" — and that is about corroboration.
+
+Conflating the two produced a real defect. On the live corpus, a 15-item cluster of
+Chainlink, Ondo and Centrifuge press releases scored `authority_coverage` **1.0**,
+because all three are tier-9 primary parties. Across the whole corpus **28 of 40
+narratives** scored a perfect 1.0 this way, and **24 of 40 had no independent source
+at all**.
+
+So §14's `authority_coverage` is left exactly as the blueprint defines it, and
+`source_credibility` reads `independent_authority_coverage` instead. A source whose
+registry type is in `source_independence.primary_party_types` is **discounted, not
+discarded** — weight `0.35`, in `weights.yaml` so it is a config diff. A primary
+party is genuine evidence of its own actions and no evidence that they matter to
+anyone else; zero would be the opposite error.
+
+The raw figure stays in the dimension's `detail`, so nothing is hidden from the
+audit trail and the QA reviewer can see both numbers.
+
+**When registry types are unavailable** no source can be identified as a primary
+party, so the corrected figure equals the raw one and `self_reported_sources` is 0.
+That is a visible degradation, not a silent one.
+
+### Known gap, owner's call
+
+`source_diversity` (distinct sources ÷ items) measures single-publisher
+concentration, but §14 feeds it only into `emergence` — no §15 dimension reads it.
+So three items from one regulator's newsroom still score full credibility, because
+that regulator *is* independent. The QA reviewer catches it (it did, on an FSB
+cluster), but deterministically it is unscored. Adding it to §15 would change the
+owner's dimension set, so it is flagged rather than done.
 
 ## Unmeasured dimensions cap the band
 

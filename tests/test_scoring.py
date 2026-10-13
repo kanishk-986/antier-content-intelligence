@@ -22,6 +22,10 @@ class FakeMomentum:
     velocity: float = 1.0
     novelty: float = 0.5
     authority_coverage: float = 1.0
+    independent_authority_coverage: float = 1.0
+    independence: float = 1.0
+    independent_sources: int = 1
+    self_reported_sources: int = 0
     baseline_rule: str = "ratio"
 
 
@@ -133,7 +137,19 @@ def test_velocity_basis_records_a_zero_baseline_rule():
 
 def test_source_credibility_comes_from_tiers_not_volume():
     """Section 5.2: popularity is never authority."""
-    assert rel.source_credibility(FakeMomentum(authority_coverage=0.25)).value == 0.25
+    m = FakeMomentum(authority_coverage=0.25, independent_authority_coverage=0.25)
+    assert rel.source_credibility(m).value == 0.25
+
+
+def test_source_credibility_reads_the_independence_corrected_figure():
+    """A vendor's own newsroom is tier 9 and corroborates nothing. The dimension
+    asks whether the topic can be evidenced, so it must not read the raw figure."""
+    m = FakeMomentum(authority_coverage=1.0, independent_authority_coverage=0.35,
+                     independence=0.0, independent_sources=0, self_reported_sources=3)
+    dim = rel.source_credibility(m)
+    assert dim.value == 0.35
+    assert "3 of 3 sources are primary parties" in dim.basis
+    assert dim.detail["authority_coverage"] == 1.0, "raw figure stays visible"
 
 
 # --- saturation ---------------------------------------------------------------

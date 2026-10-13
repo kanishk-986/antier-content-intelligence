@@ -158,10 +158,17 @@ First live pass over the top four: **3 REJECT, 1 RESEARCH_MORE, 0 APPROVE** at
 confidence 0.80–0.93. That is the correct reading of this corpus, not a failure of
 the gate — §19 says an analyst who approves everything has failed.
 
-It also found problems upstream that no deterministic score could express:
-single-source vendor newsrooms treated as three independent sources, and navigation
-boilerplate reaching the model in place of article text. Both are now known
-ingestion/clustering work rather than suspicions.
+It also found two upstream defects, both since fixed — see CHANGELOG. The serious
+one: §15's `source_credibility` was reading §14's `authority_coverage`, so a cluster
+of nothing but vendor press releases scored perfect credibility. **28 of 40
+narratives scored 1.0 that way and 24 had no independent source at all.** Authority
+and corroboration are different questions and the score was answering the wrong one.
+
+The reviewer's second complaint — navigation boilerplate in place of article text —
+was overstated at "four of six items"; measured, it is 1 of 144. But it pointed at
+something real: the feed-summary fallback was unrecorded, so 18 items reached the
+model as sub-60-word blurbs dressed as full articles. An adversarial reviewer
+exaggerating in the right direction is still worth more than a silent one.
 
 What exists:
 
