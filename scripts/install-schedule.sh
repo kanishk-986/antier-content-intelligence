@@ -28,12 +28,37 @@ fi
 
 [[ -x "$REPO/.venv/bin/python" ]] || { echo "no venv at $REPO/.venv" >&2; exit 1; }
 
+# launchd gives a job PATH=/usr/bin:/bin:/usr/sbin:/sbin and nothing else. The
+# `claude` CLI that the LLM stages shell out to is typically installed under
+# ~/.local/bin or a Homebrew prefix, none of which are on that list -- so the
+# intelligence and QA stages fail under the scheduler while working perfectly by
+# hand. Resolve it now and bake the directory in.
+CLAUDE_BIN="$(command -v claude || true)"
+if [[ -n "$CLAUDE_BIN" ]]; then
+  CLAUDE_DIR="$(cd "$(dirname "$CLAUDE_BIN")" && pwd)"
+  echo "found claude at $CLAUDE_BIN"
+else
+  CLAUDE_DIR=""
+  echo "WARNING: 'claude' is not on your PATH. The LLM stages will be skipped." >&2
+  echo "         Install it, then re-run this script." >&2
+fi
+NODE_BIN="$(command -v node || true)"
+NODE_DIR=""
+[[ -n "$NODE_BIN" ]] && NODE_DIR="$(cd "$(dirname "$NODE_BIN")" && pwd)"
+
 # A wrapper, because launchd runs the job with an empty environment: no PATH, no
 # .env, no locale. Sourcing .env here keeps the password out of the plist.
 cat > "$REPO/scripts/daily-wrapper.sh" <<WRAP
 #!/usr/bin/env bash
 set -euo pipefail
 cd "$REPO"
+
+# Rebuild the PATH launchd does not provide. The directories are resolved at
+# install time from the shell that could actually find these tools.
+export PATH="$CLAUDE_DIR:$NODE_DIR:\$HOME/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+export HOME="\$HOME"
+export LANG="\${LANG:-en_US.UTF-8}"
+
 if [[ -f .env ]]; then set -a; . ./.env; set +a; fi
 exec "$REPO/.venv/bin/python" "$REPO/scripts/run_daily.py" "\$@"
 WRAP
