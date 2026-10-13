@@ -83,14 +83,28 @@ def run(args, log) -> int:
     md_path = os.path.join(OUTPUTS, f"brief-{day}.md")
     with open(md_path, "w") as fh:
         fh.write(markdown)
+
+    # Also as HTML, because the brief has to be readable whether or not mail is
+    # working. A Workspace account with app passwords disabled by policy cannot use
+    # SMTP at all, and the brief should not be held hostage to that.
+    html_path = os.path.join(OUTPUTS, f"brief-{day}.html")
+    with open(html_path, "w") as fh:
+        fh.write(mailer.markdown_to_html(markdown))
     log(f"  {brief.total} item(s) across {len(brief.sections)} persona section(s)")
     for persona, entries in brief.sections.items():
         log(f"    {persona:8} {len(entries)}")
     log(f"  wrote {md_path}")
+    log(f"  wrote {html_path}")
+    if args.open:
+        subprocess.run(["open", html_path], check=False)
 
     to = [(recipients.get('digest') or {}).get('email') or ""]
     subject = (f"Antier daily brief — {day} — {brief.total} item(s) in the last "
                f"{window}h")
+
+    if args.no_send:
+        log("  --no-send: the brief is on disk and was not mailed.")
+        return 0
 
     if args.dry_run:
         log("  --dry-run: not sent. "
@@ -109,6 +123,11 @@ def main() -> int:
     ap.add_argument("--db", default="data/aci.db")
     ap.add_argument("--hours", type=int, help="brief window; default from config")
     ap.add_argument("--dry-run", action="store_true", help="write, do not send")
+    ap.add_argument("--open", action="store_true",
+                    help="open the brief in the browser when it is written")
+    ap.add_argument("--no-send", action="store_true",
+                    help="write the brief and skip mail entirely (no credentials "
+                         "needed); the scheduled run still produces the file")
     ap.add_argument("--brief-only", action="store_true", help="skip the pipeline")
     ap.add_argument("--intelligence-limit", type=int, default=40)
     ap.add_argument("--top", type=int, default=8, help="opportunities to QA")

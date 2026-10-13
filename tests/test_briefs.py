@@ -281,3 +281,12 @@ def test_a_recipient_name_matching_the_label_is_not_repeated():
     out = _render([], [item(1)])
     assert "Antier Corporate — Antier Corporate" not in out
     assert "## Antier Corporate" in out
+
+
+def test_the_html_brief_stands_alone():
+    """A Workspace account with app passwords disabled by policy cannot use SMTP at
+    all. The brief must be readable without mail ever working."""
+    out = mailer.markdown_to_html("# Brief\n## COO — Shashi Pal\n- [T](https://x/a)")
+    assert out.startswith("<!doctype html>")
+    assert "<meta charset='utf-8'>" in out
+    assert "Shashi Pal" in out
