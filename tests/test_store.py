@@ -206,3 +206,58 @@ def test_purging_an_item_must_not_leave_it_in_the_seen_set(tmp_path):
     store.conn.execute("DELETE FROM fetch_state WHERE item_url = ?", (url,))
     store.conn.commit()
     assert url not in store.seen_urls("src-1"), "it can be fetched again"
+
+
+# --- re-running the pipeline ---------------------------------------------------
+
+def _narrative_payload(nid="n1", content_id="c1"):
+    return [{"id": nid, "name": "stablecoin rails", "status": "emerging",
+             "members": [(content_id, 0.4)]}]
+
+
+def _with_content(tmp_path):
+    store = _store_with_source(tmp_path)
+    store.conn.execute(
+        "INSERT INTO content_items (id, source_id, url, title, content_hash,"
+        " retrieved_at) VALUES (?,?,?,?,?,?)",
+        ("c1", "src-1", "https://bis.org/news/a", "A", "h1",
+         "2026-10-13T00:00:00+00:00"))
+    store.conn.commit()
+    return store
+
+
+def test_re_clustering_succeeds_when_opportunities_already_exist(tmp_path):
+    """Clustering is not incremental, so yesterday's opportunity points at a
+    narrative about to stop existing. Deleting narratives with those rows present
+    raised FOREIGN KEY constraint failed after the clustering work was done, and a
+    full run lost 148 narratives. A daily agent must be re-runnable."""
+    store = _with_content(tmp_path)
+    store.replace_narratives(_narrative_payload())
+    store.conn.execute("INSERT INTO opportunities (id, narrative_id) VALUES (?,?)",
+                       ("o1", "n1"))
+    store.conn.execute(
+        "INSERT INTO qa_reviews (opportunity_id, ai_decision) VALUES (?,?)",
+        ("o1", "REJECT"))
+    store.conn.commit()
+
+    store.replace_narratives(_narrative_payload(nid="n2"))      # must not raise
+
+    assert [r["id"] for r in store.conn.execute("SELECT id FROM narratives")] == ["n2"]
+    assert store.conn.execute("SELECT COUNT(*) FROM opportunities").fetchone()[0] == 0
+    assert store.conn.execute("SELECT COUNT(*) FROM qa_reviews").fetchone()[0] == 0
+
+
+def test_re_clustering_keeps_the_content_items(tmp_path):
+    """Items are the corpus; narratives are a derived view of it."""
+    store = _with_content(tmp_path)
+    store.replace_narratives(_narrative_payload())
+    store.replace_narratives(_narrative_payload(nid="n2"))
+    assert store.conn.execute("SELECT COUNT(*) FROM content_items").fetchone()[0] == 1
+
+
+def test_narrative_members_are_rewritten_not_appended(tmp_path):
+    store = _with_content(tmp_path)
+    store.replace_narratives(_narrative_payload())
+    store.replace_narratives(_narrative_payload(nid="n2"))
+    rows = store.conn.execute("SELECT narrative_id FROM narrative_items").fetchall()
+    assert [r["narrative_id"] for r in rows] == ["n2"]

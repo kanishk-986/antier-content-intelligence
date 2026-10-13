@@ -293,6 +293,23 @@ class SqliteStore:
 
     # --- narratives ------------------------------------------------------------
     def replace_narratives(self, narratives: list[dict[str, Any]]) -> None:
+        """Re-cluster: replace every narrative and everything derived from one.
+
+        Clustering is not incremental -- narrative ids are fresh each run -- so a
+        scored opportunity from the previous run points at a narrative that is about
+        to stop existing. Deleting narratives with those rows still present raises
+        FOREIGN KEY constraint failed *after* the clustering work is finished, which
+        is the worst possible moment: a daily agent must be re-runnable, and the
+        second run of the day lost 148 narratives this way.
+
+        Downstream rows are cleared in dependency order rather than kept, because an
+        opportunity scored against a narrative that no longer exists is not stale
+        data, it is a dangling reference. run_scoring regenerates them.
+        """
+        self.conn.execute(
+            "DELETE FROM qa_reviews WHERE opportunity_id IN "
+            "(SELECT id FROM opportunities)")
+        self.conn.execute("DELETE FROM opportunities")
         self.conn.execute("DELETE FROM narrative_items")
         self.conn.execute("DELETE FROM narratives")
         for n in narratives:
