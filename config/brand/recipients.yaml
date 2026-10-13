@@ -31,8 +31,9 @@ personas:
       carries a first-draft territory that should be reviewed -- a wrong territory
       routes the wrong items here, which is worse than routing none.
   cto:
-    name: Nishant
+    name: Kumar Nishant
     email: ""
+    note: CTO, Antier Solutions — tech strategy and client solutions
   sme:
     # Two owners. Section 4 ties this persona to real expertise, and expertise is
     # not always one person — the section is addressed to both.

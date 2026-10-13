@@ -1,14 +1,39 @@
-# Persona: COO — Shashi Pal
+# Persona: Co-Founder & COO — Shashi Pal
 #
 # OWNER EXTENSION, beyond section 4. The blueprint names four personas (company,
 # ceo, cto, sme); this one was added on the owner's instruction on 2026-10-13.
-# The territory below is a first draft from the COO's remit and should be reviewed
-# — a wrong territory routes the wrong items here, which is worse than none.
+#
+# The territory below is taken from his own LinkedIn headline, About section and
+# listed top skills rather than inferred from the job title. My first draft covered
+# the operations half and missed the domain half entirely — he leads on RWA
+# tokenization, regulated payment rails and stablecoin infrastructure, which are
+# Antier's core themes, not only on how delivery is run.
+#
+# His words: "directing global operations, delivery engineering, and institutional
+# execution across enterprise blockchain, AI orchestration, and digital finance
+# infrastructure... scaled Antier's delivery organization into a 600+ specialist
+# enterprise".
 persona: coo
-label: COO
+label: Co-Founder & COO
 name: Shashi Pal
 territory:
+  # Domain — his stated top skills, and Antier's core services
+  - rwa tokenization
+  - real world assets
+  - tokenization
+  - stablecoin infrastructure
+  - regulated payment rails
+  - payments
+  - settlement
+  - digital asset regulatory compliance
+  - enterprise blockchain
+  - ai orchestration
+  - enterprise ai
+  - distributed systems
+  # Operations — how it gets built and run
   - operations
+  - delivery engineering
+  - institutional execution
   - execution
   - delivery
   - scale
@@ -19,10 +44,14 @@ territory:
   - risk management
   - cost
   - efficiency
-angle: How this actually gets built, run and scaled
+angle: >
+  What it takes to actually build and run this at institutional scale — the
+  delivery, compliance and operating reality behind the announcement
 framing:
-  stablecoin_infrastructure: What it takes to run this in production
-  rwa_tokenization: Operational lift and what breaks at scale
-  ai_blockchain: Where this changes delivery and cost
-  regulation: What compliance has to absorb operationally
-formats: [operational playbook, implementation note, readiness checklist]
+  stablecoin_infrastructure: Running regulated payment rails in production
+  rwa_tokenization: What tokenizing a real asset demands operationally
+  ai_blockchain: Where AI orchestration changes delivery, cost and headcount
+  regulation: What a compliance regime costs to absorb and operate
+  chain_abstraction: Delivery and integration lift across chains
+formats: [operational playbook, implementation note, readiness checklist,
+          institutional execution brief]
