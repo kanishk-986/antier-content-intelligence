@@ -354,3 +354,25 @@ def test_the_bootstrap_runs_before_any_annotation_is_evaluated():
             assert venv_at < first_def, (
                 f"{os.path.basename(path)}: the venv bootstrap must precede the "
                 "first def")
+
+
+# --- a territory can have more than one owner ---------------------------------
+
+@pytest.mark.parametrize("value,expected", [
+    ("Nishant", "Nishant"),
+    (["Rohit", "Mohit"], "Rohit and Mohit"),
+    (["A", "B", "C"], "A, B and C"),
+    (["Solo"], "Solo"),
+    ([], ""),
+    (None, ""),
+    (["", "  "], ""),
+])
+def test_a_persona_can_be_owned_by_several_people(value, expected):
+    """Expertise is not always one person: the SME territory has two."""
+    assert daily._names(value) == expected
+
+
+def test_both_sme_owners_appear_in_the_brief():
+    out = _render([], [item(1)])
+    assert "Rohit and Mohit" in out
+    assert "Nishant" in out

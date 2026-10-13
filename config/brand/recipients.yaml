@@ -31,10 +31,12 @@ personas:
       carries a first-draft territory that should be reviewed -- a wrong territory
       routes the wrong items here, which is worse than routing none.
   cto:
-    name: ""                  # unassigned
+    name: Nishant
     email: ""
   sme:
-    name: ""                  # section 4 ties this persona to named expertise
+    # Two owners. Section 4 ties this persona to real expertise, and expertise is
+    # not always one person — the section is addressed to both.
+    name: [Rohit, Mohit]
     email: ""
   company:
     name: Antier Corporate

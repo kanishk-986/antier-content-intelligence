@@ -123,6 +123,22 @@ def build(store, opportunities, window_hours: int = 24,
 
 # --- rendering ----------------------------------------------------------------
 
+def _names(value: Any) -> str:
+    """One owner or several.
+
+    Expertise is not always one person: the SME territory has two. A list in
+    recipients.yaml addresses the section to both rather than forcing a choice.
+    """
+    if isinstance(value, (list, tuple)):
+        people = [str(v).strip() for v in value if str(v).strip()]
+        if not people:
+            return ""
+        if len(people) == 1:
+            return people[0]
+        return ", ".join(people[:-1]) + " and " + people[-1]
+    return str(value or "").strip()
+
+
 def _lede(item: dict[str, Any]) -> str:
     text = " ".join((item.get("clean_text") or "").split())
     return text[:LEDE_CHARS] + ("..." if len(text) > LEDE_CHARS else "")
@@ -161,7 +177,7 @@ def render_markdown(brief: Brief, recipients: dict[str, Any] | None = None) -> s
         config = personas.get(persona, {})
         who = people.get(persona) or {}
         label = config.get("label") or persona
-        name = who.get("name") or ""
+        name = _names(who.get("name"))
         # The corporate channel's recipient name is the label, so it would read
         # "Antier Corporate — Antier Corporate".
         show_name = name and name.strip().lower() != str(label).strip().lower()
