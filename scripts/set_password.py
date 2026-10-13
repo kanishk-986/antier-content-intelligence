@@ -28,6 +28,34 @@ SETTABLE = {
 }
 
 
+def normalise(key: str, raw: str) -> tuple[str, str | None]:
+    """Clean an obviously mistyped value, and refuse one that cannot be right.
+
+    A terminal paste goes wrong in predictable ways. Google displays an app password
+    as four groups of four -- "abcd efgh ijkl mnop" -- so the spaces get pasted too,
+    and a repeated paste silently concatenates. Both produce a value that looks
+    plausible in a file and fails at the server with an unhelpful 535.
+    """
+    value = " ".join(raw.split())            # collapse runs of whitespace
+    if key in ("SMTP_PASSWORD", "GMAIL_CLIENT_SECRET"):
+        value = value.replace(" ", "")       # Google shows groups; they are display only
+
+    # A repeated paste: the same chunk over and over.
+    if len(value) > 40:
+        for size in range(8, 25):
+            if len(value) % size == 0 and len(set(
+                    value[i:i + size] for i in range(0, len(value), size))) == 1:
+                return value[:size], (
+                    f"that looks like the same {size}-character value pasted "
+                    f"{len(value) // size} times; keeping one copy")
+
+    if key == "SMTP_PASSWORD" and 20 < len(value) != 16:
+        return value, (
+            f"a Google app password is exactly 16 letters; this is {len(value)}. "
+            "If it was pasted more than once, delete it in Google and make a new one.")
+    return value, None
+
+
 def write_value(key: str, value: str, path: str) -> None:
     lines = []
     if os.path.exists(path):
@@ -77,8 +105,20 @@ def main() -> int:
         print("Nothing entered; .env unchanged.", file=sys.stderr)
         return 1
 
-    write_value(key, value.strip(), args.env)
+    cleaned, warning = normalise(key, value)
+    if warning:
+        print(f"\n  note: {warning}")
+    if not cleaned:
+        print("Nothing usable entered; .env unchanged.", file=sys.stderr)
+        return 1
+
+    write_value(key, cleaned, args.env)
     print(f"\nSaved to {args.env} (readable only by you). The value was not shown.")
+    if key == "SMTP_PASSWORD":
+        print(f"It is {len(cleaned)} characters"
+              + (" — the right length for a Google app password."
+                 if len(cleaned) == 16 else
+                 " — a Google app password is 16, so check it if sending fails."))
     print("Check it works:  python3 scripts/test_mail.py")
     return 0
 
