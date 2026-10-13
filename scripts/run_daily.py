@@ -23,6 +23,7 @@ from datetime import datetime, timezone
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from src.briefs import daily, mailer
+from src.briefs.envfile import environment
 from src.briefs.persona import load_recipients
 from src.database.sqlite_store import SqliteStore
 from src.scoring import weights as wcfg
@@ -111,7 +112,7 @@ def run(args, log) -> int:
             f"Would have gone to {', '.join(a for a in to if a) or '(nobody)'}")
         return 0
 
-    result = mailer.send(subject, markdown, to)
+    result = mailer.send(subject, markdown, to, env=environment())
     log(f"  {'sent' if result.sent else 'NOT SENT'}: {result.detail}")
     store.audit("system", "daily_brief",
                 detail=f"{brief.total} item(s), sent={result.sent}")

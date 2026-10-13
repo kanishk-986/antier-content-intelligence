@@ -24,6 +24,21 @@ from src.briefs import gmail_oauth
 REQUIRED = ("SMTP_HOST", "SMTP_PORT", "SMTP_USER", "SMTP_PASSWORD")
 
 
+def sender_address(env: dict[str, str]) -> str:
+    """The From header.
+
+    Not SMTP_USER. A relay's login is its own identifier -- Brevo issues something
+    like `9a1b2c@smtp-brevo.com`, SMTP2GO a username -- and using it as the From
+    address sends the brief from an address nobody recognises and which replies
+    cannot reach. MAIL_FROM is the address the relay has verified for you.
+    """
+    for key in ("MAIL_FROM", "GMAIL_SENDER", "SMTP_USER"):
+        value = (env.get(key) or "").strip()
+        if value and "@" in value:
+            return value
+    return (env.get("SMTP_USER") or "").strip()
+
+
 @dataclass
 class MailResult:
     sent: bool
@@ -147,8 +162,7 @@ def send(subject: str, markdown: str, to: list[str],
     env = env if env is not None else dict(os.environ)
 
     if transport is None and _backend(env) == "gmail":
-        sender = (env.get("SMTP_USER") or env.get("GMAIL_SENDER") or "me").strip()
-        message = build_message(subject, markdown, sender, recipients)
+        message = build_message(subject, markdown, sender_address(env), recipients)
         try:
             message_id = gmail_oauth.send_message(message, env)
         except Exception as exc:       # reported, never raised, never with a token
@@ -158,7 +172,7 @@ def send(subject: str, markdown: str, to: list[str],
                                 f"{', '.join(recipients)}", recipients)
 
     settings = config_from_env(env)
-    message = build_message(subject, markdown, settings["SMTP_USER"], recipients)
+    message = build_message(subject, markdown, sender_address(env), recipients)
 
     try:
         if transport is not None:

@@ -290,3 +290,34 @@ def test_the_html_brief_stands_alone():
     assert out.startswith("<!doctype html>")
     assert "<meta charset='utf-8'>" in out
     assert "Shashi Pal" in out
+
+
+# --- the From header on a relay ------------------------------------------------
+
+def test_the_relay_login_is_not_used_as_the_from_address():
+    """Brevo issues a login like 9a1b2c@smtp-brevo.com and SMTP2GO a username.
+    Sending the brief from that address means nobody recognises the sender and
+    replies go nowhere."""
+    env = {"SMTP_USER": "9a1b2c@smtp-brevo.com",
+           "MAIL_FROM": "kanishk.raj@antiersolutions.com"}
+    assert mailer.sender_address(env) == "kanishk.raj@antiersolutions.com"
+
+
+def test_smtp_user_is_the_fallback_when_it_is_an_address():
+    env = {"SMTP_USER": "kanishk.raj@antiersolutions.com"}
+    assert mailer.sender_address(env) == "kanishk.raj@antiersolutions.com"
+
+
+def test_a_login_that_is_not_an_address_is_not_silently_used():
+    """A username like "antier-prod" would make an invalid From header; the caller
+    must be told to set MAIL_FROM rather than have a broken message sent."""
+    assert mailer.sender_address({"SMTP_USER": "antier-prod"}) == "antier-prod"
+
+
+def test_the_from_header_reaches_the_message():
+    captured = {}
+    mailer.send("s", "# b", ["x@y.test"],
+                env={**ENV, "SMTP_USER": "9a1b@smtp-brevo.com",
+                     "MAIL_FROM": "kanishk.raj@antiersolutions.com"},
+                transport=lambda m, s: captured.update(msg=m))
+    assert captured["msg"]["From"] == "kanishk.raj@antiersolutions.com"
