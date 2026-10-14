@@ -202,7 +202,7 @@ def test_an_unreadable_file_raises_rather_than_returning_nothing():
     with open(path, "w") as fh:
         fh.write("this is not a zip file")
     try:
-        with pytest.raises(Exception):
+        with pytest.raises(zipfile.BadZipFile):
             xlsx_to_text(path)
     finally:
         os.unlink(path)
