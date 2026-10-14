@@ -127,12 +127,41 @@ def markdown_to_html(markdown: str) -> str:
     )
 
 
+# One address: no whitespace, exactly one @, something either side. Deliberately
+# stricter than RFC 5322, because every address here comes from a config file we
+# control, and anything odd is a typo rather than an exotic valid address.
+_ADDRESS = re.compile(r"^[^\s@,;:<>]+@[^\s@,;:<>]+\.[^\s@,;:<>]+$")
+
+
+def valid_address(value: str) -> str | None:
+    """The address, or None if it is not one.
+
+    Stripping CR and LF stops a header injection but leaves the rest of the
+    injected text in place: "x@y.test\nBcc: evil@x.test" becomes the single
+    address "x@y.test Bcc: evil@x.test", which creates no Bcc header and is also
+    not deliverable. Checking the shape rejects it outright.
+    """
+    cleaned = _header_safe(value)
+    return cleaned if _ADDRESS.match(cleaned) else None
+
+
+def _header_safe(value: str) -> str:
+    """A header value with no line breaks in it.
+
+    Python refuses to build a message when a header contains CR or LF, which is
+    correct -- that is how a header injection is attempted. But it raises, and the
+    send is the last step of a run: a stray newline in recipients.yaml would throw
+    away a whole cycle's work at the final line. Strip it and carry on.
+    """
+    return " ".join(str(value or "").replace("\r", " ").replace("\n", " ").split())
+
+
 def build_message(subject: str, markdown: str, sender: str,
                   to: list[str]) -> EmailMessage:
     message = EmailMessage()
-    message["Subject"] = subject
-    message["From"] = sender
-    message["To"] = ", ".join(to)
+    message["Subject"] = _header_safe(subject)
+    message["From"] = _header_safe(sender)
+    message["To"] = ", ".join(_header_safe(address) for address in to)
     message.set_content(markdown)
     message.add_alternative(markdown_to_html(markdown), subtype="html")
     return message
@@ -155,9 +184,15 @@ def send(subject: str, markdown: str, to: list[str],
          env: dict[str, str] | None = None,
          transport=None) -> MailResult:
     """`transport` is injected so the send path is testable without a server."""
-    recipients = [address for address in to if address and "@" in address]
+    checked = [valid_address(address) for address in to if address]
+    rejected = [a for a, ok in zip(to, checked, strict=False) if a and not ok]
+    # The same address twice means the same mail twice.
+    recipients = list(dict.fromkeys(a for a in checked if a))
     if not recipients:
-        return MailResult(False, "no valid recipient address configured", [])
+        detail = "no valid recipient address configured"
+        if rejected:
+            detail += f"; rejected {rejected[0]!r}"
+        return MailResult(False, detail, [])
 
     env = env if env is not None else dict(os.environ)
 

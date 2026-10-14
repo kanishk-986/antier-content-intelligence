@@ -511,3 +511,56 @@ def test_a_health_query_that_raises_does_not_lose_the_brief():
     out = daily.render_markdown(daily.build(Broken([item(1)]), [FakeOpportunity()],
                                             now=NOW))
     assert "Antier daily intelligence brief" in out
+
+
+# --- addresses and headers come from a config file, so they can be wrong ------
+
+@pytest.mark.parametrize("raw,expected", [
+    ("x@y.test", "x@y.test"),
+    ("  x@y.test  ", "x@y.test"),
+    ("x@y.test\nBcc: evil@x.test", None),
+    ("x@y.test\r\nBcc: evil@x.test", None),
+    ("not-an-address", None),
+    ("a@b", None),
+    ("a b@c.test", None),
+    ("a@b.test, c@d.test", None),
+    ("", None),
+])
+def test_an_address_must_look_like_one(raw, expected):
+    """Stripping CR and LF stops a header injection but leaves the injected text:
+    "x@y.test\\nBcc: evil@x.test" becomes the single address
+    "x@y.test Bcc: evil@x.test", which creates no Bcc header and is also not
+    deliverable."""
+    assert mailer.valid_address(raw) == expected
+
+
+def test_an_injected_recipient_is_refused_and_named():
+    result = mailer.send("s", "# b", ["x@y.test\nBcc: evil@x.test"], env=ENV,
+                         transport=lambda m, s: None)
+    assert not result.sent
+    assert "rejected" in result.detail
+
+
+def test_no_bcc_header_can_be_created_through_an_address():
+    captured = {}
+    mailer.send("s", "# b", ["good@y.test", "x@y.test\nBcc: evil@x.test"], env=ENV,
+                transport=lambda m, s: captured.update(msg=m))
+    assert "Bcc" not in captured["msg"]
+    assert "evil@x.test" not in captured["msg"].as_string()
+
+
+def test_a_newline_in_the_subject_does_not_crash_the_send():
+    """The send is the last step of a run. Python refuses a header with CR or LF,
+    and that refusal would throw away a whole cycle's work at the final line."""
+    captured = {}
+    result = mailer.send("Brief\nBcc: evil@x.test", "# b", ["x@y.test"], env=ENV,
+                         transport=lambda m, s: captured.update(msg=m))
+    assert result.sent
+    assert "\n" not in str(captured["msg"]["Subject"])
+
+
+def test_the_same_address_twice_is_mailed_once():
+    captured = {}
+    mailer.send("s", "# b", ["x@y.test", "x@y.test"], env=ENV,
+                transport=lambda m, s: captured.update(msg=m))
+    assert str(captured["msg"]["To"]) == "x@y.test"
