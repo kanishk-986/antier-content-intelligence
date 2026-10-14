@@ -27,12 +27,19 @@ def read_env_file(path: str = DEFAULT_PATH) -> dict[str, str]:
             if not line or line.startswith("#") or "=" not in line:
                 continue
             key, _, value = line.partition("=")
+            # `export VAR=value` is valid in a file meant to be sourced, and the
+            # launchd wrapper does source it with `set -a`. Reading the key as
+            # "export VAR" would make the same file work under the scheduler and
+            # silently fail for every script that reads it directly.
+            key = key.strip()
+            if key.startswith("export ") or key.startswith("export\t"):
+                key = key[len("export"):].strip()
             value = value.strip()
             # Quotes are a shell convention for values with spaces, not part of the
             # value. `export` strips them, so reading the file must too.
             if len(value) >= 2 and value[0] == value[-1] and value[0] in "\"'":
                 value = value[1:-1]
-            out[key.strip()] = value
+            out[key] = value
     return out
 
 
