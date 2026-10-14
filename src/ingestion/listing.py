@@ -29,6 +29,7 @@ import httpx
 import trafilatura
 import yaml
 
+from src.ingestion import retry
 from src.ingestion.fetcher import UA, _parse_date, content_hash
 from src.ingestion.urls import same_site
 
@@ -223,7 +224,7 @@ def extract_listing(source: dict[str, Any], seen: set[str],
         shell_seen = False
         for listing_url in _resolve_listings(source, rules):
             try:
-                resp = client.get(listing_url)
+                resp = retry.get(client, listing_url)
             except httpx.HTTPError as exc:
                 out.status, out.detail = _classify_transport(exc)
                 continue
@@ -320,7 +321,7 @@ def _fetch_article(client: httpx.Client, source: dict[str, Any], url: str,
     made the field useless for exactly the audit it exists to support.
     """
     try:
-        page = client.get(url)
+        page = retry.get(client, url)
     except httpx.HTTPError:
         return None
     if page.status_code >= 400:

@@ -27,6 +27,7 @@ from urllib.parse import urljoin, urlparse
 
 import httpx
 
+from src.ingestion import retry
 from src.ingestion.listing import (
     MIN_ARTICLE_CHARS,
     _fetch_article,
@@ -151,7 +152,7 @@ def discover(source: dict[str, Any], client: httpx.Client) -> SitemapOutcome:
     declared: list[str] = []
     disallow: list[str] = []
     try:
-        robots = client.get(urljoin(root, "/robots.txt"))
+        robots = retry.get(client, urljoin(root, "/robots.txt"))
         if robots.status_code < 400:
             declared, disallow = parse_robots(robots.text)
     except httpx.HTTPError:
@@ -161,7 +162,7 @@ def discover(source: dict[str, Any], client: httpx.Client) -> SitemapOutcome:
         if not same_site(source["url"], candidate):
             continue                 # a sitemap on another domain is another site
         try:
-            resp = client.get(candidate)
+            resp = retry.get(client, candidate)
         except httpx.HTTPError as exc:
             out.status, out.detail = "error", f"{type(exc).__name__} on {candidate}"
             continue
@@ -179,7 +180,7 @@ def discover(source: dict[str, Any], client: httpx.Client) -> SitemapOutcome:
             entries = []
             for child in children:
                 try:
-                    sub = client.get(child)
+                    sub = retry.get(client, child)
                 except httpx.HTTPError:
                     continue
                 if sub.status_code >= 400:

@@ -21,6 +21,7 @@ import feedparser
 import httpx
 import trafilatura
 
+from src.ingestion import retry
 from src.ingestion.urls import same_site
 
 UA = "AntierContentIntelligence/0.1 (+research; contact via repo owner)"
@@ -80,9 +81,14 @@ def _client() -> httpx.Client:
 
 
 def discover_feed(url: str, client: httpx.Client) -> tuple[str | None, int | None]:
-    """Find a feed for a source. Returns (feed_url, http_status_of_last_attempt)."""
+    """Find a feed for a source. Returns (feed_url, http_status_of_last_attempt).
+
+    This is the first request made for every source, so a few seconds of network
+    instability here costs the whole run: 82 of 98 sources were recorded as failed
+    on one such run, and all of them answered 200 minutes later.
+    """
     try:
-        resp = client.get(url)
+        resp = retry.get(client, url)
     except httpx.HTTPError as exc:
         return None, getattr(exc, "response", None) and exc.response.status_code
     if resp.status_code >= 400:
@@ -99,7 +105,7 @@ def discover_feed(url: str, client: httpx.Client) -> tuple[str | None, int | Non
     for guess in FEED_GUESSES:
         candidate = str(httpx.URL(url).join(guess))
         try:
-            probe = client.get(candidate)
+            probe = retry.get(client, candidate)
         except httpx.HTTPError:
             continue
         if probe.status_code < 400 and "xml" in probe.headers.get(
@@ -129,7 +135,7 @@ def fetch_source(source: dict[str, Any], seen: set[str], max_items: int = 20,
             return out
 
         try:
-            raw = client.get(feed_url)
+            raw = retry.get(client, feed_url)
         except httpx.HTTPError as exc:
             out.status = "error"
             out.detail = str(exc)[:200]
@@ -168,7 +174,7 @@ def fetch_source(source: dict[str, Any], seen: set[str], max_items: int = 20,
             raw_text, clean_text = "", ""
             if fetch_bodies:
                 try:
-                    page = client.get(link)
+                    page = retry.get(client, link)
                     if page.status_code < 400:
                         raw_text = page.text
                         clean_text = trafilatura.extract(
