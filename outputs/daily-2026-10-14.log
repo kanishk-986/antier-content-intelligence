@@ -1,76 +1,11 @@
-daily cycle 2026-10-14T04:30:04+00:00
+daily cycle 2026-10-14T10:36:25+00:00
 
 === ingestion ===
-    [105/105] Tokenized Economies Institute            listing  error             new=0   dup=0   ConnectError: [SSL: CERTIFICATE_VERIFY_FAILED]
+    [105/105] Tokenized Economies Institute            feed     no_feed           new=0   dup=0   no RSS/Atom feed found (HTTP 200)
   
-    logged 105 source outcome(s) at 2026-10-14T04:49:18+00:00
-    attempted 98 | stored 13 | duplicates 11
-    by status: blocked=4, blocked_known=7, error=76, js_rendered=2, no_feed=6, not_a_listing=1, ok=9
-    db counts: sources=105, content_items=1043, intelligence=151, narratives=158, narrative_items=1004, opportunities=158, qa_reviews=6, audit_log=63, fetch_state=1151
+    logged 105 source outcome(s) at 2026-10-14T10:59:27+00:00
+    attempted 98 | stored 42 | duplicates 1
+    by status: blocked=14, blocked_known=7, error=1, js_rendered=6, no_feed=39, not_a_listing=5, offsite_redirect=2, ok=31
+    db counts: sources=105, content_items=1176, intelligence=171, narratives=171, narrative_items=1134, opportunities=171, audit_log=109, fetch_state=1292
 
 === intelligence ===
-      46af024e  RuntimeError: claude CLI exited 1: API Error: Unable to connect to API: Self-signed cert
-      8cfdbc4b  RuntimeError: claude CLI exited 1: API Error: Unable to connect to API: Self-signed cert
-      e983a693  RuntimeError: claude CLI exited 1: API Error: Unable to connect to API: Self-signed cert
-  
-    attempted 40 | stored 20 | failed 19 | speculation filtered 1
-    db: sources=105, content_items=1043, intelligence=171, narratives=158, narrative_items=1004, opportunities=158, qa_reviews=6, audit_log=84, fetch_state=1151
-
-=== narratives ===
-         terms: 
-         srcs : 1 distinct, 1 publisher(s) | dated 1, undated 0
-         - Invest in What's Next
-  
-    shown 163 of 163 | multi-item narratives: 148 | largest: 33 | singletons: 15
-    persisted 163 narratives at 2026-10-14T05:00:32+00:00
-
-=== scoring ===
-           tren=0.00  anti=1.00  audi=0.80  comm=0.60  auth=1.00  nove=0.00  sour=0.56
-           unmeasured: commercial_relevance
-  
-    bands: good=4, monitor=28, reject=131
-    competitor saturation axis: not_measured (section 32 defers it; never read as 0)
-    persisted 163 opportunities
-
-=== qa ===
-            · Q3: This is not an emerging narrative — it is three forum posts in a draft-standard discussion t
-            · Q3: trend_velocity 1.0 on 'velocity 12.0' is an artefact of a forum thread accumulating replies,
-            · Q1: 2 distinct sources, and the provenance itself records that 2 of 2 are primary parties — Ethe
-  
-    decisions: REJECT=7, RESEARCH_MORE=1
-    Section 20: this narrows the queue. Human review is final; nothing is published here.
-
-=== brief ===
-  15 item(s) across 5 persona section(s)
-    ceo      5
-    coo      5
-    cto      0
-    sme      0
-    company  5
-  wrote /Users/kanishk.raj/antier-content-intelligence/outputs/brief-2026-10-14.md
-  wrote /Users/kanishk.raj/antier-content-intelligence/outputs/brief-2026-10-14.html
-  sent: sent to kanishk.raj@antiersolutions.com
-daily cycle 2026-10-14T09:29:11+00:00
-
-=== brief ===
-  13 item(s) across 5 persona section(s); 13 routing decision(s) recorded
-    ceo      3
-    coo      5
-    cto      0
-    sme      0
-    company  5
-  wrote /Users/kanishk.raj/antier-content-intelligence/outputs/brief-2026-10-14.md
-  wrote /Users/kanishk.raj/antier-content-intelligence/outputs/brief-2026-10-14.html
-  --no-send: the brief is on disk and was not mailed.
-daily cycle 2026-10-14T09:52:38+00:00
-
-=== brief ===
-  0 item(s) across 5 persona section(s); 0 routing decision(s) recorded
-    ceo      0
-    coo      0
-    cto      0
-    sme      0
-    company  0
-  wrote /Users/kanishk.raj/antier-content-intelligence/outputs/brief-2026-10-14.md
-  wrote /Users/kanishk.raj/antier-content-intelligence/outputs/brief-2026-10-14.html
-  --no-send: the brief is on disk and was not mailed.

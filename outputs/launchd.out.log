@@ -96,3 +96,14 @@ daily cycle 2026-10-14T04:30:04+00:00
   wrote /Users/kanishk.raj/antier-content-intelligence/outputs/brief-2026-10-14.md
   wrote /Users/kanishk.raj/antier-content-intelligence/outputs/brief-2026-10-14.html
   sent: sent to kanishk.raj@antiersolutions.com
+daily cycle 2026-10-14T10:36:25+00:00
+
+=== ingestion ===
+    [105/105] Tokenized Economies Institute            feed     no_feed           new=0   dup=0   no RSS/Atom feed found (HTTP 200)
+  
+    logged 105 source outcome(s) at 2026-10-14T10:59:27+00:00
+    attempted 98 | stored 42 | duplicates 1
+    by status: blocked=14, blocked_known=7, error=1, js_rendered=6, no_feed=39, not_a_listing=5, offsite_redirect=2, ok=31
+    db counts: sources=105, content_items=1176, intelligence=171, narratives=171, narrative_items=1134, opportunities=171, audit_log=109, fetch_state=1292
+
+=== intelligence ===
