@@ -75,6 +75,18 @@ def main() -> int:
     run_at = rows[0]["run_at"]
     print(f"source health for run {run_at}  ({len(rows)} sources)\n")
 
+    # Lead with this. Every number below is computed from the same run, so a
+    # reader who meets the caveat after the figures has already believed them.
+    fault = environment_fault(rows)
+    if fault:
+        signature, count = fault
+        print(f"  ENVIRONMENT FAULT: {count} of {len(rows)} sources failed with "
+              f"the same error —\n    {signature}\n"
+              "  One shared failure across most of a run is this machine's network,"
+              "\n  not those publishers. Every figure below is from that run and is"
+              "\n  therefore unreliable. Re-run on a stable connection before"
+              " acting on it.\n")
+
     # --- yield by source type, split on independence ------------------------
     buckets: dict[str, dict[str, int]] = {}
     for r in rows:
@@ -97,9 +109,12 @@ def main() -> int:
     if total:
         share = 100 * ind_items / total
         print(f"\n  independent items: {ind_items}/{total} = {share:.0f}%")
-        if share < 50:
+        if share < 50 and not fault:
             print("  ^ a corpus this self-reported cannot support a claim. "
                   "See SCORING.md, 'Authority is not corroboration'.")
+        elif share < 50:
+            print("  ^ not a conclusion: this run's independent sources were the "
+                  "ones that failed.")
     print(f"  independent sources in registry: {ind_n}/{len(rows)}")
 
     # --- why the silent ones were silent ------------------------------------
@@ -107,16 +122,6 @@ def main() -> int:
     by_status: dict[str, list[dict]] = {}
     for r in silent:
         by_status.setdefault(r["status"], []).append(r)
-
-    fault = environment_fault(rows)
-    if fault:
-        signature, count = fault
-        print(f"\n  ENVIRONMENT FAULT: {count} of {len(rows)} sources failed with "
-              f"the same error —\n    {signature}\n"
-              "  One shared failure across most of the run is this machine's "
-              "network, not\n  those publishers. Treat the statuses below as "
-              "unreliable for this run and\n  re-run when the connection is "
-              "stable; do not act on them.")
 
     print(f"\n  {len(silent)} of {len(rows)} sources yielded nothing:")
     for status, group in sorted(by_status.items(), key=lambda kv: -len(kv[1])):
