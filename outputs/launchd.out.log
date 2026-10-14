@@ -33,3 +33,14 @@ daily cycle 2026-10-13T16:53:10+00:00
     persisted 158 opportunities
 
 === qa ===
+daily cycle 2026-10-13T18:46:30+00:00
+
+=== ingestion ===
+    [105/105] Tokenized Economies Institute            listing  error             new=0   dup=0   ConnectError: [Errno 8] nodename nor servname 
+  
+    logged 105 source outcome(s) at 2026-10-14T03:54:27+00:00
+    attempted 98 | stored 26 | duplicates 18
+    by status: blocked=5, blocked_known=7, blocked_transport=2, error=54, js_rendered=3, no_feed=15, not_a_listing=3, ok=16
+    db counts: sources=105, content_items=1030, intelligence=129, narratives=158, narrative_items=1004, opportunities=158, qa_reviews=6, audit_log=55, fetch_state=1127
+
+=== intelligence ===

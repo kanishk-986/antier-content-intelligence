@@ -376,3 +376,58 @@ def test_both_sme_owners_appear_in_the_brief():
     out = _render([], [item(1)])
     assert "Rohit and Mohit" in out
     assert "Nishant" in out
+
+
+# --- the cycle's own preconditions --------------------------------------------
+
+import importlib.util as _ilu
+
+_rd_spec = _ilu.spec_from_file_location(
+    "run_daily", os.path.join(os.path.dirname(os.path.dirname(
+        os.path.abspath(__file__))), "scripts", "run_daily.py"))
+run_daily = _ilu.module_from_spec(_rd_spec)
+_rd_spec.loader.exec_module(run_daily)
+
+
+def test_an_unreachable_network_is_detected():
+    """A run that starts while the Mac is asleep has no DNS, and every source fails
+    with "nodename nor servname". A real overnight run recorded 54 of 105 sources
+    as `error` — which is not a fact about those publishers, and pollutes the health
+    report that decides where work is worth doing."""
+    assert run_daily.network_is_up(("no-such-host-xyz.invalid",)) is False
+
+
+def test_a_resolvable_host_counts_as_up():
+    assert run_daily.network_is_up(("localhost",)) is True
+
+
+def test_one_bad_probe_host_does_not_report_the_network_down():
+    assert run_daily.network_is_up(("no-such-host-xyz.invalid", "localhost")) is True
+
+
+def test_only_one_cycle_runs_at_a_time(tmp_path):
+    """launchd starts the job on schedule regardless of what is already running.
+    Two cycles sharing one SQLite file would interleave a re-clustering with a
+    scoring pass."""
+    lock = str(tmp_path / "daily.lock")
+    with run_daily.single_instance(lock), pytest.raises(RuntimeError, match="already running"):
+        with run_daily.single_instance(lock):
+            pass
+
+
+def test_the_lock_is_released_when_the_cycle_ends(tmp_path):
+    lock = str(tmp_path / "daily.lock")
+    with run_daily.single_instance(lock):
+        pass
+    with run_daily.single_instance(lock):
+        pass          # must not raise
+
+
+def test_the_lock_is_released_even_after_a_crash(tmp_path):
+    """flock is held by the file descriptor, so a crashed cycle cannot wedge the
+    schedule permanently."""
+    lock = str(tmp_path / "daily.lock")
+    with pytest.raises(ValueError), run_daily.single_instance(lock):
+        raise ValueError("stage blew up")
+    with run_daily.single_instance(lock):
+        pass

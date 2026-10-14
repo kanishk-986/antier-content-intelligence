@@ -26,8 +26,11 @@ if _os.path.exists(_VENV) and _os.path.realpath(_sys.executable) != _os.path.rea
     _os.execv(_VENV, [_VENV, _os.path.abspath(__file__), *_sys.argv[1:]])
 
 import argparse
+import contextlib
+import fcntl
 import os
 import signal
+import socket
 import subprocess
 import sys
 from datetime import datetime, timezone
@@ -57,6 +60,49 @@ STAGE_TIMEOUT_SECONDS = {
     "qa": 20 * 60,
 }
 DEFAULT_STAGE_TIMEOUT = 30 * 60
+
+
+LOCK_PATH = os.path.join(OUTPUTS, ".daily.lock")
+NETWORK_PROBE = ("bis.org", "www.circle.com")
+
+
+def network_is_up(hosts=NETWORK_PROBE) -> bool:
+    """Can we resolve anything at all?
+
+    A run that starts while the Mac is asleep has no DNS, and every source fails
+    with "nodename nor servname". Measured on a real overnight run: 54 of 105
+    sources recorded as `error`, which is not a fact about those publishers and
+    pollutes the health report that decides where work is worth doing.
+    """
+    for host in hosts:
+        try:
+            socket.getaddrinfo(host, 443)
+            return True
+        except OSError:
+            continue
+    return False
+
+
+@contextlib.contextmanager
+def single_instance(path: str = LOCK_PATH):
+    """Only one cycle at a time.
+
+    launchd starts the job on a calendar schedule regardless of what is already
+    running. Two cycles sharing one SQLite file would interleave a re-clustering
+    with a scoring pass. The lock is advisory and released even on a crash, because
+    flock is held by the file descriptor rather than written into the file.
+    """
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "w") as handle:
+        try:
+            fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except OSError as exc:
+            raise RuntimeError(
+                "another daily cycle is already running; this one will not start"
+            ) from exc
+        handle.write(f"{os.getpid()}\n")
+        handle.flush()
+        yield
 
 
 def stage(name: str, args: list[str], required: bool, log) -> bool:
@@ -103,6 +149,12 @@ def stage(name: str, args: list[str], required: bool, log) -> bool:
 def run(args, log) -> int:
     """One cycle. `log` writes to both the console and the day's log file."""
     day = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+
+    if not args.brief_only and not network_is_up():
+        log("\n  no network: DNS does not resolve. Skipping the pipeline rather "
+            "than recording every source as failed — a sleeping machine is not a "
+            "fact about a publisher. The brief below uses what is already stored.")
+        args.brief_only = True
 
     if not args.brief_only:
         chain = [
@@ -193,7 +245,12 @@ def main() -> int:
             log_file.flush()
 
         log(f"daily cycle {datetime.now(timezone.utc).isoformat(timespec='seconds')}")
-        return run(args, log)
+        try:
+            with single_instance():
+                return run(args, log)
+        except RuntimeError as exc:
+            log(f"  {exc}")
+            return 0
 
 
 if __name__ == "__main__":
