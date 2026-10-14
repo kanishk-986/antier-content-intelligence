@@ -410,8 +410,9 @@ def test_only_one_cycle_runs_at_a_time(tmp_path):
     Two cycles sharing one SQLite file would interleave a re-clustering with a
     scoring pass."""
     lock = str(tmp_path / "daily.lock")
-    with run_daily.single_instance(lock), pytest.raises(RuntimeError, match="already running"):
-        with run_daily.single_instance(lock):
+    with run_daily.single_instance(lock):
+        second = pytest.raises(RuntimeError, match="already running")
+        with second, run_daily.single_instance(lock):
             pass
 
 
