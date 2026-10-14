@@ -31,6 +31,29 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from src.database.sqlite_store import SqliteStore
 from src.ingestion.status import ACTIONABLE, guidance
+
+# When this share of a run's sources fail with the same transport signature, the
+# fault is ours, not theirs. Measured: a run during an office-network change
+# recorded 76 of 98 sources as `error` with the same SSL verification failure, and
+# the same sources verified cleanly minutes later. Writing that into the health
+# report would send someone chasing listing rules for sources that were never
+# broken.
+ENVIRONMENT_FAULT_SHARE = 0.4
+
+
+def environment_fault(rows: list[dict]) -> tuple[str, int] | None:
+    """The dominant shared failure, when one failure dominates the run."""
+    signatures: dict[str, int] = {}
+    for row in rows:
+        if row["status"] not in ("error", "blocked"):
+            continue
+        detail = (row.get("detail") or "").strip()
+        key = detail.split(":")[0][:60] or row["status"]
+        signatures[key] = signatures.get(key, 0) + 1
+    if not signatures or not rows:
+        return None
+    worst, count = max(signatures.items(), key=lambda kv: kv[1])
+    return (worst, count) if count / len(rows) >= ENVIRONMENT_FAULT_SHARE else None
 from src.narratives.momentum import load_independence
 
 
@@ -84,6 +107,16 @@ def main() -> int:
     by_status: dict[str, list[dict]] = {}
     for r in silent:
         by_status.setdefault(r["status"], []).append(r)
+
+    fault = environment_fault(rows)
+    if fault:
+        signature, count = fault
+        print(f"\n  ENVIRONMENT FAULT: {count} of {len(rows)} sources failed with "
+              f"the same error —\n    {signature}\n"
+              "  One shared failure across most of the run is this machine's "
+              "network, not\n  those publishers. Treat the statuses below as "
+              "unreliable for this run and\n  re-run when the connection is "
+              "stable; do not act on them.")
 
     print(f"\n  {len(silent)} of {len(rows)} sources yielded nothing:")
     for status, group in sorted(by_status.items(), key=lambda kv: -len(kv[1])):

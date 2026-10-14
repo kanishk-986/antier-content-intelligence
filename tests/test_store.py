@@ -261,3 +261,49 @@ def test_narrative_members_are_rewritten_not_appended(tmp_path):
     store.replace_narratives(_narrative_payload(nid="n2"))
     rows = store.conn.execute("SELECT narrative_id FROM narrative_items").fetchall()
     assert [r["narrative_id"] for r in rows] == ["n2"]
+
+
+# --- telling an environment fault from a publisher's --------------------------
+
+def _health_rows(error_count, ok_count, detail="ConnectError: [SSL] verify failed"):
+    rows = [{"status": "error", "detail": detail} for _ in range(error_count)]
+    rows += [{"status": "ok", "detail": "3 new item(s)"} for _ in range(ok_count)]
+    return rows
+
+
+def _fault(rows):
+    import importlib.util
+    root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    spec = importlib.util.spec_from_file_location(
+        "source_health", os.path.join(root, "scripts", "source_health.py"))
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod.environment_fault(rows)
+
+
+def test_one_shared_failure_across_most_of_a_run_is_ours_not_theirs():
+    """A run during an office-network change recorded 76 of 98 sources as `error`
+    with the same SSL verification failure, and the same sources verified cleanly
+    minutes later. Written into the health report, that sends someone chasing
+    listing rules for sources that were never broken."""
+    got = _fault(_health_rows(76, 29))
+    assert got is not None
+    assert got[1] == 76
+
+
+def test_a_few_scattered_failures_are_not_an_environment_fault():
+    assert _fault(_health_rows(3, 100)) is None
+
+
+def test_failures_with_different_causes_are_not_one_fault():
+    rows = [{"status": "error", "detail": f"Cause{i}: something"} for i in range(50)]
+    rows += [{"status": "ok", "detail": ""} for _ in range(50)]
+    assert _fault(rows) is None
+
+
+def test_an_empty_run_reports_nothing():
+    assert _fault([]) is None
+
+
+def test_a_healthy_run_reports_nothing():
+    assert _fault(_health_rows(0, 100)) is None
