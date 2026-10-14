@@ -252,3 +252,17 @@ Top rising narratives · emerging but not yet saturated · gaining institutional
 traction · regulatory tension · topics competitors overuse · topics competitors ignore
 · topics Antier should own · CEO opportunities · CTO opportunities · long-form
 opportunities · previous-week performance.
+
+### Entering a credential
+
+    python3 scripts/set_password.py                  # which settings are set, which empty
+    python3 scripts/set_password.py SMTP_PASSWORD    # prompts with the input hidden
+
+The prompt hides what you type, the value goes straight into `.env` at mode 600, and
+it is never displayed, never in scrollback and never in shell history. It also
+cleans what it is given: Google shows an app password as four groups of four, and
+those spaces are display only, so they are stripped; a value that is the same chunk
+pasted repeatedly is reduced to one copy and the fact is reported. It prints the
+resulting length — never the value — so a mistake is visible when it is made.
+
+Never pass the password on a command line — it lands in shell history and in `ps`.

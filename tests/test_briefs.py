@@ -564,3 +564,37 @@ def test_the_same_address_twice_is_mailed_once():
     mailer.send("s", "# b", ["x@y.test", "x@y.test"], env=ENV,
                 transport=lambda m, s: captured.update(msg=m))
     assert str(captured["msg"]["To"]) == "x@y.test"
+
+
+def test_every_script_is_documented():
+    """A script nobody can find is a script nobody uses. set_password.py was the
+    one the owner was told to run three times and was in no document."""
+    import glob
+    import re
+    root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    named = set()
+    for doc in [*glob.glob(os.path.join(root, "docs", "*.md")),
+                os.path.join(root, "README.md")]:
+        if not os.path.exists(doc):
+            continue
+        with open(doc) as fh:
+            named |= set(re.findall(r"scripts/([a-z_]+\.py)", fh.read()))
+    have = {os.path.basename(p)
+            for p in glob.glob(os.path.join(root, "scripts", "*.py"))}
+    assert not (have - named), f"undocumented: {sorted(have - named)}"
+
+
+def test_no_document_names_a_script_that_does_not_exist():
+    import glob
+    import re
+    root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    named = set()
+    for doc in [*glob.glob(os.path.join(root, "docs", "*.md")),
+                os.path.join(root, "README.md")]:
+        if not os.path.exists(doc):
+            continue
+        with open(doc) as fh:
+            named |= set(re.findall(r"scripts/([a-z_]+\.py)", fh.read()))
+    missing = [s for s in sorted(named)
+               if not os.path.exists(os.path.join(root, "scripts", s))]
+    assert not missing, f"documented but absent: {missing}"
