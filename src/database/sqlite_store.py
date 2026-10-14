@@ -413,6 +413,22 @@ class SqliteStore:
             """, (run_at,)).fetchall()
         return [dict(r) for r in rows]
 
+    def set_opportunity_personas(self, assignments: dict[str, str]) -> int:
+        """Record which persona each opportunity was routed to.
+
+        The routing was computed for the brief and then discarded, so the column
+        existed and was never written. Section 33 wants the decision in the audit
+        trail, section 27's dashboard needs it to group by owner, and section 30's
+        feedback loop cannot learn from a decision nobody kept.
+        """
+        rows = [(persona, oid) for oid, persona in assignments.items() if persona]
+        if not rows:
+            return 0
+        self.conn.executemany(
+            "UPDATE opportunities SET persona = ? WHERE id = ?", rows)
+        self.conn.commit()
+        return len(rows)
+
     def source_types(self) -> dict[str, str]:
         """Registry type per source. Feeds the momentum independence correction:
         a primary party reporting on itself is not corroboration."""

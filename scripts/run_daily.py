@@ -180,6 +180,7 @@ def run(args, log) -> int:
     persist(store, [o for o, _ in scored])
     brief = daily.build(store, [o for o, _ in scored], window_hours=window)
     markdown = daily.render_markdown(brief, recipients)
+    stored = store.set_opportunity_personas(brief.assignments)
 
     md_path = os.path.join(OUTPUTS, f"brief-{day}.md")
     with open(md_path, "w") as fh:
@@ -191,7 +192,8 @@ def run(args, log) -> int:
     html_path = os.path.join(OUTPUTS, f"brief-{day}.html")
     with open(html_path, "w") as fh:
         fh.write(mailer.markdown_to_html(markdown))
-    log(f"  {brief.total} item(s) across {len(brief.sections)} persona section(s)")
+    log(f"  {brief.total} item(s) across {len(brief.sections)} persona section(s)"
+        f"; {stored} routing decision(s) recorded")
     for persona, entries in brief.sections.items():
         log(f"    {persona:8} {len(entries)}")
     log(f"  wrote {md_path}")

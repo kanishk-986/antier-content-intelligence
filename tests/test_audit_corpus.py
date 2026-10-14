@@ -142,3 +142,30 @@ def test_a_report_only_run_changes_nothing(tmp_path, monkeypatch):
     conn = SqliteStore(store.path).conn
     assert conn.execute("SELECT COUNT(*) FROM content_items").fetchone()[0] == 1
     assert conn.execute("SELECT COUNT(*) FROM fetch_state").fetchone()[0] == 1
+
+
+# --- the three ingestion paths are judged by different evidence ---------------
+
+def test_a_sitemap_article_is_judged_by_its_own_url():
+    """A sitemap lists the whole site and is not an index page, so its URL carries
+    no editorial segment. Judging it flagged 89 real Ondo, Circle and State Street
+    posts for deletion. The test that applies is the one ingestion already ran."""
+    meta = ('{"via": "sitemap", "listing_url": "https://ondo.finance/sitemap.xml"}')
+    assert audit.classify(
+        _row("https://ondo.finance/blog/ondo-partners-with-sbi-group", meta),
+        STEMS) is None
+
+
+def test_a_sitemap_product_page_is_still_flagged():
+    meta = '{"via": "sitemap", "listing_url": "https://acme.test/sitemap.xml"}'
+    assert audit.classify(
+        _row("https://acme.test/products-and-services/optimisation", meta),
+        STEMS) == "not_editorial"
+
+
+def test_a_feed_item_is_judged_against_its_feed_not_its_path():
+    """A feed is the publisher's own declaration, so the article path is irrelevant;
+    what matters is that the link did not leave the publisher."""
+    meta = '{"via": "feed", "feed_url": "https://acme.test/rss"}'
+    assert audit.classify(_row("https://acme.test/x/y/z", meta), STEMS) is None
+    assert audit.classify(_row("https://doi.org/10.1/x", meta), STEMS) == "offsite"

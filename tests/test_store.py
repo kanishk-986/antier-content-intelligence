@@ -307,3 +307,22 @@ def test_an_empty_run_reports_nothing():
 
 def test_a_healthy_run_reports_nothing():
     assert _fault(_health_rows(0, 100)) is None
+
+
+def test_routing_decisions_are_recorded(tmp_path):
+    store = _store_with_source(tmp_path)
+    store.conn.execute("INSERT INTO narratives (id, name) VALUES ('n1','x')")
+    store.conn.execute("INSERT INTO opportunities (id, narrative_id) VALUES ('o1','n1')")
+    store.conn.commit()
+    assert store.set_opportunity_personas({"o1": "coo"}) == 1
+    got = store.conn.execute("SELECT persona FROM opportunities WHERE id='o1'").fetchone()
+    assert got["persona"] == "coo"
+
+
+def test_an_empty_assignment_map_is_not_an_error(tmp_path):
+    assert _store_with_source(tmp_path).set_opportunity_personas({}) == 0
+
+
+def test_a_blank_persona_is_skipped(tmp_path):
+    store = _store_with_source(tmp_path)
+    assert store.set_opportunity_personas({"o1": ""}) == 0

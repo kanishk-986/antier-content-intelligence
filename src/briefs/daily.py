@@ -49,6 +49,7 @@ class Brief:
     window_hours: int
     sections: dict[str, list[BriefItem]] = field(default_factory=dict)
     corpus: dict[str, Any] = field(default_factory=dict)
+    assignments: dict[str, str] = field(default_factory=dict)
 
     @property
     def total(self) -> int:
@@ -118,6 +119,13 @@ def build(store, opportunities, window_hours: int = 24,
 
     brief.corpus = {"opportunities": considered, "in_window": fresh,
                     "shown": brief.total, "window_hours": window_hours}
+
+    # Keep the routing decision rather than recomputing it from a brief nobody
+    # stored. An assignment that only exists inside one rendered document cannot
+    # be audited, grouped by owner, or learned from.
+    brief.assignments = {entry.opportunity.id: persona
+                         for persona, entries in brief.sections.items()
+                         for entry in entries}
     return brief
 
 

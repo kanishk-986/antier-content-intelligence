@@ -50,3 +50,15 @@ daily cycle 2026-10-14T04:30:04+00:00
   wrote /Users/kanishk.raj/antier-content-intelligence/outputs/brief-2026-10-14.md
   wrote /Users/kanishk.raj/antier-content-intelligence/outputs/brief-2026-10-14.html
   sent: sent to kanishk.raj@antiersolutions.com
+daily cycle 2026-10-14T09:29:11+00:00
+
+=== brief ===
+  13 item(s) across 5 persona section(s); 13 routing decision(s) recorded
+    ceo      3
+    coo      5
+    cto      0
+    sme      0
+    company  5
+  wrote /Users/kanishk.raj/antier-content-intelligence/outputs/brief-2026-10-14.md
+  wrote /Users/kanishk.raj/antier-content-intelligence/outputs/brief-2026-10-14.html
+  --no-send: the brief is on disk and was not mailed.

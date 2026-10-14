@@ -52,9 +52,20 @@ def classify(row: dict, stems: list[str]) -> str | None:
             meta = json.loads(row["metadata"]) or {}
         except (TypeError, ValueError):
             meta = {}
+    via = (meta.get("via") or "").strip()
+
     feed_url = meta.get("feed_url")
-    if feed_url:
+    if via == "feed" or feed_url:
         return None if same_site(feed_url, row["url"]) else "offsite"
+
+    if via == "sitemap":
+        # A sitemap lists the whole site and is not itself an index page, so its
+        # URL has no editorial segment -- judging it flags every article that came
+        # through this path. 89 real Ondo, Circle and State Street posts were
+        # flagged for deletion this way. The editorial test that applies here is
+        # the one ingestion already ran: the article's own URL.
+        return (None if _has_editorial_section(row["url"], stems)
+                else "not_editorial")
 
     # For a listing item, the question is whether the *index* it came from was an
     # editorial one -- not whether the article's own path looks editorial. A real

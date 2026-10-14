@@ -432,3 +432,19 @@ def test_the_lock_is_released_even_after_a_crash(tmp_path):
         raise ValueError("stage blew up")
     with run_daily.single_instance(lock):
         pass
+
+
+def test_the_routing_decision_is_kept_not_only_rendered():
+    """It was computed for the brief and discarded, so the `persona` column existed
+    and was never written — 0 of 163 rows. A decision that lives only inside one
+    rendered document cannot be audited, grouped by owner, or learned from."""
+    brief = daily.build(FakeStore([item(1)]), [FakeOpportunity()], now=NOW)
+    assert brief.assignments == {"o1": "ceo"}
+
+
+def test_assignments_cover_every_shown_item():
+    store = FakeStore([item(1)])
+    many = [FakeOpportunity(id=f"o{i}", score_0_10=float(i)) for i in range(4)]
+    brief = daily.build(store, many, now=NOW)
+    shown = {e.opportunity.id for v in brief.sections.values() for e in v}
+    assert set(brief.assignments) == shown
