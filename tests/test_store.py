@@ -326,3 +326,51 @@ def test_an_empty_assignment_map_is_not_an_error(tmp_path):
 def test_a_blank_persona_is_skipped(tmp_path):
     store = _store_with_source(tmp_path)
     assert store.set_opportunity_personas({"o1": ""}) == 0
+
+
+# --- the stored HTML is evidence, not working data ----------------------------
+
+def test_content_items_does_not_load_the_stored_html(tmp_path):
+    """raw_text is the page's full HTML: 214 MB of a 227 MB database, and nothing
+    downstream reads it. `SELECT *` pulled all of it into memory on every call —
+    511 MB of the 513 MB a scoring run peaked at."""
+    store = _store_with_source(tmp_path)
+    store.conn.execute(
+        "INSERT INTO content_items (id, source_id, url, title, content_hash,"
+        " retrieved_at, raw_text, clean_text) VALUES (?,?,?,?,?,?,?,?)",
+        ("c1", "src-1", "https://bis.org/a", "A", "h1",
+         "2026-10-14T00:00:00+00:00", "<html>" + "x" * 10_000 + "</html>", "body"))
+    store.conn.commit()
+
+    row = store.content_items()[0]
+    assert "raw_text" not in row
+    assert row["clean_text"] == "body", "the text the pipeline uses is still there"
+    assert row["title"] == "A" and row["url"] == "https://bis.org/a"
+
+
+def test_the_html_is_still_there_when_asked_for(tmp_path):
+    """It stays stored as evidence of what the page actually said."""
+    store = _store_with_source(tmp_path)
+    store.conn.execute(
+        "INSERT INTO content_items (id, source_id, url, title, content_hash,"
+        " retrieved_at, raw_text) VALUES (?,?,?,?,?,?,?)",
+        ("c1", "src-1", "https://bis.org/a", "A", "h1",
+         "2026-10-14T00:00:00+00:00", "<html>kept</html>"))
+    store.conn.commit()
+    assert store.content_items(with_raw=True)[0]["raw_text"] == "<html>kept</html>"
+
+
+def test_narrative_items_does_not_load_the_html_either(tmp_path):
+    store = _store_with_source(tmp_path)
+    store.conn.execute(
+        "INSERT INTO content_items (id, source_id, url, title, content_hash,"
+        " retrieved_at, raw_text, clean_text) VALUES (?,?,?,?,?,?,?,?)",
+        ("c1", "src-1", "https://bis.org/a", "A", "h1",
+         "2026-10-14T00:00:00+00:00", "<html>big</html>", "body"))
+    store.conn.execute("INSERT INTO narratives (id, name) VALUES ('n1','x')")
+    store.conn.execute(
+        "INSERT INTO narrative_items (narrative_id, content_id) VALUES ('n1','c1')")
+    store.conn.commit()
+    row = store.narrative_items("n1")[0]
+    assert "raw_text" not in row
+    assert row["source_name"] == "BIS", "the registry join still works"

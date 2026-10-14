@@ -23,6 +23,17 @@ MIGRATIONS = os.path.join(
 
 JSON_FIELDS = {"topics", "entities", "claims", "metadata", "embedding"}
 
+# Every column of content_items except raw_text, which is the page's full HTML.
+# It is 95% of the database (214 MB of 227) and nothing downstream reads it:
+# scoring, QA and the brief all work from clean_text. Selecting it with `c.*`
+# pulled all of it into memory on every scoring run — 513 MB peak for 171
+# narratives, growing linearly with the corpus. It stays stored as evidence of
+# what the page actually said; it is simply never loaded unless asked for.
+CONTENT_COLUMNS = (
+    "c.id, c.source_id, c.url, c.title, c.author, c.published_at, "
+    "c.retrieved_at, c.clean_text, c.content_hash, c.language, c.metadata"
+)
+
 _ADD_COLUMN = re.compile(
     r"^\s*ALTER\s+TABLE\s+(\w+)\s+ADD\s+COLUMN\s+(\w+)", re.IGNORECASE
 )
@@ -207,8 +218,16 @@ class SqliteStore:
             raise
 
     def content_items(self, since: str | None = None,
-                      limit: int | None = None) -> list[dict[str, Any]]:
-        sql = "SELECT * FROM content_items"
+                      limit: int | None = None,
+                      with_raw: bool = False) -> list[dict[str, Any]]:
+        """Items, without the stored HTML unless `with_raw` is asked for.
+
+        `SELECT *` here pulled 214 MB of raw_text into memory on every call, which
+        is 511 MB of the 513 MB a scoring run peaked at. Nothing downstream reads
+        it, so the default is the columns that are actually used.
+        """
+        columns = "*" if with_raw else CONTENT_COLUMNS.replace("c.", "")
+        sql = f"SELECT {columns} FROM content_items"
         params: list[Any] = []
         if since:
             sql += " WHERE retrieved_at >= ?"
@@ -237,7 +256,7 @@ class SqliteStore:
 
     # --- intelligence ----------------------------------------------------------
     def items_without_intelligence(self, limit: int | None = None) -> list[dict[str, Any]]:
-        sql = ("SELECT c.* FROM content_items c "
+        sql = (f"SELECT {CONTENT_COLUMNS} FROM content_items c "
                "LEFT JOIN intelligence i ON i.content_id = c.id "
                "WHERE i.content_id IS NULL "
                "ORDER BY c.published_at DESC, c.retrieved_at DESC")
@@ -355,7 +374,8 @@ class SqliteStore:
         rows = self.conn.execute(
             # source_name and source_type travel with the item so a reviewer can
             # see that five "sources" are one vendor's newsroom.
-            "SELECT c.*, s.name AS source_name, s.source_type AS source_type "
+            f"SELECT {CONTENT_COLUMNS}, s.name AS source_name, "
+            "s.source_type AS source_type "
             "FROM content_items c "
             "JOIN narrative_items ni ON ni.content_id = c.id "
             "LEFT JOIN sources s ON s.id = c.source_id "
