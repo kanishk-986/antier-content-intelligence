@@ -448,3 +448,66 @@ def test_assignments_cover_every_shown_item():
     brief = daily.build(store, many, now=NOW)
     shown = {e.opportunity.id for v in brief.sections.values() for e in v}
     assert set(brief.assignments) == shown
+
+
+# --- an empty brief must say why it is empty ----------------------------------
+
+class HealthStore(FakeStore):
+    def __init__(self, items, health, reviews=None):
+        super().__init__(items, reviews)
+        self._health = health
+
+    def source_health(self, run_at=None):
+        return self._health
+
+
+def _health(ok, failed, detail="ConnectError: [SSL] verify failed"):
+    return ([{"status": "ok", "detail": "3 new item(s)"} for _ in range(ok)]
+            + [{"status": "error", "detail": detail} for _ in range(failed)])
+
+
+def test_an_empty_brief_after_a_failed_run_says_so():
+    """A brief that is empty because the network failed reads exactly like one that
+    is empty because nothing happened. The reader cannot tell without being told."""
+    brief = daily.build(HealthStore([], _health(7, 82)), [], now=NOW)
+    out = daily.render_markdown(brief)
+    assert "not a reading of the market" in out
+    assert "this machine's network" in out
+
+
+def test_an_empty_brief_on_a_quiet_day_says_that_instead():
+    brief = daily.build(HealthStore([], _health(95, 3)), [], now=NOW)
+    out = daily.render_markdown(brief)
+    assert "Nothing matched today" in out
+    assert "not because the run failed" in out
+
+
+def test_the_source_count_is_always_shown():
+    """It is the check a reader needs to judge the rest."""
+    brief = daily.build(HealthStore([item(1)], _health(60, 5)), [FakeOpportunity()],
+                        now=NOW)
+    assert "Sources: 60 of 65 returned something" in daily.render_markdown(brief)
+
+
+def test_a_healthy_run_with_items_carries_no_warning():
+    brief = daily.build(HealthStore([item(1)], _health(60, 2)), [FakeOpportunity()],
+                        now=NOW)
+    out = daily.render_markdown(brief)
+    assert "not a reading of the market" not in out
+    assert "Nothing matched today" not in out
+
+
+def test_a_store_without_a_health_log_still_builds():
+    """FakeStore has no source_health; a missing log must not lose the brief."""
+    out = daily.render_markdown(daily.build(FakeStore([item(1)]), [FakeOpportunity()],
+                                            now=NOW))
+    assert "Antier daily intelligence brief" in out
+
+
+def test_a_health_query_that_raises_does_not_lose_the_brief():
+    class Broken(FakeStore):
+        def source_health(self, run_at=None):
+            raise RuntimeError("table missing")
+    out = daily.render_markdown(daily.build(Broken([item(1)]), [FakeOpportunity()],
+                                            now=NOW))
+    assert "Antier daily intelligence brief" in out

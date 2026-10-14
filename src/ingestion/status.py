@@ -61,3 +61,30 @@ def classify(status: str) -> str:
 
 def guidance(status: str) -> str:
     return GUIDANCE[classify(status)]
+
+
+# When this share of a run's sources fail with the same transport signature, the
+# fault is ours, not theirs. Measured: a run during an office-network change
+# recorded 76 of 98 sources as `error` with the same SSL verification failure, and
+# the same sources verified cleanly minutes later.
+ENVIRONMENT_FAULT_SHARE = 0.4
+
+
+def environment_fault(rows: list[dict]) -> tuple[str, int] | None:
+    """The dominant shared failure, when one failure dominates the run.
+
+    Lives here rather than in the health script because the daily brief needs it
+    too: an empty brief after a failed pipeline reads exactly like a quiet news
+    day, and the reader cannot tell the difference without being told.
+    """
+    signatures: dict[str, int] = {}
+    for row in rows:
+        if row.get("status") not in ("error", "blocked"):
+            continue
+        detail = (row.get("detail") or "").strip()
+        key = detail.split(":")[0][:60] or str(row.get("status"))
+        signatures[key] = signatures.get(key, 0) + 1
+    if not signatures or not rows:
+        return None
+    worst, count = max(signatures.items(), key=lambda kv: kv[1])
+    return (worst, count) if count / len(rows) >= ENVIRONMENT_FAULT_SHARE else None

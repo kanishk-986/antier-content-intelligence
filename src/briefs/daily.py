@@ -24,6 +24,7 @@ from typing import Any
 
 from src.brand import load_personas, persona_names
 from src.briefs.persona import assign, load_recipients
+from src.ingestion.status import environment_fault
 
 # More than this in one section and it stops being a brief.
 MAX_PER_PERSONA = 5
@@ -117,8 +118,22 @@ def build(store, opportunities, window_hours: int = 24,
         entries.sort(key=lambda e: e.opportunity.score_0_10, reverse=True)
         brief.sections[persona] = entries[:max_per_persona]
 
+    # How the run that produced this brief actually went. Without it, a brief
+    # that is empty because the network failed reads exactly like one that is
+    # empty because nothing happened, and the reader cannot tell which.
+    health: list[dict[str, Any]] = []
+    if hasattr(store, "source_health"):
+        try:
+            health = store.source_health()
+        except Exception:                 # a missing log must not lose the brief
+            health = []
+    fault = environment_fault(health) if health else None
+    yielded = sum(1 for row in health if row.get("status") == "ok")
+
     brief.corpus = {"opportunities": considered, "in_window": fresh,
-                    "shown": brief.total, "window_hours": window_hours}
+                    "shown": brief.total, "window_hours": window_hours,
+                    "sources_total": len(health), "sources_yielding": yielded,
+                    "environment_fault": fault}
 
     # Keep the routing decision rather than recomputing it from a brief nobody
     # stored. An assignment that only exists inside one rendered document cannot
@@ -175,6 +190,27 @@ def render_markdown(brief: Brief, recipients: dict[str, Any] | None = None) -> s
     out.append(f"Window: the last {brief.window_hours} hours. "
                f"{brief.corpus['in_window']} of {brief.corpus['opportunities']} "
                f"scored opportunities published in it; {brief.total} shown.")
+
+    total_sources = brief.corpus.get("sources_total") or 0
+    yielding = brief.corpus.get("sources_yielding") or 0
+    if total_sources:
+        out.append(f"Sources: {yielding} of {total_sources} returned something on "
+                   "the run behind this brief.")
+
+    fault = brief.corpus.get("environment_fault")
+    if fault:
+        signature, count = fault
+        out.append("")
+        out.append(f"**This brief is not a reading of the market.** {count} of "
+                   f"{total_sources} sources failed with the same error "
+                   f"(`{signature}`), which is this machine's network rather than "
+                   "those publishers. What follows was built from whatever was "
+                   "already stored. Re-run on a stable connection.")
+    elif brief.total == 0:
+        out.append("")
+        out.append("**Nothing matched today.** Every section below is empty "
+                   "because nothing in the window met the bar — not because the "
+                   "run failed. The sources line above is the check.")
     out.append("")
     out.append("Human review is final (section 20). Nothing here has been published,"
                " and a rejected item is shown with its objection rather than removed"
