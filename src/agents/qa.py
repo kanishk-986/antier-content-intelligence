@@ -95,6 +95,26 @@ def validate(review: dict[str, Any]) -> dict[str, Any]:
                 "risk_flags"):
         if not isinstance(review[key], list):
             raise QAValidationError(f"{key} is not an array")
+        # Each entry is prose a person will read in the brief. A dict here renders
+        # as "{'q': 1}" in the mail and tells the reader nothing.
+        bad = [v for v in review[key] if not isinstance(v, str)]
+        if bad:
+            raise QAValidationError(
+                f"{key} contains a non-string entry: {bad[0]!r}")
+
+    # Question numbers, used to show which of section 19's ten questions failed.
+    wrong = [v for v in review["failed_questions"]
+             if not isinstance(v, int) or isinstance(v, bool) or not 1 <= v <= 10]
+    if wrong:
+        raise QAValidationError(
+            f"failed_questions must be question numbers 1-10, got {wrong[0]!r}")
+
+    # The schema declares additionalProperties: false, so honour it. A field the
+    # model invented is a sign the prompt and the schema have drifted apart, and
+    # silently keeping it means nobody finds out.
+    unknown = sorted(set(review) - set(QA_SCHEMA["properties"]))
+    if unknown:
+        raise QAValidationError(f"unexpected field(s): {', '.join(unknown)}")
 
     # An adversarial reviewer that rejects without saying why is useless downstream:
     # section 27 requires the dashboard to show "rejected topics with reasons", and

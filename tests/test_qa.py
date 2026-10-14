@@ -301,3 +301,29 @@ def test_stdin_reaches_the_command():
     from src.intelligence.claude_cli import _run_in_own_group
     out, _, code = _run_in_own_group(["cat"], "from stdin", timeout=10)
     assert code == 0 and "from stdin" in out
+
+
+# --- the validator must enforce what the schema declares ----------------------
+
+def test_a_field_the_model_invented_is_rejected():
+    """The schema declares additionalProperties: false. Keeping an unknown field
+    silently means nobody finds out the prompt and schema have drifted apart."""
+    with pytest.raises(qa.QAValidationError, match="unexpected field"):
+        qa.validate({**CLEAN, "confidence_reason": "because"})
+
+
+def test_a_problem_that_is_not_prose_is_rejected():
+    """Each entry is read by a person in the brief. A dict renders as "{'q': 1}"
+    and tells the reader nothing."""
+    with pytest.raises(qa.QAValidationError, match="non-string"):
+        qa.validate({**CLEAN, "decision": "REJECT", "problems": [{"q": 1}]})
+
+
+@pytest.mark.parametrize("value", [["three"], [0], [11], [1.5], [True]])
+def test_failed_questions_must_be_question_numbers(value):
+    with pytest.raises(qa.QAValidationError, match="question numbers"):
+        qa.validate({**CLEAN, "failed_questions": value})
+
+
+def test_valid_question_numbers_pass():
+    assert qa.validate({**CLEAN, "failed_questions": [1, 3, 10]})
