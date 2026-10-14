@@ -45,7 +45,12 @@ MAX_URLS_SCANNED = 5000
 DEFAULT_MAX_ITEMS = 12
 DEFAULT_WINDOW_DAYS = 120
 
-_LOC = re.compile(r"<loc>\s*([^<\s]+)\s*</loc>", re.IGNORECASE)
+# `<loc><![CDATA[https://...]]></loc>` is valid and used by real sitemaps; a
+# pattern that stops at the first "<" reads such an entry as empty and silently
+# drops every URL in the file.
+_LOC = re.compile(
+    r"<loc>\s*(?:<!\[CDATA\[\s*)?(.*?)(?:\s*\]\]>)?\s*</loc>",
+    re.IGNORECASE | re.DOTALL)
 _ENTRY = re.compile(r"<(url|sitemap)\b.*?</\1>", re.IGNORECASE | re.DOTALL)
 _LASTMOD = re.compile(r"<lastmod>\s*([^<\s]+)\s*</lastmod>", re.IGNORECASE)
 _IS_INDEX = re.compile(r"<sitemapindex", re.IGNORECASE)
@@ -135,13 +140,18 @@ def parse_sitemap(xml: str) -> tuple[bool, list[tuple[str, datetime | None]]]:
         loc = _LOC.search(chunk)
         if not loc:
             continue
+        # The CDATA-tolerant pattern also matches `<loc></loc>`; an entry with no
+        # URL is not an entry.
+        url = loc.group(1).strip()
+        if not url:
+            continue
         mod = _LASTMOD.search(chunk)
-        out.append((loc.group(1).strip(),
-                    _parse_lastmod(mod.group(1) if mod else None)))
+        out.append((url, _parse_lastmod(mod.group(1) if mod else None)))
         if len(out) >= MAX_URLS_SCANNED:
             break
     if not out:                     # a sitemap with no per-entry wrappers
-        out = [(loc.strip(), None) for loc in _LOC.findall(xml)[:MAX_URLS_SCANNED]]
+        out = [(loc.strip(), None) for loc in _LOC.findall(xml)[:MAX_URLS_SCANNED]
+               if loc.strip()]
     return bool(_IS_INDEX.search(xml)), out
 
 

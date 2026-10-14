@@ -43,6 +43,11 @@ MIN_ARTICLE_CHARS = 400
 JS_SHELL_LINK_FLOOR = 3
 MAX_CANDIDATES = 12
 
+# A listing page should not offer thousands of article links. Scanning every one
+# of a hostile or generated page costs memory for nothing, since the caller takes
+# at most MAX_CANDIDATES anyway.
+MAX_LINKS_SCANNED = 500
+
 _SLUG_WORDS = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+){2,}")   # >=3 hyphenated words
 _YEAR = re.compile(r"/20\d\d(?:[/-]|$)")
 _NEXT_SHELL = re.compile(r"/_next/static|window\.__NUXT__|__remixContext")
@@ -199,6 +204,8 @@ def candidate_links(html: str, listing_url: str, reject: list[str]) -> list[str]
             continue
         seen.add(key)
         out.append(absolute)
+        if len(out) >= MAX_LINKS_SCANNED:
+            break
     return out
 
 

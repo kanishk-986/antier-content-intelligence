@@ -220,3 +220,23 @@ def test_transport_refusal_is_not_reported_as_our_error(exc, status):
 def test_the_detail_survives_classification():
     _, detail = listing._classify_transport(httpx.ReadError("Connection reset by peer"))
     assert "Connection reset by peer" in detail
+
+
+def test_link_scanning_is_bounded():
+    """A listing page should not offer thousands of article links. Scanning every
+    one of a hostile or generated page costs memory for nothing, since the caller
+    takes at most MAX_CANDIDATES anyway."""
+    html = "".join(f'<a href="/news/item-number-{i}">x</a>' for i in range(10_000))
+    got = listing.candidate_links(html, "https://a.test/news", [])
+    assert len(got) == listing.MAX_LINKS_SCANNED
+
+
+@pytest.mark.parametrize("html", [
+    "", "<html></html>",
+    '<a href="https://a.test/news/x-y-z>text',          # unterminated attribute
+    '<a href="javascript:alert(1)">x</a>',
+    '<a href="data:text/html,<script>">x</a>',
+])
+def test_malformed_html_yields_no_bad_links(html):
+    got = listing.candidate_links(html, "https://a.test/news", [])
+    assert all(u.startswith("https://a.test/") for u in got)

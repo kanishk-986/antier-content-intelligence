@@ -163,3 +163,40 @@ def test_the_real_config_enables_only_verified_sources():
     assert "ondo.finance" in enabled
     assert "dtcc.com" not in enabled, (
         "DTCC yields 4 articles in 6; it needs a path allowlist first")
+
+
+# --- malformed input ----------------------------------------------------------
+
+def test_a_cdata_wrapped_loc_is_read():
+    """Valid and used by real sitemaps. A pattern that stops at the first "<" reads
+    such an entry as empty and silently drops every URL in the file."""
+    _, entries = sm.parse_sitemap(
+        "<urlset><url><loc><![CDATA[https://a.test/news/x-y-z]]></loc>"
+        "<lastmod>2026-10-14</lastmod></url></urlset>")
+    assert entries[0][0] == "https://a.test/news/x-y-z"
+    assert entries[0][1] is not None
+
+
+@pytest.mark.parametrize("xml", [
+    "", "<html><body>hi</body></html>",
+    "<urlset><url><loc>https://a.test/news/x</lo",      # truncated mid-tag
+    "<urlset><url><loc></loc></url></urlset>",
+])
+def test_malformed_xml_yields_nothing_rather_than_raising(xml):
+    is_index, entries = sm.parse_sitemap(xml)
+    assert is_index is False
+    assert all(url.strip() for url, _ in entries)
+
+
+def test_whitespace_around_a_loc_is_trimmed():
+    _, entries = sm.parse_sitemap(
+        "<urlset><url><loc>\n  https://a.test/news/alpha-beta-gamma  \n</loc>"
+        "</url></urlset>")
+    assert entries[0][0] == "https://a.test/news/alpha-beta-gamma"
+
+
+def test_an_unparseable_lastmod_is_none_not_a_guess():
+    _, entries = sm.parse_sitemap(
+        "<urlset><url><loc>https://a.test/news/x-y-z</loc>"
+        "<lastmod>soon</lastmod></url></urlset>")
+    assert entries[0][1] is None
