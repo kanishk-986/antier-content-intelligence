@@ -183,11 +183,20 @@ def run(args, log) -> int:
     # said that for this reason.
     opportunities = load_persisted(store)
     if not opportunities:
-        # --brief-only on a database that has never been scored.
-        log("  no scored opportunities stored; scoring now")
-        scored = score_all(store, config)
-        persist(store, [o for o, _ in scored])
-        opportunities = load_persisted(store)
+        # --brief-only on a database that has never been scored. Guarded on the QA
+        # table as well as the opportunity table, because persist() clears reviews:
+        # scoring here while verdicts exist would repeat the bug this replaced.
+        # The two cannot disagree in a normal run -- a review references an
+        # opportunity row -- so this is belt and braces around a destructive call.
+        if store.qa_reviews():
+            log("  no scored opportunities, but QA reviews exist; refusing to "
+                "re-score, because that would delete them. Run run_scoring.py "
+                "and run_qa.py.")
+        else:
+            log("  no scored opportunities stored; scoring now")
+            scored = score_all(store, config)
+            persist(store, [o for o, _ in scored])
+            opportunities = load_persisted(store)
 
     brief = daily.build(store, opportunities, window_hours=window)
     markdown = daily.render_markdown(brief, recipients)

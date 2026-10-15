@@ -598,3 +598,19 @@ def test_no_document_names_a_script_that_does_not_exist():
     missing = [s for s in sorted(named)
                if not os.path.exists(os.path.join(root, "scripts", s))]
     assert not missing, f"documented but absent: {missing}"
+
+
+def test_the_brief_refuses_to_re_score_while_qa_verdicts_exist():
+    """The fallback re-scores when nothing is persisted, and persist() clears
+    qa_reviews. Scoring there with verdicts present would repeat the bug it
+    replaced: the brief deleting the decisions it is meant to report."""
+    import re as _re
+    with open(os.path.join(os.path.dirname(os.path.dirname(
+            os.path.abspath(__file__))), "scripts", "run_daily.py")) as fh:
+        body = fh.read()
+    after = body.split('opportunities = load_persisted(store)', 1)[1]
+    guard = after.split("brief = daily.build", 1)[0]
+    assert "store.qa_reviews()" in guard, (
+        "the destructive fallback must be guarded on the QA table")
+    assert _re.search(r"if store\.qa_reviews\(\):[\s\S]{0,400}?else:", guard), (
+        "scoring must sit in the else branch")
