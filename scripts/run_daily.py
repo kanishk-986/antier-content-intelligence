@@ -42,7 +42,7 @@ from src.briefs.envfile import environment
 from src.briefs.persona import load_recipients
 from src.database.sqlite_store import SqliteStore
 from src.scoring import weights as wcfg
-from src.scoring.opportunity import persist, score_all
+from src.scoring.opportunity import load_persisted, persist, score_all
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PYTHON = os.path.join(REPO, ".venv", "bin", "python")
@@ -176,9 +176,20 @@ def run(args, log) -> int:
 
     store = SqliteStore(args.db)
     config = wcfg.load()
-    scored = score_all(store, config)
-    persist(store, [o for o, _ in scored])
-    brief = daily.build(store, [o for o, _ in scored], window_hours=window)
+    # Read what the scoring stage persisted; do not score again. Re-scoring mints
+    # new opportunity ids, and `persist` clears qa_reviews to keep the foreign key
+    # honest -- so the brief was destroying the verdicts the QA stage had just
+    # written, and then reporting every item as UNREVIEWED. Every brief so far has
+    # said that for this reason.
+    opportunities = load_persisted(store)
+    if not opportunities:
+        # --brief-only on a database that has never been scored.
+        log("  no scored opportunities stored; scoring now")
+        scored = score_all(store, config)
+        persist(store, [o for o, _ in scored])
+        opportunities = load_persisted(store)
+
+    brief = daily.build(store, opportunities, window_hours=window)
     markdown = daily.render_markdown(brief, recipients)
     stored = store.set_opportunity_personas(brief.assignments)
 

@@ -172,3 +172,43 @@ def persist(store, opportunities: list[Opportunity]) -> None:
             f"INSERT INTO opportunities ({cols}, created_at) "
             f"VALUES ({marks}, datetime('now'))", row)
     store.conn.commit()
+
+
+# The seven section 15 dimensions as persisted, in the order the brief shows them.
+PERSISTED_DIMENSIONS = (
+    "trend_velocity", "antier_relevance", "audience_relevance",
+    "commercial_relevance", "authority_potential", "novelty", "source_credibility",
+)
+
+
+@dataclass
+class StoredOpportunity:
+    """A scored opportunity read back from the database.
+
+    Carries what the brief needs and nothing more. It deliberately does not
+    reconstruct the reasoning behind each dimension -- that is not persisted, and
+    inventing it here would put a sentence in the brief that no scoring run
+    produced.
+    """
+
+    id: str
+    narrative_id: str
+    narrative_name: str
+    score_0_10: float
+    band: str
+    unmeasured: list[str]
+
+
+def load_persisted(store) -> list[StoredOpportunity]:
+    out = []
+    for row in store.opportunities():
+        unmeasured = [d for d in PERSISTED_DIMENSIONS if row.get(d) is None]
+        out.append(StoredOpportunity(
+            id=row["id"],
+            narrative_id=row["narrative_id"],
+            narrative_name=row.get("narrative_name") or "",
+            score_0_10=float(row.get("opportunity_score") or 0.0),
+            band=row.get("status") or "reject",
+            unmeasured=unmeasured,
+        ))
+    return out

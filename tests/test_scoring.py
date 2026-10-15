@@ -250,3 +250,65 @@ def test_breadth_absent_leaves_the_figure_alone():
         authority_coverage: float = 0.8
         independent_authority_coverage: float = 0.8
     assert rel.source_credibility(Old()).value == 0.8
+
+
+# --- the brief reads what was scored; it does not score again -----------------
+
+def _scored_db(tmp_path, with_review=True):
+    import uuid
+
+    from src.database.sqlite_store import SqliteStore
+    store = SqliteStore(str(tmp_path / "s.db"))
+    store.migrate()
+    store.conn.execute("INSERT INTO narratives (id, name) VALUES ('n1','stablecoins')")
+    oid = str(uuid.uuid4())
+    store.conn.execute(
+        "INSERT INTO opportunities (id, narrative_id, opportunity_score, status,"
+        " trend_velocity, antier_relevance, audience_relevance, authority_potential,"
+        " novelty, source_credibility) VALUES (?,?,?,?,?,?,?,?,?,?)",
+        (oid, "n1", 7.5, "good", 0.5, 0.9, 0.4, 0.3, 0.8, 0.6))
+    if with_review:
+        store.conn.execute(
+            "INSERT INTO qa_reviews (opportunity_id, ai_decision) VALUES (?,?)",
+            (oid, "REJECT"))
+    store.conn.commit()
+    return store, oid
+
+
+def test_persisted_opportunities_load_with_their_narrative_name(tmp_path):
+    from src.scoring.opportunity import load_persisted
+    store, oid = _scored_db(tmp_path)
+    got = load_persisted(store)
+    assert len(got) == 1
+    assert got[0].id == oid
+    assert got[0].narrative_name == "stablecoins"
+    assert got[0].score_0_10 == 7.5
+    assert got[0].band == "good"
+
+
+def test_a_null_dimension_is_reported_as_unmeasured(tmp_path):
+    """commercial_relevance was never set, so it must not read as zero."""
+    from src.scoring.opportunity import load_persisted
+    store, _ = _scored_db(tmp_path)
+    assert load_persisted(store)[0].unmeasured == ["commercial_relevance"]
+
+
+def test_reading_the_scores_does_not_destroy_the_qa_verdicts(tmp_path):
+    """The brief used to re-score, and persist() clears qa_reviews to keep the
+    foreign key honest. So the brief destroyed the verdicts the QA stage had just
+    written and then reported every item as UNREVIEWED — every brief so far."""
+    from src.scoring.opportunity import load_persisted
+    store, _ = _scored_db(tmp_path)
+    before = store.conn.execute("SELECT COUNT(*) FROM qa_reviews").fetchone()[0]
+    load_persisted(store)
+    after = store.conn.execute("SELECT COUNT(*) FROM qa_reviews").fetchone()[0]
+    assert before == after == 1
+
+
+def test_persist_still_clears_reviews_because_the_ids_change(tmp_path):
+    """The clearing itself is correct: a review points at an opportunity id, and
+    re-scoring mints new ones. The bug was calling it again after QA had run."""
+    from src.scoring.opportunity import persist
+    store, _ = _scored_db(tmp_path)
+    persist(store, [])
+    assert store.conn.execute("SELECT COUNT(*) FROM qa_reviews").fetchone()[0] == 0

@@ -433,6 +433,20 @@ class SqliteStore:
             """, (run_at,)).fetchall()
         return [dict(r) for r in rows]
 
+    def opportunities(self) -> list[dict[str, Any]]:
+        """Scored opportunities as persisted, with their narrative's name.
+
+        The brief reads these rather than re-scoring, because re-scoring mints new
+        opportunity ids and `persist` clears qa_reviews to keep the foreign key
+        honest -- so a brief that re-scored destroyed the verdicts the QA stage had
+        just written, and then reported every item as UNREVIEWED.
+        """
+        rows = self.conn.execute(
+            "SELECT o.*, n.name AS narrative_name FROM opportunities o "
+            "JOIN narratives n ON n.id = o.narrative_id "
+            "ORDER BY o.opportunity_score DESC").fetchall()
+        return [dict(r) for r in rows]
+
     def set_opportunity_personas(self, assignments: dict[str, str]) -> int:
         """Record which persona each opportunity was routed to.
 

@@ -9,3 +9,44 @@ daily cycle 2026-10-14T10:36:25+00:00
     db counts: sources=105, content_items=1176, intelligence=171, narratives=171, narrative_items=1134, opportunities=171, audit_log=109, fetch_state=1292
 
 === intelligence ===
+    imp=0.55 tension=0.40  Draft ERC proposing an onchain val Draft ERC: Agentic Resource Discovery (A
+    imp=0.55 tension=0.50  Institutional crypto derivatives i Crypto Derivatives: Futures vs. Options 
+    imp=0.45 tension=0.50  ERC-8427 Portable Spend Grants spe ERC-8427: Portable Spend Grants
+  
+    attempted 40 | stored 40 | failed 0 | speculation filtered 0
+    db: sources=105, content_items=1176, intelligence=211, narratives=171, narrative_items=1134, opportunities=171, audit_log=110, fetch_state=1292
+
+=== narratives ===
+         terms: 
+         srcs : 1 distinct, 1 publisher(s) | dated 1, undated 0
+         - The Decline of Student Visas and Its Implications
+  
+    shown 178 of 178 | multi-item narratives: 155 | largest: 42 | singletons: 23
+    persisted 178 narratives at 2026-10-14T11:14:55+00:00
+
+=== scoring ===
+     5.99  monitor              svc 8    fsb, supervisory, frameworks, modernisation
+           tren=0.50  anti=0.75  audi=0.45  comm=0.44  auth=0.53  nove=0.96  sour=0.67
+  
+    bands: good=4, monitor=34, reject=140
+    competitor saturation axis: not_measured (section 32 defers it; never read as 0)
+    persisted 178 opportunities
+
+=== qa ===
+            · Q3: This is not an event. Both items are draft ERC discussion posts on a standards forum — one a
+            · Q3: A two-item cluster from a single publisher (Ethereum Magicians, one forum category) is not a
+            · Q3: trend_velocity 1.0 on 'velocity 6.0' from a 2-item single-source cluster indicates no meanin
+  
+    decisions: REJECT=8
+    Section 20: this narrows the queue. Human review is final; nothing is published here.
+
+=== brief ===
+  14 item(s) across 5 persona section(s); 14 routing decision(s) recorded
+    ceo      5
+    coo      4
+    cto      0
+    sme      0
+    company  5
+  wrote /Users/kanishk.raj/antier-content-intelligence/outputs/brief-2026-10-14.md
+  wrote /Users/kanishk.raj/antier-content-intelligence/outputs/brief-2026-10-14.html
+  sent: sent to kanishk.raj@antiersolutions.com
