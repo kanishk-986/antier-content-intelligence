@@ -1,0 +1,52 @@
+daily cycle 2026-10-16T04:30:04+00:00
+
+=== ingestion ===
+    [105/105] Tokenized Economies Institute            feed     no_feed           new=0   dup=0   no RSS/Atom feed found (HTTP 200)
+  
+    logged 105 source outcome(s) at 2026-10-16T04:56:17+00:00
+    attempted 98 | stored 86 | duplicates 9
+    by status: blocked=14, blocked_known=7, blocked_transport=1, js_rendered=6, no_feed=33, not_a_listing=6, offsite_redirect=2, ok=36
+    db counts: sources=105, content_items=1328, intelligence=250, narratives=179, narrative_items=1242, opportunities=179, qa_reviews=8, audit_log=142, fetch_state=1463
+
+=== intelligence ===
+  
+    failures:
+      7f7d6e93  invalid record: primary_topic is empty
+  
+    attempted 40 | stored 39 | failed 1 | speculation filtered 0
+    db: sources=105, content_items=1328, intelligence=289, narratives=179, narrative_items=1242, opportunities=179, qa_reviews=8, audit_log=144, fetch_state=1463
+
+=== narratives ===
+         terms: 
+         srcs : 1 distinct, 1 publisher(s) | dated 1, undated 0
+         - The Decline of Student Visas and Its Implications
+  
+    shown 182 of 182 | multi-item narratives: 164 | largest: 62 | singletons: 18
+    persisted 182 narratives at 2026-10-16T05:11:14+00:00
+
+=== scoring ===
+     5.83  monitor              svc 8    cyber, cybersecurity, threats, fraud
+           tren=0.00  anti=0.75  audi=0.80  comm=0.44  auth=0.95  nove=0.68  sour=0.84
+  
+    bands: good=5, monitor=28, priority=2, reject=147
+    competitor saturation axis: not_measured (section 32 defers it; never read as 0)
+    persisted 182 opportunities
+
+=== qa ===
+            · Q3: This is not a narrative at all. 'interview, ceo, tells, executive' is a clustering artifact 
+            · Q3: trend_velocity 1.0 (velocity 2.651) measures CB Insights publishing more interviews, not ris
+            · Q1: 62 items from a single publisher is one source, not 62. source_credibility 0.667 already dis
+  
+    decisions: REJECT=8
+    Section 20: this narrows the queue. Human review is final; nothing is published here.
+
+=== brief ===
+  13 item(s) across 5 persona section(s); 13 routing decision(s) recorded
+    ceo      4
+    coo      3
+    cto      1
+    sme      0
+    company  5
+  wrote /Users/kanishk.raj/antier-content-intelligence/outputs/brief-2026-10-16.md
+  wrote /Users/kanishk.raj/antier-content-intelligence/outputs/brief-2026-10-16.html
+  sent: sent to kanishk.raj@antiersolutions.com

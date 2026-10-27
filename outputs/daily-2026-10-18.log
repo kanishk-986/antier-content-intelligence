@@ -1,0 +1,52 @@
+daily cycle 2026-10-18T04:31:22+00:00
+
+=== ingestion ===
+    [105/105] Tokenized Economies Institute            feed     no_feed           new=0   dup=0   no RSS/Atom feed found (HTTP 200)
+  
+    logged 105 source outcome(s) at 2026-10-18T18:11:45+00:00
+    attempted 98 | stored 103 | duplicates 16
+    by status: blocked=13, blocked_known=7, blocked_transport=1, js_rendered=6, no_feed=32, not_a_listing=6, offsite_redirect=2, ok=38
+    db counts: sources=105, content_items=1431, intelligence=289, narratives=182, narrative_items=1328, opportunities=182, qa_reviews=8, audit_log=158, fetch_state=1582
+
+=== intelligence ===
+    imp=0.45 tension=0.30  Hyperliquid API read vs write surf Hyperliquid API: Public Data vs Trading 
+    imp=0.45 tension=0.40  Cloudflare introduces continuous b Continuous accountability for Verified b
+    imp=0.45 tension=0.30  Travel-focused feature competition How do consumer finance apps compare on 
+  
+    attempted 40 | stored 40 | failed 0 | speculation filtered 0
+    db: sources=105, content_items=1431, intelligence=329, narratives=182, narrative_items=1328, opportunities=182, qa_reviews=8, audit_log=159, fetch_state=1582
+
+=== narratives ===
+         terms: 
+         srcs : 1 distinct, 1 publisher(s) | dated 1, undated 0
+         - Invest in What's Next
+  
+    shown 193 of 193 | multi-item narratives: 171 | largest: 79 | singletons: 22
+    persisted 193 narratives at 2026-10-18T18:27:39+00:00
+
+=== scoring ===
+           tren=0.00  anti=1.00  audi=0.80  comm=0.60  auth=1.00  nove=0.00  sour=0.23
+           unmeasured: commercial_relevance
+  
+    bands: good=2, monitor=22, reject=169
+    competitor saturation axis: not_measured (section 32 defers it; never read as 0)
+    persisted 193 opportunities
+
+=== qa ===
+            · Q3 — This is not a narrative. It is a feed of 79 unrelated CB Insights executive-interview posts
+            · Q3 — The items are not events. They are a recurring syndicated interview series, i.e. publisher 
+            · Q1 — 79 items, one publisher. CB Insights' own research library is a single source, and the 'ind
+  
+    decisions: REJECT=8
+    Section 20: this narrows the queue. Human review is final; nothing is published here.
+
+=== brief ===
+  4 item(s) across 5 persona section(s); 4 routing decision(s) recorded
+    ceo      1
+    coo      0
+    cto      0
+    sme      0
+    company  3
+  wrote /Users/kanishk.raj/antier-content-intelligence/outputs/brief-2026-10-18.md
+  wrote /Users/kanishk.raj/antier-content-intelligence/outputs/brief-2026-10-18.html
+  sent: sent to kanishk.raj@antiersolutions.com

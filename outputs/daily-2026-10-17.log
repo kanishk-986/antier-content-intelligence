@@ -1,0 +1,14 @@
+daily cycle 2026-10-17T04:44:23+00:00
+
+  no network: DNS does not resolve. Skipping the pipeline rather than recording every source as failed — a sleeping machine is not a fact about a publisher. The brief below uses what is already stored.
+
+=== brief ===
+  0 item(s) across 5 persona section(s); 0 routing decision(s) recorded
+    ceo      0
+    coo      0
+    cto      0
+    sme      0
+    company  0
+  wrote /Users/kanishk.raj/antier-content-intelligence/outputs/brief-2026-10-17.md
+  wrote /Users/kanishk.raj/antier-content-intelligence/outputs/brief-2026-10-17.html
+  NOT SENT: gaierror: [Errno 8] nodename nor servname provided, or not known

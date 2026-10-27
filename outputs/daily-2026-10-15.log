@@ -17,3 +17,52 @@ daily cycle 2026-10-15T04:38:05+00:00
   another daily cycle is already running; this one will not start
 daily cycle 2026-10-15T04:38:10+00:00
   another daily cycle is already running; this one will not start
+    [105/105] Tokenized Economies Institute            feed     no_feed           new=0   dup=0   no RSS/Atom feed found (HTTP 200)
+  
+    logged 105 source outcome(s) at 2026-10-15T04:53:02+00:00
+    attempted 98 | stored 66 | duplicates 10
+    by status: blocked=14, blocked_known=7, blocked_transport=1, js_rendered=6, no_feed=34, not_a_listing=5, offsite_redirect=2, ok=36
+    db counts: sources=105, content_items=1242, intelligence=211, narratives=178, narrative_items=1176, opportunities=178, qa_reviews=4, audit_log=127, fetch_state=1368
+
+=== intelligence ===
+    imp=0.55 tension=0.60  How Tether (USDT) is structured an Tether (USDT): How the Largest Stablecoi
+    imp=0.55 tension=0.50  ERC-8443 proposal for post-quantum ERC-8443: Quantum Bridge Shield
+    imp=0.55 tension=0.30  AI assistants replacing search eng When ChatGPT becomes a banking advisor: 
+  
+    attempted 40 | stored 39 | failed 0 | speculation filtered 1
+    db: sources=105, content_items=1242, intelligence=250, narratives=178, narrative_items=1176, opportunities=178, qa_reviews=4, audit_log=129, fetch_state=1368
+
+=== narratives ===
+         terms: 
+         srcs : 1 distinct, 1 publisher(s) | dated 1, undated 0
+         - Invest in What's Next
+  
+    shown 179 of 179 | multi-item narratives: 161 | largest: 46 | singletons: 18
+    persisted 179 narratives at 2026-10-15T05:42:59+00:00
+
+=== scoring ===
+     5.87  monitor              svc 2    distinction, transition, resolution, eip-tbd
+           tren=1.00  anti=0.23  audi=0.45  comm=0.58  auth=0.70  nove=0.88  sour=0.29
+  
+    bands: good=2, monitor=35, priority=1, reject=141
+    competitor saturation axis: not_measured (section 32 defers it; never read as 0)
+    persisted 179 opportunities
+
+=== qa ===
+            · Q3: This is not an emerging narrative. It is two consecutive forum posts (post_416 and post_417)
+            · Q3: trend_velocity is pinned at 1.0 and novelty at 0.864 purely on a 24-hour recency proxy. Timi
+            · Q3: A draft-specification discussion thread is explicitly out of scope as an event — this is sta
+  
+    decisions: REJECT=7, RESEARCH_MORE=1
+    Section 20: this narrows the queue. Human review is final; nothing is published here.
+
+=== brief ===
+  12 item(s) across 5 persona section(s); 12 routing decision(s) recorded
+    ceo      4
+    coo      3
+    cto      0
+    sme      0
+    company  5
+  wrote /Users/kanishk.raj/antier-content-intelligence/outputs/brief-2026-10-15.md
+  wrote /Users/kanishk.raj/antier-content-intelligence/outputs/brief-2026-10-15.html
+  sent: sent to kanishk.raj@antiersolutions.com

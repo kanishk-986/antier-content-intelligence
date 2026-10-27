@@ -151,3 +151,170 @@ daily cycle 2026-10-14T10:36:25+00:00
 daily cycle 2026-10-15T04:30:05+00:00
 
 === ingestion ===
+    [105/105] Tokenized Economies Institute            feed     no_feed           new=0   dup=0   no RSS/Atom feed found (HTTP 200)
+  
+    logged 105 source outcome(s) at 2026-10-15T04:53:02+00:00
+    attempted 98 | stored 66 | duplicates 10
+    by status: blocked=14, blocked_known=7, blocked_transport=1, js_rendered=6, no_feed=34, not_a_listing=5, offsite_redirect=2, ok=36
+    db counts: sources=105, content_items=1242, intelligence=211, narratives=178, narrative_items=1176, opportunities=178, qa_reviews=4, audit_log=127, fetch_state=1368
+
+=== intelligence ===
+    imp=0.55 tension=0.60  How Tether (USDT) is structured an Tether (USDT): How the Largest Stablecoi
+    imp=0.55 tension=0.50  ERC-8443 proposal for post-quantum ERC-8443: Quantum Bridge Shield
+    imp=0.55 tension=0.30  AI assistants replacing search eng When ChatGPT becomes a banking advisor: 
+  
+    attempted 40 | stored 39 | failed 0 | speculation filtered 1
+    db: sources=105, content_items=1242, intelligence=250, narratives=178, narrative_items=1176, opportunities=178, qa_reviews=4, audit_log=129, fetch_state=1368
+
+=== narratives ===
+         terms: 
+         srcs : 1 distinct, 1 publisher(s) | dated 1, undated 0
+         - Invest in What's Next
+  
+    shown 179 of 179 | multi-item narratives: 161 | largest: 46 | singletons: 18
+    persisted 179 narratives at 2026-10-15T05:42:59+00:00
+
+=== scoring ===
+     5.87  monitor              svc 2    distinction, transition, resolution, eip-tbd
+           tren=1.00  anti=0.23  audi=0.45  comm=0.58  auth=0.70  nove=0.88  sour=0.29
+  
+    bands: good=2, monitor=35, priority=1, reject=141
+    competitor saturation axis: not_measured (section 32 defers it; never read as 0)
+    persisted 179 opportunities
+
+=== qa ===
+            · Q3: This is not an emerging narrative. It is two consecutive forum posts (post_416 and post_417)
+            · Q3: trend_velocity is pinned at 1.0 and novelty at 0.864 purely on a 24-hour recency proxy. Timi
+            · Q3: A draft-specification discussion thread is explicitly out of scope as an event — this is sta
+  
+    decisions: REJECT=7, RESEARCH_MORE=1
+    Section 20: this narrows the queue. Human review is final; nothing is published here.
+
+=== brief ===
+  12 item(s) across 5 persona section(s); 12 routing decision(s) recorded
+    ceo      4
+    coo      3
+    cto      0
+    sme      0
+    company  5
+  wrote /Users/kanishk.raj/antier-content-intelligence/outputs/brief-2026-10-15.md
+  wrote /Users/kanishk.raj/antier-content-intelligence/outputs/brief-2026-10-15.html
+  sent: sent to kanishk.raj@antiersolutions.com
+daily cycle 2026-10-16T04:30:04+00:00
+
+=== ingestion ===
+    [105/105] Tokenized Economies Institute            feed     no_feed           new=0   dup=0   no RSS/Atom feed found (HTTP 200)
+  
+    logged 105 source outcome(s) at 2026-10-16T04:56:17+00:00
+    attempted 98 | stored 86 | duplicates 9
+    by status: blocked=14, blocked_known=7, blocked_transport=1, js_rendered=6, no_feed=33, not_a_listing=6, offsite_redirect=2, ok=36
+    db counts: sources=105, content_items=1328, intelligence=250, narratives=179, narrative_items=1242, opportunities=179, qa_reviews=8, audit_log=142, fetch_state=1463
+
+=== intelligence ===
+  
+    failures:
+      7f7d6e93  invalid record: primary_topic is empty
+  
+    attempted 40 | stored 39 | failed 1 | speculation filtered 0
+    db: sources=105, content_items=1328, intelligence=289, narratives=179, narrative_items=1242, opportunities=179, qa_reviews=8, audit_log=144, fetch_state=1463
+
+=== narratives ===
+         terms: 
+         srcs : 1 distinct, 1 publisher(s) | dated 1, undated 0
+         - The Decline of Student Visas and Its Implications
+  
+    shown 182 of 182 | multi-item narratives: 164 | largest: 62 | singletons: 18
+    persisted 182 narratives at 2026-10-16T05:11:14+00:00
+
+=== scoring ===
+     5.83  monitor              svc 8    cyber, cybersecurity, threats, fraud
+           tren=0.00  anti=0.75  audi=0.80  comm=0.44  auth=0.95  nove=0.68  sour=0.84
+  
+    bands: good=5, monitor=28, priority=2, reject=147
+    competitor saturation axis: not_measured (section 32 defers it; never read as 0)
+    persisted 182 opportunities
+
+=== qa ===
+            · Q3: This is not a narrative at all. 'interview, ceo, tells, executive' is a clustering artifact 
+            · Q3: trend_velocity 1.0 (velocity 2.651) measures CB Insights publishing more interviews, not ris
+            · Q1: 62 items from a single publisher is one source, not 62. source_credibility 0.667 already dis
+  
+    decisions: REJECT=8
+    Section 20: this narrows the queue. Human review is final; nothing is published here.
+
+=== brief ===
+  13 item(s) across 5 persona section(s); 13 routing decision(s) recorded
+    ceo      4
+    coo      3
+    cto      1
+    sme      0
+    company  5
+  wrote /Users/kanishk.raj/antier-content-intelligence/outputs/brief-2026-10-16.md
+  wrote /Users/kanishk.raj/antier-content-intelligence/outputs/brief-2026-10-16.html
+  sent: sent to kanishk.raj@antiersolutions.com
+daily cycle 2026-10-17T04:44:23+00:00
+
+  no network: DNS does not resolve. Skipping the pipeline rather than recording every source as failed — a sleeping machine is not a fact about a publisher. The brief below uses what is already stored.
+
+=== brief ===
+  0 item(s) across 5 persona section(s); 0 routing decision(s) recorded
+    ceo      0
+    coo      0
+    cto      0
+    sme      0
+    company  0
+  wrote /Users/kanishk.raj/antier-content-intelligence/outputs/brief-2026-10-17.md
+  wrote /Users/kanishk.raj/antier-content-intelligence/outputs/brief-2026-10-17.html
+  NOT SENT: gaierror: [Errno 8] nodename nor servname provided, or not known
+daily cycle 2026-10-18T04:31:22+00:00
+
+=== ingestion ===
+    [105/105] Tokenized Economies Institute            feed     no_feed           new=0   dup=0   no RSS/Atom feed found (HTTP 200)
+  
+    logged 105 source outcome(s) at 2026-10-18T18:11:45+00:00
+    attempted 98 | stored 103 | duplicates 16
+    by status: blocked=13, blocked_known=7, blocked_transport=1, js_rendered=6, no_feed=32, not_a_listing=6, offsite_redirect=2, ok=38
+    db counts: sources=105, content_items=1431, intelligence=289, narratives=182, narrative_items=1328, opportunities=182, qa_reviews=8, audit_log=158, fetch_state=1582
+
+=== intelligence ===
+    imp=0.45 tension=0.30  Hyperliquid API read vs write surf Hyperliquid API: Public Data vs Trading 
+    imp=0.45 tension=0.40  Cloudflare introduces continuous b Continuous accountability for Verified b
+    imp=0.45 tension=0.30  Travel-focused feature competition How do consumer finance apps compare on 
+  
+    attempted 40 | stored 40 | failed 0 | speculation filtered 0
+    db: sources=105, content_items=1431, intelligence=329, narratives=182, narrative_items=1328, opportunities=182, qa_reviews=8, audit_log=159, fetch_state=1582
+
+=== narratives ===
+         terms: 
+         srcs : 1 distinct, 1 publisher(s) | dated 1, undated 0
+         - Invest in What's Next
+  
+    shown 193 of 193 | multi-item narratives: 171 | largest: 79 | singletons: 22
+    persisted 193 narratives at 2026-10-18T18:27:39+00:00
+
+=== scoring ===
+           tren=0.00  anti=1.00  audi=0.80  comm=0.60  auth=1.00  nove=0.00  sour=0.23
+           unmeasured: commercial_relevance
+  
+    bands: good=2, monitor=22, reject=169
+    competitor saturation axis: not_measured (section 32 defers it; never read as 0)
+    persisted 193 opportunities
+
+=== qa ===
+            · Q3 — This is not a narrative. It is a feed of 79 unrelated CB Insights executive-interview posts
+            · Q3 — The items are not events. They are a recurring syndicated interview series, i.e. publisher 
+            · Q1 — 79 items, one publisher. CB Insights' own research library is a single source, and the 'ind
+  
+    decisions: REJECT=8
+    Section 20: this narrows the queue. Human review is final; nothing is published here.
+
+=== brief ===
+  4 item(s) across 5 persona section(s); 4 routing decision(s) recorded
+    ceo      1
+    coo      0
+    cto      0
+    sme      0
+    company  3
+  wrote /Users/kanishk.raj/antier-content-intelligence/outputs/brief-2026-10-18.md
+  wrote /Users/kanishk.raj/antier-content-intelligence/outputs/brief-2026-10-18.html
+  sent: sent to kanishk.raj@antiersolutions.com
