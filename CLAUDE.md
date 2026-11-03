@@ -145,3 +145,9 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 ---
 
 **These guidelines are working if:** fewer unnecessary changes in diffs, fewer rewrites due to overcomplication, and clarifying questions come before implementation rather than after mistakes.
+
+## Grilling, Pocock skills and last30days
+
+- **Grill on anything new.** Whenever we start something new (content, plan, strategy, design, topic, setup or tool), run the `grilling` skill first: ask the open decisions in numbered rounds with a recommended answer for each, and act only once the user confirms. Skip it for direct, fully specified instructions on agreed work.
+- **Pocock skills** (from mattpocock/skills) are in `.claude/skills/`. `code-review` is renamed `pocock-code-review` so it does not replace the built-in command. Use only the ones that fit the work: content and research (`grilling`, `research`, `handoff`, `teach`, `writing-for-agents`); code (`diagnosing-bugs`, `tdd`, `pocock-code-review`, `pr`, `prototype`).
+- **last30days** (mvanhorn/last30days-skill) is installed once per machine, not in this repo. Use it to research the last 30 days of Reddit, X, YouTube, Hacker News and the web on a topic. It needs Python 3.12: `uv run --no-project --python 3.12 ~/.claude/skills/last30days/scripts/last30days.py`. On a new machine, install it with `/plugin marketplace add mvanhorn/last30days-skill`.
