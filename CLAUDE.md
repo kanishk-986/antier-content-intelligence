@@ -83,7 +83,7 @@ plus a simple dashboard. Expand coverage only once that runs end to end.
 
 ## Behaviour guidelines (karpathy-guidelines)
 
-Follow these on every task. Skill copy: `.claude/skills/karpathy-guidelines/SKILL.md`. Project-specific instructions above take precedence where they conflict.
+Follow these on every task. Skill: plugin `andrej-karpathy-skills@karpathy-skills` (auto-updating, declared in `.claude/settings.json`). Project-specific instructions above take precedence where they conflict.
 **Tradeoff:** These guidelines bias toward caution over speed. For trivial tasks, use judgment.
 
 ### 1. Think Before Coding
@@ -149,5 +149,5 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 ## Grilling, Pocock skills and last30days
 
 - **Grill on anything new.** Whenever we start something new (content, plan, strategy, design, topic, setup or tool), run the `grilling` skill first: ask the open decisions in numbered rounds with a recommended answer for each, and act only once the user confirms. Skip it for direct, fully specified instructions on agreed work.
-- **Pocock skills** (from mattpocock/skills) are in `.claude/skills/`. `code-review` is renamed `pocock-code-review` so it does not replace the built-in command. Use only the ones that fit the work: content and research (`grilling`, `research`, `handoff`, `teach`, `writing-for-agents`); code (`diagnosing-bugs`, `tdd`, `pocock-code-review`, `pr`, `prototype`).
-- **last30days** (mvanhorn/last30days-skill) is installed once per machine, not in this repo. Use it to research the last 30 days of Reddit, X, YouTube, Hacker News and the web on a topic. It needs Python 3.12: `uv run --no-project --python 3.12 ~/.claude/skills/last30days/scripts/last30days.py`. On a new machine, install it with `/plugin marketplace add mvanhorn/last30days-skill`.
+- **Pocock skills** come from the auto-updating plugin `mattpocock-skills@mattpocock` (27 skills, named `mattpocock-skills:<name>`), declared in `.claude/settings.json`; his 12 in-progress and misc skills stay as copies in `.claude/skills/`. Use only the ones that fit the work: content and research (`grilling`, `research`, `handoff`, `teach`, `writing-for-agents`); code (`diagnosing-bugs`, `tdd`, `code-review`, `pr`, `prototype`).
+- **last30days** comes from the auto-updating plugin `last30days@last30days-skill`, declared in `.claude/settings.json`. Use it to research the last 30 days of Reddit, X, YouTube, Hacker News and the web on a topic. It needs Python 3.12: run its script with `uv run --no-project --python 3.12`. Claude Code offers to install all three plugins when this repo is opened.
